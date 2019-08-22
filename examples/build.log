@@ -1,0 +1,2 @@
+gcc -lpam /usr/lib/libnetsnmp.5.dylib hello.c
+ld: warning: ignoring file /usr/lib/libnetsnmp.5.dylib, file was built for i386 which is not the architecture being linked (x86_64): /usr/lib/libnetsnmp.5.dylib
