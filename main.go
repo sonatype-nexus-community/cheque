@@ -21,9 +21,7 @@ import (
 	"github.com/sonatype-nexus-community/nancy/customerrors"
 	"github.com/sonatype-nexus-community/nancy/ossindex"
 	"github.com/sonatype-nexus-community/nancy/types"
-	nancyPackages "github.com/sonatype-nexus-community/nancy/packages"
-	"github.com/sonatype-nexus-community/auditcpp/packages"
-	// "github.com/sonatype-nexus-community/nancy/parse"
+	"github.com/sonatype-nexus-community/cheque/packages"
 	"os"
 	"strings"
 )
@@ -178,8 +176,4 @@ func RpmPurls(misses []string) (results []string, err error) {
 		results = append(results, "pkg:rpm/fedora/" + tokens[len(tokens) - 1]);
 	}
 	return results, nil
-}
-
-func processPackages(p nancyPackages.Packages) []string {
-	return p.ExtractPurlsFromManifest()
 }
