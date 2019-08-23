@@ -1,6 +1,20 @@
+// Copyright 2019 Sonatype Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 package main
 
 import (
+  // "fmt"
   "os"
 
 	// Required to get OS
@@ -10,6 +24,7 @@ import (
 	"path/filepath"
 )
 
+var libpaths = []string {"/usr/lib/", "/usr/local/lib/"}
 
 // Depending on the operating system, we need to find library versions in
 // different ways.
@@ -34,19 +49,21 @@ func GetLibraryVersion(name string) (version string, err error) {
 
 func FindLibFile(prefix string, lib string, suffix string) (match string, err error) {
 
-	matches, err := filepath.Glob("/usr/lib/" + prefix + lib + suffix)
+  for _, libpath := range libpaths {
+    // _, _ = fmt.Fprintf(os.Stderr, "TRY 1  %s\n", libpath + prefix + lib + suffix)
 
-	if err != nil {
-	  return "", err
-	}
+   	matches, err := filepath.Glob(libpath + prefix + lib + suffix)
 
-	if len(matches) != 0 {
+  	if err == nil {
+    	if len(matches) != 0 {
 
-    if _, err := os.Stat(matches[0]); os.IsNotExist(err) {
-      return "", nil
+        if _, err := os.Stat(matches[0]); os.IsNotExist(err) {
+          // Do nothing
+        } else {
+    	     return matches[0], nil
+        }
+    	}
     }
-
-	  return matches[0], nil
-	}
+  }
 	return "", nil
 }
