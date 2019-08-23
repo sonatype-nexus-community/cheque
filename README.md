@@ -11,3 +11,6 @@ or pretty much anything else rather then poring through obtuse lists and
 reading Makefiles.
 
 And its completely free! Beauty, eh?
+
+WARNING: This code is currently in development, and will almost certainly not
+do what you want it to; it is pretty hosed. Sorry.
