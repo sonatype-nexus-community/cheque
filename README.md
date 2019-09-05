@@ -1,3 +1,13 @@
+<p align="center">
+    <img src="https://github.com/sonatype-nexus-community/cheque/blob/master/docs/images/cheque.png" width="350"/>
+</p>
+<p align="center">
+    <a href="https://travis-ci.org/sonatype-nexus-community/cheque"><img src="https://travis-ci.org/sonatype-nexus-community/cheque.svg?branch=master" alt="Build Status"></img></a>
+</p>
+<p align="center">
+    <a href="https://depshield.github.io"><img src="https://depshield.sonatype.org/badges/sonatype-nexus-community/cheque/depshield.svg" alt="DepShield Badge"></img></a>
+</p>
+
 # cheque
 
 Like wearing a toque in the winter, ensuring your software is secure should be
