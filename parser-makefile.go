@@ -20,6 +20,7 @@ import (
   "os"
 	"io/ioutil"
 	"regexp"
+	"strings"
 )
 
 func ParseMakefile(path string) (deps types.ProjectList, err error) {
@@ -32,13 +33,16 @@ func ParseMakefile(path string) (deps types.ProjectList, err error) {
 	b, err := ioutil.ReadAll(file)
 	s := string(b)
 
+	// _, _ = fmt.Fprintf(os.Stderr, "ParseMakefile 1: %s\n", path)
+
 	{
 		// look for -l libs
-		r, _ := regexp.Compile("-l[a-zA-Z0-9_]+")
+		r, _ := regexp.Compile("[[:space:]]-l[a-zA-Z0-9_]+")
 		matches := r.FindAllString(s, -1)
 
 		for _,lib := range matches {
-			lib = lib[2:]
+			lib = strings.TrimSpace(lib)[2:]
+	// _, _ = fmt.Fprintf(os.Stderr, "ParseMakefile 1.1: %s\n", lib)
 
 			version, err := GetLibraryVersion(lib)
 			customerrors.Check(err, "Error finding file/version")
@@ -60,29 +64,36 @@ func ParseMakefile(path string) (deps types.ProjectList, err error) {
 			}
 		}
 	}
+	// _, _ = fmt.Fprintf(os.Stderr, "ParseMakefile 2: %s\n", path)
 
 	{
 		// look for libs in path
-		r, _ := regexp.Compile("[a-zA-Z0-9_/\\.]+\\.dylib")
+		r, _ := regexp.Compile(GetLibraryPathRegexPattern())
 		matches := r.FindAllString(s, -1)
+		if (len(matches) > 0) {
+			// _, _ = fmt.Fprintf(os.Stderr, "ParseMakefile 2.1: %s\n", matches[0])
 
-		for _,lib := range matches {
-      rn, _ := regexp.Compile("([a-zA-Z0-9_]+)\\.[0-9\\.]+\\.dylib")
-      nameMatch := rn.FindStringSubmatch(lib)
+			for _,lib := range matches {
+				// _, _ = fmt.Fprintf(os.Stderr, "ParseMakefile 2.2: %s\n", lib)
+	      rn, _ := regexp.Compile(GetLibraryFileRegexPattern())
+	      nameMatch := rn.FindStringSubmatch(lib)
+				// _, _ = fmt.Fprintf(os.Stderr, "ParseMakefile 2.1: %s\n", nameMatch)
 
-			version, err := GetLibraryVersion(lib)
-			customerrors.Check(err, "Error finding file/version")
+				version, err := GetLibraryVersion(lib)
+				customerrors.Check(err, "Error finding file/version")
 
-			if (version != "") {
-				project := types.Projects{}
-				project.Name = nameMatch[1];
-				project.Version = version
-				deps.Projects = append(deps.Projects, project)
-			} else {
-				_, _ = fmt.Fprintf(os.Stderr, "Cannot find '%s' library... skipping\n", lib)
+				if (version != "") {
+					project := types.Projects{}
+					project.Name = nameMatch[1];
+					project.Version = version
+					deps.Projects = append(deps.Projects, project)
+				} else {
+					_, _ = fmt.Fprintf(os.Stderr, "Cannot find '%s' library... skipping\n", lib)
+				}
 			}
 		}
 	}
+	// _, _ = fmt.Fprintf(os.Stderr, "ParseMakefile 3: %s\n", path)
 
 	return deps, nil
 }

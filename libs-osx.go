@@ -77,7 +77,7 @@ func GetOtoolVersion(name string, file string) (version string, err error) {
 	lines := strings.Split(out, "\n")
 
 	for _, line := range lines {
-		fmt.Fprintf(os.Stderr, "SNUH %s .. %s\n", name, line)
+		fmt.Fprintf(os.Stderr, "* %s .. %s\n", name, line)
 	}
 
 	return "", nil
@@ -112,4 +112,13 @@ func GetOsxSymlinkVersion(file string) (version string, err error) {
 	}
 
 	return matches[1], nil
+}
+
+func GetOsxLibraryPathRegexPattern() (result string) {
+	return "[a-zA-Z0-9_/\\.]+\\.dylib"
+}
+
+
+func GetOsxLibraryFileRegexPattern() (result string) {
+	return "([a-zA-Z0-9_]+)\\.[0-9\\.]+\\.dylib"
 }

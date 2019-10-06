@@ -26,12 +26,20 @@ import (
 	"strings"
 )
 
+var bom *bool
+var isBom *bool
+var isMakefile *bool
+var isLog *bool
 var noColorPtr *bool
 var path string
 
 func main() {
 	args := os.Args[1:]
 
+	bom = flag.Bool("bom", false, "generate a Bill Of Materials only")
+	isBom = flag.Bool("isBom", false, "The input file is a Bill Of Materials")
+	isMakefile = flag.Bool("isMakefile", false, "The input file is a Makefile")
+	isLog = flag.Bool("isLog", false, "The input file is a Make log")
 	noColorPtr = flag.Bool("noColor", false, "indicate output should not be colorized")
 	version := flag.Bool("version", false, "prints current auditcpp version")
 
@@ -68,7 +76,19 @@ func doCheckExistenceAndParse() {
 		dep := packages.Make{}
 		dep.MakefilePath = path
 		if dep.CheckExistenceOfManifest() {
-			dep.ProjectList, _ = ParseMakefile(path)
+			if (*isBom) {
+				dep.ProjectList, _ = ParseBom(path)
+			} else {
+				dep.ProjectList, _ = ParseMakefile(path)
+			}
+			if (*bom) {
+				for _,dep := range dep.ProjectList.Projects {
+					_, _ = fmt.Printf("pkg:cpp/%s@%s\n", dep.Name, dep.Version)
+				}
+
+				os.Exit(0)
+			}
+
 			var purls,_ = RootPurls(dep.ProjectList)
 			var packageCount = CountDistinctLibraries(purls)
 

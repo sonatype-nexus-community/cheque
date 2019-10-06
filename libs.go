@@ -51,19 +51,53 @@ func FindLibFile(prefix string, lib string, suffix string) (match string, err er
 
   for _, libpath := range libpaths {
     // _, _ = fmt.Fprintf(os.Stderr, "TRY 1  %s\n", libpath + prefix + lib + suffix)
-
-   	matches, err := filepath.Glob(libpath + prefix + lib + suffix)
+    globPattern := libpath + prefix + lib + suffix + "*";
+    // fmt.Fprintf(os.Stderr, "FindLibFile 1 %s\n", globPattern)
+   	matches, err := filepath.Glob(globPattern)
 
   	if err == nil {
-    	if len(matches) != 0 {
+      // fmt.Fprintf(os.Stderr, "FindLibFile 2 %s\n", globPattern)
+    	if len(matches) > 0 {
+        for _,match := range matches {
+          // fmt.Fprintf(os.Stderr, "FindLibFile 3 %s\n", match)
 
-        if _, err := os.Stat(matches[0]); os.IsNotExist(err) {
-          // Do nothing
-        } else {
-    	     return matches[0], nil
+          if _, err := os.Stat(match); os.IsNotExist(err) {
+            // Do nothing if file does not exist
+          } else {
+            //  fmt.Fprintf(os.Stderr, "FindLibFile 4 %s\n", match)
+      	     return match, nil
+          }
         }
     	}
     }
   }
 	return "", nil
+}
+
+
+func GetLibraryPathRegexPattern() (result string) {
+
+	if runtime.GOOS == "windows" {
+  }
+
+	if runtime.GOOS == "darwin" {
+    return GetOsxLibraryPathRegexPattern()
+  }
+
+	// Fall back to unix variant
+  return GetUnixLibraryPathRegexPattern()
+}
+
+
+func GetLibraryFileRegexPattern() (result string) {
+
+	if runtime.GOOS == "windows" {
+  }
+
+	if runtime.GOOS == "darwin" {
+    return GetOsxLibraryFileRegexPattern()
+  }
+
+	// Fall back to unix variant
+  return GetUnixLibraryFileRegexPattern()
 }

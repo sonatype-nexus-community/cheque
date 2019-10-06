@@ -17,16 +17,20 @@ import (
 	"regexp"
 	"os"
 	"strings"
+	// "fmt"
 	"path/filepath"
 )
 
 func GetUnixLibraryVersion(name string) (version string, err error) {
 	file, err := FindUnixLibFile(name)
+	// fmt.Fprintf(os.Stderr, "GetUnixLibraryVersion 1 %s\n", file)
 
   if (err == nil) {
     if (file == "") {
       return "", nil
     }
+
+	// fmt.Fprintf(os.Stderr, "GetUnixLibraryVersion 2 %s\n", file)
 
     return GetUnixSymlinkVersion(file)
 
@@ -53,12 +57,15 @@ func GetUnixLibraryVersion(name string) (version string, err error) {
 }
 
 func FindUnixLibFile(name string) (match string, err error) {
-	if strings.HasSuffix(name, ".so") {
+	if strings.Contains(name, ".so.") || strings.HasSuffix(name, ".so") {
+		// fmt.Fprintf(os.Stderr, "BUH 1 %s\n", name)
     if _, err := os.Stat(name); os.IsNotExist(err) {
       return "", err
     }
 		return name,nil
 	} else {
+		// fmt.Fprintf(os.Stderr, "BUH 2 %s\n", name)
+
 		return FindLibFile("lib", name, ".so")
 	}
 }
@@ -69,12 +76,14 @@ func FindUnixLibFile(name string) (match string, err error) {
 func GetUnixSymlinkVersion(file string) (version string, err error) {
 	path,err = filepath.EvalSymlinks(file)
 
+	// fmt.Fprintf(os.Stderr, "GetUnixSymlinkVersion 2 %s\n", path)
+
 	if err != nil {
 		return "", err
 	}
 
 	// Extract a version
-	r, err := regexp.Compile("\\.([0-9\\.]+)\\.dylib")
+	r, err := regexp.Compile("\\.so\\.([0-9\\.]+)")
 	if err != nil {
 		return "", err
 	}
@@ -84,4 +93,13 @@ func GetUnixSymlinkVersion(file string) (version string, err error) {
 	}
 
 	return matches[1], nil
+}
+
+func GetUnixLibraryPathRegexPattern() (result string) {
+	return "[a-zA-Z0-9_/\\.\\-]+\\.so\\.[a-zA-Z0-9_/\\.]+";
+}
+
+
+func GetUnixLibraryFileRegexPattern() (result string) {
+	return "([a-zA-Z0-9_\\-]+)\\.so\\.[0-9\\.]+"
 }
