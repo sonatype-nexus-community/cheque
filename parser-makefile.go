@@ -50,15 +50,9 @@ func ParseMakefile(path string) (deps types.ProjectList, err error) {
 			if (version != "") {
 				// Add the simple name
 				project := types.Projects{}
-				project.Name = lib;
+				project.Name = "lib" + lib
 				project.Version = version
 				deps.Projects = append(deps.Projects, project)
-
-				// Also add with "lib" prepended, since that is how it may be represented in some ecosystems
-				libProject := types.Projects{}
-				libProject.Name = "lib" + lib;
-				libProject.Version = project.Version
-				deps.Projects = append(deps.Projects, libProject)
 			} else {
 				_, _ = fmt.Fprintf(os.Stderr, "Cannot find '%s' library... skipping\n", lib)
 			}

@@ -16,11 +16,11 @@ package main
 import (
 	"github.com/sonatype-nexus-community/nancy/types"
   // "github.com/sonatype-nexus-community/nancy/customerrors"
-  "fmt"
+  // "fmt"
   "os"
 	// "io/ioutil"
 	// "regexp"
-	// "strings"
+	"strings"
 	"bufio"
 	"log"
 )
@@ -34,7 +34,15 @@ func ParseBom(path string) (deps types.ProjectList, err error) {
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
-	    fmt.Println(scanner.Text())
+		purl := scanner.Text()
+		tokens := strings.Split(purl, ":")
+		tokens = strings.Split(tokens[1], "/")
+		tokens = strings.Split(tokens[len(tokens) - 1], "@")
+
+		project := types.Projects{}
+		project.Name = tokens[0];
+		project.Version = tokens[1]
+		deps.Projects = append(deps.Projects, project)
 	}
 
 	if err := scanner.Err(); err != nil {
