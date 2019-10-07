@@ -83,20 +83,26 @@ func doCheckExistenceAndParse() {
 			}
 			if (*bom) {
 				for _,dep := range dep.ProjectList.Projects {
-					_, _ = fmt.Printf("pkg:cpp/%s@%s\n", dep.Name, dep.Version)
+					if strings.HasPrefix(dep.Name, "pkg:") {
+						_, _ = fmt.Printf("%s@%s\n", dep.Name, dep.Version)
+					} else {
+						_, _ = fmt.Printf("pkg:cpp/%s@%s\n", dep.Name, dep.Version)
+					}
 				}
 
 				os.Exit(0)
 			}
 
-			var purls,_ = RootPurls(dep.ProjectList)
-			var packageCount = CountDistinctLibraries(purls)
+			var canonicalPurls,_ = RootPurls(dep.ProjectList)
+			var purls,_ = DefinedPurls(dep.ProjectList)
+			var packageCount = CountDistinctLibraries(append(canonicalPurls, purls...))
 
 			// For speed purposes, check all possible types simultaneously
-			var conanPurls,_ = ConanPurls(purls)
-			var debPurls,_ = DebPurls(purls)
-			var rpmPurls,_ = RpmPurls(purls)
-			purls = append(conanPurls, debPurls...)
+			var conanPurls,_ = ConanPurls(canonicalPurls)
+			var debPurls,_ = DebPurls(canonicalPurls)
+			var rpmPurls,_ = RpmPurls(canonicalPurls)
+			purls = append(purls, conanPurls...)
+			purls = append(purls, debPurls...)
 			purls = append(purls, rpmPurls...)
 
 			coordinates, err := ossindex.AuditPackages(purls)
@@ -161,7 +167,18 @@ func GetCanonicalNameAndVersion(path string) (result string) {
 // subsequently be used to build *real* PURLs for OSS Index queries.
 func RootPurls(deps types.ProjectList) (purls []string, err error) {
 	for _,dep := range deps.Projects {
-		purls = append(purls, "pkg:cpp/" + dep.Name + "@" + dep.Version);
+		if !strings.HasPrefix(dep.Name, "pkg:") {
+			purls = append(purls, "pkg:cpp/" + dep.Name + "@" + dep.Version);
+		}
+	}
+	return purls, nil
+}
+
+func DefinedPurls(deps types.ProjectList) (purls []string, err error) {
+	for _,dep := range deps.Projects {
+		if strings.HasPrefix(dep.Name, "pkg:") {
+			purls = append(purls, dep.Name + "@" + dep.Version);
+		}
 	}
 	return purls, nil
 }

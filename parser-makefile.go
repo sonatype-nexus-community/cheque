@@ -44,14 +44,14 @@ func ParseMakefile(path string) (deps types.ProjectList, err error) {
 			lib = strings.TrimSpace(lib)[2:]
 	// _, _ = fmt.Fprintf(os.Stderr, "ParseMakefile 1.1: %s\n", lib)
 
-			version, err := GetLibraryVersion(lib)
+			project, err := GetLibraryId(lib)
 			customerrors.Check(err, "Error finding file/version")
 
-			if (version != "") {
+			if (project.Version != "") {
 				// Add the simple name
-				project := types.Projects{}
-				project.Name = "lib" + lib
-				project.Version = version
+					if (project.Name == "") {
+						project.Name = "lib" + lib
+					}
 				deps.Projects = append(deps.Projects, project)
 			} else {
 				_, _ = fmt.Fprintf(os.Stderr, "Cannot find '%s' library... skipping\n", lib)
@@ -73,13 +73,13 @@ func ParseMakefile(path string) (deps types.ProjectList, err error) {
 	      nameMatch := rn.FindStringSubmatch(lib)
 				// _, _ = fmt.Fprintf(os.Stderr, "ParseMakefile 2.1: %s\n", nameMatch)
 
-				version, err := GetLibraryVersion(lib)
+				project, err := GetLibraryId(lib)
 				customerrors.Check(err, "Error finding file/version")
 
-				if (version != "") {
-					project := types.Projects{}
-					project.Name = nameMatch[1];
-					project.Version = version
+				if (project.Version != "") {
+					if (project.Name == "") {
+						project.Name = nameMatch[1];
+					}
 					deps.Projects = append(deps.Projects, project)
 				} else {
 					_, _ = fmt.Fprintf(os.Stderr, "Cannot find '%s' library... skipping\n", lib)

@@ -14,28 +14,60 @@
 package main
 
 import (
+	"github.com/sonatype-nexus-community/nancy/types"
 	"regexp"
 	"os"
 	"strings"
 	// "fmt"
 	"path/filepath"
+
+	"os/exec"
+	// "bytes"
 )
 
-func GetUnixLibraryVersion(name string) (version string, err error) {
+func GetLinuxDistro() (name string) {
+
+	return "Unknown";
+}
+
+func GetUnixLibraryId(name string) (project types.Projects, err error) {
+  project = types.Projects{}
 	file, err := FindUnixLibFile(name)
 	// fmt.Fprintf(os.Stderr, "GetUnixLibraryVersion 1 %s\n", file)
 
   if (err == nil) {
     if (file == "") {
-      return "", nil
+      return project, nil
     }
 
-	// fmt.Fprintf(os.Stderr, "GetUnixLibraryVersion 2 %s\n", file)
+		// fmt.Fprintf(os.Stderr, "GetUnixLibraryVersion 2 %s\n", file)
+		// distro := strings.ToLower(GetLinuxDistro())
+		// fmt.Fprintf(os.Stderr, "GetUnixLibraryVersion 3 %s\n", distro)
 
-    return GetUnixSymlinkVersion(file)
+		// try dpkg
+		dpkgCmd := exec.Command("dpkg", "-S", file)
+		out,err := dpkgCmd.Output()
+		if (err == nil) {
+			// fmt.Fprintf(os.Stderr, "GetUnixLibraryVersion 3.1 %s\n", out)
+			buf := string(out)
+			tokens := strings.Split(buf, ":")
+			libname := tokens[0]
 
-    // return GetOtoolVersion("lib" + name, file)
-    return "", nil
+			dpkgCmd := exec.Command("dpkg", "-s", libname)
+			out,err := dpkgCmd.Output()
+			if (err == nil) {
+				r, _ := regexp.Compile("Version: ([^\\n]+)")
+				matches := r.FindStringSubmatch(string(out))
+				if matches != nil {
+					project.Name = "pkg:dpkg/ubuntu/" + libname
+					project.Version = doParseAptVersionIntoPurl(libname, matches[1])
+					// fmt.Fprintf(os.Stderr, "GetUnixLibraryVersion 3.2: %s %s\n", project.Name, project.Version)
+					return project,nil
+				}
+			}
+		}
+		project.Version,err = GetUnixSymlinkVersion(file)
+		return project,err;
   }
 
   // Try to fallback to pulling a version out of the filename
@@ -43,17 +75,17 @@ func GetUnixLibraryVersion(name string) (version string, err error) {
     // Extract a version
     r, err := regexp.Compile("\\.([0-9\\.]+)\\.so")
     if err != nil {
-      return "", err
+      return project, err
     }
     matches := r.FindStringSubmatch(name)
     if matches == nil {
-      return "", nil
+      return project, nil
     }
-
-    return matches[1], nil
+		project.Version = matches[1]
+    return project, nil
   }
 
-  return "", nil
+  return project, nil
 }
 
 func FindUnixLibFile(name string) (match string, err error) {
@@ -85,11 +117,17 @@ func GetUnixSymlinkVersion(file string) (version string, err error) {
 	// Extract a version
 	r, err := regexp.Compile("\\.so\\.([0-9\\.]+)")
 	if err != nil {
+	// fmt.Fprintf(os.Stderr, "GetUnixSymlinkVersion 3 %s\n", path)
 		return "", err
 	}
+	// fmt.Fprintf(os.Stderr, "GetUnixSymlinkVersion 4 %s\n", path)
 	matches := r.FindStringSubmatch(path)
 	if matches == nil {
-		return "", nil
+		r, _ = regexp.Compile("([0-9\\.]+)\\.so")
+		matches = r.FindStringSubmatch(path)
+		if matches == nil {
+			return "", nil
+		}
 	}
 
 	return matches[1], nil

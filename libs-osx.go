@@ -14,6 +14,7 @@
 package main
 
 import (
+	// "github.com/sonatype-nexus-community/nancy/types"
 	"fmt"
 	"os"
 	"strings"
@@ -25,7 +26,7 @@ import (
 )
 
 
-func GetOsxLibraryVersion(name string) (version string, err error) {
+func GetOsxLibraryId(name string) (version string, err error) {
   file, err := FindOsxLibFile(name)
 
   if (err == nil) {

@@ -14,6 +14,7 @@
 package main
 
 import (
+	"github.com/sonatype-nexus-community/nancy/types"
   // "fmt"
   "os"
 
@@ -24,7 +25,7 @@ import (
 	"path/filepath"
 )
 
-var libpaths = []string {"/usr/lib/", "/usr/local/lib/"}
+var libpaths = []string {"/usr/lib/", "/usr/local/lib/", "/usr/lib/x86_64-linux-gnu/"}
 
 // Depending on the operating system, we need to find library versions in
 // different ways.
@@ -32,18 +33,20 @@ var libpaths = []string {"/usr/lib/", "/usr/local/lib/"}
 //   OSX: otool -L <path>
 //   Linux: Get file name (may be symbolically linked)
 //   Windows: There is a way...
-func GetLibraryVersion(name string) (version string, err error) {
+func GetLibraryId(name string) (project types.Projects, err error) {
+  project = types.Projects{}
 
-	if runtime.GOOS == "windows" {
-    return GetWindowsLibraryVersion(name)
+  switch (runtime.GOOS) {
+    case "windows":
+        project.Version,err = GetWindowsLibraryId(name)
+
+    case "darwin":
+        project.Version,err = GetOsxLibraryId(name)
+
+    default:
+      return GetUnixLibraryId(name)
   }
-
-	if runtime.GOOS == "darwin" {
-    return GetOsxLibraryVersion(name)
-  }
-
-	// Fall back to unix variant
-  return GetUnixLibraryVersion(name)
+  return project, err;
 }
 
 

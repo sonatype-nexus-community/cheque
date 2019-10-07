@@ -14,6 +14,7 @@
 package main
 
 import (
+	// "github.com/sonatype-nexus-community/nancy/types"
 	"fmt"
 	"os"
 	"flag"
@@ -23,7 +24,7 @@ import (
 )
 
 
-func GetWindowsLibraryVersion(name string) (version string, err error) {
+func GetWindowsLibraryId(name string) (version string, err error) {
 	_, _ = fmt.Fprintf(os.Stderr, "Unsupported OS: %s\n", runtime.GOOS)
 	flag.PrintDefaults()
 	os.Exit(2)
