@@ -15,8 +15,6 @@ package main
 
 import (
 	"github.com/sonatype-nexus-community/nancy/types"
-  "github.com/sonatype-nexus-community/nancy/customerrors"
-  "fmt"
   "os"
 	"io/ioutil"
 	"regexp"
@@ -24,6 +22,10 @@ import (
 )
 
 func ParseMakefile(path string) (deps types.ProjectList, err error) {
+	libPaths := []string {"/usr/lib/", "/usr/local/lib/", "/usr/lib/x86_64-linux-gnu/"}
+  var libs []string
+  var files []string
+
 	file, err := os.Open(path)
 	if err != nil {
 		return deps, err
@@ -33,8 +35,6 @@ func ParseMakefile(path string) (deps types.ProjectList, err error) {
 	b, err := ioutil.ReadAll(file)
 	s := string(b)
 
-	// _, _ = fmt.Fprintf(os.Stderr, "ParseMakefile 1: %s\n", path)
-
 	{
 		// look for -l libs
 		r, _ := regexp.Compile("[[:space:]]-l[a-zA-Z0-9_]+")
@@ -42,52 +42,20 @@ func ParseMakefile(path string) (deps types.ProjectList, err error) {
 
 		for _,lib := range matches {
 			lib = strings.TrimSpace(lib)[2:]
-	// _, _ = fmt.Fprintf(os.Stderr, "ParseMakefile 1.1: %s\n", lib)
-
-			project, err := GetLibraryId(lib)
-			customerrors.Check(err, "Error finding file/version")
-
-			if (project.Version != "") {
-				// Add the simple name
-					if (project.Name == "") {
-						project.Name = "lib" + lib
-					}
-				deps.Projects = append(deps.Projects, project)
-			} else {
-				_, _ = fmt.Fprintf(os.Stderr, "Cannot find '%s' library... skipping\n", lib)
-			}
+			libs = append(libs, lib)
 		}
 	}
-	// _, _ = fmt.Fprintf(os.Stderr, "ParseMakefile 2: %s\n", path)
 
 	{
 		// look for libs in path
 		r, _ := regexp.Compile(GetLibraryPathRegexPattern())
 		matches := r.FindAllString(s, -1)
 		if (len(matches) > 0) {
-			// _, _ = fmt.Fprintf(os.Stderr, "ParseMakefile 2.1: %s\n", matches[0])
-
 			for _,lib := range matches {
-				// _, _ = fmt.Fprintf(os.Stderr, "ParseMakefile 2.2: %s\n", lib)
-	      rn, _ := regexp.Compile(GetLibraryFileRegexPattern())
-	      nameMatch := rn.FindStringSubmatch(lib)
-				// _, _ = fmt.Fprintf(os.Stderr, "ParseMakefile 2.1: %s\n", nameMatch)
-
-				project, err := GetLibraryId(lib)
-				customerrors.Check(err, "Error finding file/version")
-
-				if (project.Version != "") {
-					if (project.Name == "") {
-						project.Name = nameMatch[1];
-					}
-					deps.Projects = append(deps.Projects, project)
-				} else {
-					_, _ = fmt.Fprintf(os.Stderr, "Cannot find '%s' library... skipping\n", lib)
-				}
+				files = append(files, lib)
 			}
 		}
 	}
-	// _, _ = fmt.Fprintf(os.Stderr, "ParseMakefile 3: %s\n", path)
 
-	return deps, nil
+	return CreateBom(libPaths, libs, files)
 }
