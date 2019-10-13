@@ -16,6 +16,7 @@ package parse
 import (
 	"fmt"
 	"github.com/sonatype-nexus-community/cheque/packages"
+	"github.com/sonatype-nexus-community/cheque/audit"
 	"os"
 	"strings"
 )

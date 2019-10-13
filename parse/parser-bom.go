@@ -15,7 +15,6 @@ package parse
 
 import (
 	"github.com/sonatype-nexus-community/nancy/types"
-  // "github.com/sonatype-nexus-community/nancy/customerrors"
   // "fmt"
   "os"
 	// "io/ioutil"

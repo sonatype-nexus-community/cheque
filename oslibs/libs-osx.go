@@ -14,7 +14,6 @@
 package oslibs
 
 import (
-	// "github.com/sonatype-nexus-community/nancy/types"
 	"fmt"
 	"os"
 	"strings"

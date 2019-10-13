@@ -14,6 +14,7 @@
 package linker
 
 import (
+	"github.com/sonatype-nexus-community/cheque/audit"
 	"strings"
   "github.com/golang/glog"
 )
