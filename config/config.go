@@ -15,65 +15,89 @@ package config
 
 import (
   "github.com/sonatype-nexus-community/nancy/buildversion"
-  "flag"
 	"os"
   "fmt"
+  "path/filepath"
 )
 
-var bom *bool
-var isBom *bool
-var isMakefile *bool
-var isLog *bool
-var noColorPtr *bool
+var bom = false
+var isBom = false
+var isMakefile = false
+var isLog = false
+var noColorPtr = false
+var version = false
 var path string
 var workingDir string
+var cmd string
 
 func init() {
+  cmd = filepath.Base(os.Args[0])
+
   args := os.Args[1:]
-  bom = flag.Bool("export-bom", false, "generate a Bill Of Materials only")
-  isBom = flag.Bool("parse-bom", false, "The input file is a Bill Of Materials")
-  isMakefile = flag.Bool("parse-makefile", false, "The input file is a Makefile")
-  isLog = flag.Bool("parse-log", false, "The input file is a Make log")
-  noColorPtr = flag.Bool("noColor", false, "indicate output should not be colorized")
-  version := flag.Bool("version", false, "prints current auditcpp version")
-  flag.StringVar(&workingDir, "working-directory", ".", "Resolve file paths relative to the specified directory")
-
-
-  flag.Usage = func() {
-    _, _ = fmt.Fprintf(os.Stderr, "Usage: \nauditcpp [options] </path/to/Makefile>\n\nOptions:\n")
-    flag.PrintDefaults()
-    os.Exit(2)
-  }
 
   if len(args) < 1 {
-    flag.Usage()
+    usage()
     os.Exit(1)
   }
 
-  // Parse flags from the command line output
-  flag.Parse()
+  for i := 0; i < len(args); i++ {
+    arg := args[i]
+    switch(arg) {
+      case "export-bom": bom = true
+      case "parse-bom": isBom = true
+      case "parse-makefile": isMakefile = true
+      case "parse-log": isLog = true
+      case "noColor": noColorPtr = true
+      case "version": version = true
+      case "working-directory": i++; workingDir = args[i]
+    }
+  }
 
-  if *version {
+  if version {
     fmt.Println(buildversion.BuildVersion)
     _, _ = fmt.Printf("build time: %s\n", buildversion.BuildTime)
     _, _ = fmt.Printf("build commit: %s\n", buildversion.BuildCommit)
     os.Exit(0)
   }
+}
 
+func usage() {
+  fmt.Fprintf(os.Stderr, "Usage: \nauditcpp [options] </path/to/Makefile>\n\nOptions:\n")
+  fmt.Fprintf(os.Stderr, "Usage of cheque:\n")
+  fmt.Fprintf(os.Stderr, "  -export-bom\n")
+  fmt.Fprintf(os.Stderr, "    	generate a Bill Of Materials only\n")
+  fmt.Fprintf(os.Stderr, "  -noColor\n")
+  fmt.Fprintf(os.Stderr, "    	indicate output should not be colorized\n")
+  fmt.Fprintf(os.Stderr, "  -parse-bom\n")
+  fmt.Fprintf(os.Stderr, "    	The input file is a Bill Of Materials\n")
+  fmt.Fprintf(os.Stderr, "  -parse-log\n")
+  fmt.Fprintf(os.Stderr, "    	The input file is a Make log\n")
+  fmt.Fprintf(os.Stderr, "  -parse-makefile\n")
+  fmt.Fprintf(os.Stderr, "    	The input file is a Makefile\n")
+  fmt.Fprintf(os.Stderr, "  -version\n")
+  fmt.Fprintf(os.Stderr, "    	prints current auditcpp version\n")
+  fmt.Fprintf(os.Stderr, "  -working-directory string\n")
+  fmt.Fprintf(os.Stderr, "    	Resolve file paths relative to the specified directory (default '.')\n")
+
+  os.Exit(2)
+}
+
+func GetCommand() (s string) {
+  return cmd
 }
 
 func IsMakefile() (b bool) {
-  return *isMakefile
+  return isMakefile
 }
 
 func IsLog() (b bool) {
-  return *isLog
+  return isLog
 }
 
 func IsBom() (b bool) {
-  return *isBom
+  return isBom
 }
 
 func GetBom() (b bool) {
-  return *bom
+  return bom
 }

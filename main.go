@@ -17,7 +17,11 @@ import (
 	"github.com/sonatype-nexus-community/cheque/config"
 	"github.com/sonatype-nexus-community/cheque/parse"
 	"github.com/sonatype-nexus-community/cheque/linker"
+	"github.com/sonatype-nexus-community/cheque/oslibs"
 	"os"
+	"os/exec"
+	"github.com/golang/glog"
+	"fmt"
 )
 
 func main() {
@@ -31,5 +35,31 @@ func main() {
 	}
 
 	// Otherwise act like a compiler
-	linker.DoLink(args);
+	count := linker.DoLink(args);
+
+	switch(config.GetCommand()) {
+	case "cheque":
+		break;
+	default:
+		cmd := oslibs.GetCommandPath(config.GetCommand())
+		if cmd == "" {
+			glog.Fatal("Cannot find official command: " + config.GetCommand())
+		} else {
+			// Run external command
+			externalCmd := exec.Command(cmd, args...)
+			externalCmd.Stdout = os.Stdout
+			externalCmd.Stderr = os.Stderr
+			err := externalCmd.Run()
+
+			if err != nil {
+				// FIXME: Return actual error code from command
+				fmt.Fprintf(os.Stderr, "Error running %s: %v\n", config.GetCommand(), err)
+			}
+		}
+		break;
+	}
+
+	if count > 0 {
+		os.Exit(count)
+  }
 }

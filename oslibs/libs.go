@@ -16,8 +16,8 @@ package oslibs
 import (
 	"github.com/sonatype-nexus-community/nancy/types"
 
-	// Required to get OS
 	"runtime"
+	"os"
 )
 
 var libpaths = []string {"/usr/lib/", "/usr/local/lib/", "/usr/lib/x86_64-linux-gnu/"}
@@ -69,4 +69,14 @@ func GetLibraryFileRegexPattern() (result string) {
 
 	// Fall back to unix variant
   return getUnixLibraryFileRegexPattern()
+}
+
+/** FIXME: Actually search paths to find actual binary
+ */
+func GetCommandPath(cmd string) (path string) {
+	path = "/usr/bin/" + cmd;
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+	  return ""
+	}
+	return path;
 }

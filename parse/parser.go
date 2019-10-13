@@ -43,6 +43,9 @@ func DoCheckExistenceAndParse(path string) {
 			os.Exit(0)
 		}
 
-    audit.AuditBom(dep.ProjectList)
+    count := audit.AuditBom(dep.ProjectList)
+		if count > 0 {
+			os.Exit(count)
+		}
 	}
 }

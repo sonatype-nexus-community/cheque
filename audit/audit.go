@@ -21,19 +21,18 @@ import (
   "github.com/sonatype-nexus-community/nancy/audit"
   "github.com/sonatype-nexus-community/nancy/ossindex"
   "github.com/golang/glog"
-  "os"
 	"regexp"
   "strings"
 )
 
-func ProcessPaths(libPaths []string, libs []string, files []string) {
-  glog.Info("libPaths: " + strings.Join(libPaths, ", "))
-  glog.Info("libs: " + strings.Join(libs, ", "))
-  glog.Info("files: " + strings.Join(files, ", "))
+func ProcessPaths(libPaths []string, libs []string, files []string) (count int) {
+  // glog.Info("libPaths: " + strings.Join(libPaths, ", "))
+  // glog.Info("libs: " + strings.Join(libs, ", "))
+  // glog.Info("files: " + strings.Join(files, ", "))
 
   bom := packages.Make{}
   bom.ProjectList, _ = CreateBom(libPaths, libs, files)
-  AuditBom(bom.ProjectList)
+  return AuditBom(bom.ProjectList)
 }
 
 func CreateBom(_ []string, libs []string, files []string) (deps types.ProjectList, err error) {
@@ -75,7 +74,7 @@ func CreateBom(_ []string, libs []string, files []string) (deps types.ProjectLis
   return deps,nil
 }
 
-func AuditBom(deps types.ProjectList) {
+func AuditBom(deps types.ProjectList) (count int){
   var canonicalPurls,_ = RootPurls(deps)
   var purls,_ = DefinedPurls(deps)
   var packageCount = CountDistinctLibraries(append(canonicalPurls, purls...))
@@ -116,9 +115,8 @@ func AuditBom(deps types.ProjectList) {
     results = append(results, v)
   }
 
-  if count := audit.LogResults(false, packageCount, results); count > 0 {
-    os.Exit(count)
-  }
+  count = audit.LogResults(false, packageCount, results)
+  return count
 }
 
 func CountDistinctLibraries(purls []string) (result int) {
