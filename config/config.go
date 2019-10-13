@@ -18,6 +18,7 @@ import (
 	"os"
   "fmt"
   "path/filepath"
+  "strings"
 )
 
 var bom = false
@@ -42,7 +43,14 @@ func init() {
 
   for i := 0; i < len(args); i++ {
     arg := args[i]
+    if arg == "--" {
+      break;
+    }
+    for strings.HasPrefix(arg, "-") {
+      arg = arg[1:]
+    }
     switch(arg) {
+      case "help": usage()
       case "export-bom": bom = true
       case "parse-bom": isBom = true
       case "parse-makefile": isMakefile = true

@@ -38,7 +38,7 @@ func ProcessPaths(libPaths []string, libs []string, files []string) (count int) 
 func CreateBom(_ []string, libs []string, files []string) (deps types.ProjectList, err error) {
   // Library names
   for _,lib := range libs {
-    glog.Info("CreateBom 1: " + lib)
+    // glog.Info("CreateBom 1: " + lib)
     project, err := oslibs.GetLibraryId(lib)
     customerrors.Check(err, "Error finding file/version")
 
@@ -49,13 +49,13 @@ func CreateBom(_ []string, libs []string, files []string) (deps types.ProjectLis
         }
       deps.Projects = append(deps.Projects, project)
     } else {
-      glog.Error("Cannot find " + lib + " library... skipping")
+      glog.Warning("Cannot find " + lib + " library... skipping")
     }
   }
 
   // Paths to libraries
   for _,lib := range files {
-    glog.Info("CreateBom 2: " + lib)
+    // glog.Info("CreateBom 2: " + lib)
     rn, _ := regexp.Compile(oslibs.GetLibraryFileRegexPattern())
     nameMatch := rn.FindStringSubmatch(lib)
 
@@ -68,7 +68,7 @@ func CreateBom(_ []string, libs []string, files []string) (deps types.ProjectLis
       }
       deps.Projects = append(deps.Projects, project)
     } else {
-      glog.Error("Cannot find " + lib + " library... skipping")
+      glog.Warning("Cannot find " + lib + " library... skipping")
     }
   }
   return deps,nil

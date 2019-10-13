@@ -20,21 +20,24 @@ import (
 )
 
 func DoLink(args []string) (count int) {
-  libPaths := []string {"/usr/lib/", "/usr/local/lib/", "/usr/lib/x86_64-linux-gnu/"}
-  var libs []string
-  var files []string
+	libPaths := make(map[string]bool)
+	libPaths["/usr/lib/"] = true
+	libPaths["/usr/local/lib/"] = true
+	libPaths["/usr/lib/x86_64-linux-gnu/"] = true
+	libs := make(map[string]bool)
+	files := make(map[string]bool)
 
   for i := 0; i < len(args); i++ {
     arg := args[i]
     if (strings.HasPrefix(arg, "-l")) {
       if (len(arg) > 2) {
         glog.Info("lib: " + arg)
-        libs = append(libs, arg[2:])
+        libs[arg[2:]] = true
       } else {
         i++
         arg := args[i]
         glog.Info("lib: " + arg)
-        libs = append(libs, arg)
+				libs[arg] = true
       }
       continue;
     }
@@ -43,12 +46,12 @@ func DoLink(args []string) (count int) {
     if (strings.HasPrefix(arg, "-L")) {
       if (len(arg) > 2) {
         glog.Info("LibPath: " + arg)
-        libPaths = append(libPaths, arg[2:])
+				libPaths[arg[2:]] = true
       } else {
         i++
         arg := args[i]
         glog.Info("LibPath: " + arg)
-        libPaths = append(libPaths, arg)
+				libPaths[arg] = true
       }
       continue;
     }
@@ -63,33 +66,46 @@ func DoLink(args []string) (count int) {
     // -----------------------------------------
     if (strings.HasSuffix(arg, ".dylib")) {
       glog.Info("OSX DLL: " + arg)
-      files = append(files, arg)
+			files[arg] = true
       continue;
     }
     if (strings.HasSuffix(arg, ".so")) {
       glog.Info("Linux DLL: " + arg)
-      files = append(files, arg)
+			files[arg] = true
       continue;
     }
     if (strings.Contains(arg, ".so.")) {
       glog.Info("Linux DLL: " + arg)
-      files = append(files, arg)
+			files[arg] = true
       continue;
     }
     if (strings.HasSuffix(arg, ".a")) {
       glog.Info("Static lib: " + arg)
-      files = append(files, arg)
+			files[arg] = true
       continue;
     }
     if (strings.Contains(arg, ".a.")) {
       glog.Info("Static lib: " + arg)
-      files = append(files, arg)
+			files[arg] = true
       continue;
     }
   }
 
 	if len(libs) > 0 || len(files) > 0 {
-	  return audit.ProcessPaths(libPaths, libs, files)
+		libPathsSlice := []string{}
+		for key, _ := range libPaths {
+				libPathsSlice = append(libPathsSlice, key)
+		}
+		libsSlice := []string{}
+		for key, _ := range libs {
+				libsSlice = append(libsSlice, key)
+		}
+		filesSlice := []string{}
+		for key, _ := range files {
+				filesSlice = append(filesSlice, key)
+		}
+
+	  return audit.ProcessPaths(libPathsSlice, libsSlice, filesSlice)
 	}
 
 	return 0
