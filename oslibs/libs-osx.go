@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package main
+package oslibs
 
 import (
 	// "github.com/sonatype-nexus-community/nancy/types"
@@ -96,7 +96,7 @@ func FindOsxLibFile(name string) (match string, err error) {
 }
 
 func GetOsxSymlinkVersion(file string) (version string, err error) {
-	path,err = filepath.EvalSymlinks(file)
+	path,err := filepath.EvalSymlinks(file)
 
 	if err != nil {
 		return "", err

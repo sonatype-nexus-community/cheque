@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package main
+package oslibs
 
 import (
 	"github.com/sonatype-nexus-community/nancy/types"
@@ -106,7 +106,7 @@ func FindUnixLibFile(name string) (match string, err error) {
  * number. Try and extract a version from there.
  */
 func GetUnixSymlinkVersion(file string) (version string, err error) {
-	path,err = filepath.EvalSymlinks(file)
+	path,err := filepath.EvalSymlinks(file)
 
 	// fmt.Fprintf(os.Stderr, "GetUnixSymlinkVersion 2 %s\n", path)
 

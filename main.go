@@ -15,6 +15,7 @@ package main
 
 import (
 	"github.com/sonatype-nexus-community/nancy/buildversion"
+	"github.com/sonatype-nexus-community/cheque/parse"
 	"flag"
 	"fmt"
 	"os"

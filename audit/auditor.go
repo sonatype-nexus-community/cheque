@@ -11,9 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package main
+package audit
 
 import (
+  "github.com/sonatype-nexus-community/cheque/oslibs"
   "github.com/sonatype-nexus-community/cheque/packages"
   "github.com/sonatype-nexus-community/nancy/types"
   "github.com/sonatype-nexus-community/nancy/customerrors"
