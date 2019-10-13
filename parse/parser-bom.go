@@ -24,7 +24,7 @@ import (
 	"log"
 )
 
-func ParseBom(path string) (deps types.ProjectList, err error) {
+func parseBom(path string) (deps types.ProjectList, err error) {
 	file, err := os.Open(path)
 	if err != nil {
 		return deps, err

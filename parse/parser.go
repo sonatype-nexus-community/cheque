@@ -27,9 +27,9 @@ func DoCheckExistenceAndParse(path string) {
 	dep.MakefilePath = path
 	if dep.CheckExistenceOfManifest() {
 		if (config.IsBom()) {
-			dep.ProjectList, _ = ParseBom(path)
+			dep.ProjectList, _ = parseBom(path)
 		} else {
-			dep.ProjectList, _ = ParseMakefile(path)
+			dep.ProjectList, _ = parseMakefile(path)
 		}
 		if (config.GetBom()) {
 			for _,dep := range dep.ProjectList.Projects {

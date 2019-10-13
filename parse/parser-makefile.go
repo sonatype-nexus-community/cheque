@@ -23,7 +23,7 @@ import (
 	"strings"
 )
 
-func ParseMakefile(path string) (deps types.ProjectList, err error) {
+func parseMakefile(path string) (deps types.ProjectList, err error) {
 	libPaths := []string {"/usr/lib/", "/usr/local/lib/", "/usr/lib/x86_64-linux-gnu/"}
   var libs []string
   var files []string
