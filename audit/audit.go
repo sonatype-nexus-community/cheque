@@ -26,7 +26,7 @@ import (
   "strings"
 )
 
-func processPaths(libPaths []string, libs []string, files []string) {
+func ProcessPaths(libPaths []string, libs []string, files []string) {
   glog.Info("libPaths: " + strings.Join(libPaths, ", "))
   glog.Info("libs: " + strings.Join(libs, ", "))
   glog.Info("files: " + strings.Join(files, ", "))
@@ -40,7 +40,7 @@ func CreateBom(_ []string, libs []string, files []string) (deps types.ProjectLis
   // Library names
   for _,lib := range libs {
     glog.Info("CreateBom 1: " + lib)
-    project, err := GetLibraryId(lib)
+    project, err := oslibs.GetLibraryId(lib)
     customerrors.Check(err, "Error finding file/version")
 
     if (project.Version != "") {
@@ -57,10 +57,10 @@ func CreateBom(_ []string, libs []string, files []string) (deps types.ProjectLis
   // Paths to libraries
   for _,lib := range files {
     glog.Info("CreateBom 2: " + lib)
-    rn, _ := regexp.Compile(GetLibraryFileRegexPattern())
+    rn, _ := regexp.Compile(oslibs.GetLibraryFileRegexPattern())
     nameMatch := rn.FindStringSubmatch(lib)
 
-    project, err := GetLibraryId(lib)
+    project, err := oslibs.GetLibraryId(lib)
     customerrors.Check(err, "Error finding file/version")
 
     if (project.Version != "") {
@@ -116,7 +116,7 @@ func AuditBom(deps types.ProjectList) {
     results = append(results, v)
   }
 
-  if count := audit.LogResults(*noColorPtr, packageCount, results); count > 0 {
+  if count := audit.LogResults(false, packageCount, results); count > 0 {
     os.Exit(count)
   }
 }

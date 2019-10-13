@@ -19,7 +19,7 @@ import (
   "github.com/golang/glog"
 )
 
-func doLink(args []string) {
+func DoLink(args []string) {
   libPaths := []string {"/usr/lib/", "/usr/local/lib/", "/usr/lib/x86_64-linux-gnu/"}
   var libs []string
   var files []string
@@ -88,5 +88,5 @@ func doLink(args []string) {
     }
   }
 
-  processPaths(libPaths, libs, files)
+  audit.ProcessPaths(libPaths, libs, files)
 }

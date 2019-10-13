@@ -15,14 +15,9 @@ package oslibs
 
 import (
 	"github.com/sonatype-nexus-community/nancy/types"
-  // "fmt"
-  "os"
 
 	// Required to get OS
 	"runtime"
-
-	// Required to search file system
-	"path/filepath"
 )
 
 var libpaths = []string {"/usr/lib/", "/usr/local/lib/", "/usr/lib/x86_64-linux-gnu/"}
@@ -38,45 +33,16 @@ func GetLibraryId(name string) (project types.Projects, err error) {
 
   switch (runtime.GOOS) {
     case "windows":
-        project.Version,err = GetWindowsLibraryId(name)
+        project.Version,err = getWindowsLibraryId(name)
 
     case "darwin":
-        project.Version,err = GetOsxLibraryId(name)
+        project.Version,err = getOsxLibraryId(name)
 
     default:
-      return GetUnixLibraryId(name)
+      return getUnixLibraryId(name)
   }
   return project, err;
 }
-
-
-func FindLibFile(prefix string, lib string, suffix string) (match string, err error) {
-
-  for _, libpath := range libpaths {
-    // _, _ = fmt.Fprintf(os.Stderr, "TRY 1  %s\n", libpath + prefix + lib + suffix)
-    globPattern := libpath + prefix + lib + suffix + "*";
-    // fmt.Fprintf(os.Stderr, "FindLibFile 1 %s\n", globPattern)
-   	matches, err := filepath.Glob(globPattern)
-
-  	if err == nil {
-      // fmt.Fprintf(os.Stderr, "FindLibFile 2 %s\n", globPattern)
-    	if len(matches) > 0 {
-        for _,match := range matches {
-          // fmt.Fprintf(os.Stderr, "FindLibFile 3 %s\n", match)
-
-          if _, err := os.Stat(match); os.IsNotExist(err) {
-            // Do nothing if file does not exist
-          } else {
-            //  fmt.Fprintf(os.Stderr, "FindLibFile 4 %s\n", match)
-      	     return match, nil
-          }
-        }
-    	}
-    }
-  }
-	return "", nil
-}
-
 
 func GetLibraryPathRegexPattern() (result string) {
 
@@ -84,11 +50,11 @@ func GetLibraryPathRegexPattern() (result string) {
   }
 
 	if runtime.GOOS == "darwin" {
-    return GetOsxLibraryPathRegexPattern()
+    return getOsxLibraryPathRegexPattern()
   }
 
 	// Fall back to unix variant
-  return GetUnixLibraryPathRegexPattern()
+  return getUnixLibraryPathRegexPattern()
 }
 
 
@@ -98,9 +64,9 @@ func GetLibraryFileRegexPattern() (result string) {
   }
 
 	if runtime.GOOS == "darwin" {
-    return GetOsxLibraryFileRegexPattern()
+    return getOsxLibraryFileRegexPattern()
   }
 
 	// Fall back to unix variant
-  return GetUnixLibraryFileRegexPattern()
+  return getUnixLibraryFileRegexPattern()
 }

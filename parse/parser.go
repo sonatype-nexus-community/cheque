@@ -17,20 +17,21 @@ import (
 	"fmt"
 	"github.com/sonatype-nexus-community/cheque/packages"
 	"github.com/sonatype-nexus-community/cheque/audit"
+	"github.com/sonatype-nexus-community/cheque/config"
 	"os"
 	"strings"
 )
 
-func doCheckExistenceAndParse() {
+func DoCheckExistenceAndParse(path string) {
 	dep := packages.Make{}
 	dep.MakefilePath = path
 	if dep.CheckExistenceOfManifest() {
-		if (*isBom) {
+		if (config.IsBom()) {
 			dep.ProjectList, _ = ParseBom(path)
 		} else {
 			dep.ProjectList, _ = ParseMakefile(path)
 		}
-		if (*bom) {
+		if (config.GetBom()) {
 			for _,dep := range dep.ProjectList.Projects {
 				if strings.HasPrefix(dep.Name, "pkg:") {
 					_, _ = fmt.Printf("%s@%s\n", dep.Name, dep.Version)
@@ -42,6 +43,6 @@ func doCheckExistenceAndParse() {
 			os.Exit(0)
 		}
 
-    AuditBom(dep.ProjectList)
+    audit.AuditBom(dep.ProjectList)
 	}
 }

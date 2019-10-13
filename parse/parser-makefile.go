@@ -16,6 +16,7 @@ package parse
 import (
 	"github.com/sonatype-nexus-community/nancy/types"
 	"github.com/sonatype-nexus-community/cheque/audit"
+	"github.com/sonatype-nexus-community/cheque/oslibs"
   "os"
 	"io/ioutil"
 	"regexp"
@@ -49,7 +50,7 @@ func ParseMakefile(path string) (deps types.ProjectList, err error) {
 
 	{
 		// look for libs in path
-		r, _ := regexp.Compile(GetLibraryPathRegexPattern())
+		r, _ := regexp.Compile(oslibs.GetLibraryPathRegexPattern())
 		matches := r.FindAllString(s, -1)
 		if (len(matches) > 0) {
 			for _,lib := range matches {
@@ -58,5 +59,5 @@ func ParseMakefile(path string) (deps types.ProjectList, err error) {
 		}
 	}
 
-	return CreateBom(libPaths, libs, files)
+	return audit.CreateBom(libPaths, libs, files)
 }

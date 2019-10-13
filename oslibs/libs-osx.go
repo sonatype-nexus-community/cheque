@@ -25,8 +25,8 @@ import (
 )
 
 
-func GetOsxLibraryId(name string) (version string, err error) {
-  file, err := FindOsxLibFile(name)
+func getOsxLibraryId(name string) (version string, err error) {
+  file, err := findOsxLibFile(name)
 
   if (err == nil) {
     if (file == "") {
@@ -39,7 +39,7 @@ func GetOsxLibraryId(name string) (version string, err error) {
 		// 	return version, err
 		// }
 
-    return GetOsxSymlinkVersion(file)
+    return getOsxSymlinkVersion(file)
 
     // return GetOtoolVersion("lib" + name, file)
     return "", nil
@@ -67,7 +67,7 @@ func GetOsxLibraryId(name string) (version string, err error) {
  *
  * 	/usr/lib/libpam.2.dylib (compatibility version 3.0.0, current version 3.0.0)
  */
-func GetOtoolVersion(name string, file string) (version string, err error) {
+func getOtoolVersion(name string, file string) (version string, err error) {
 	outbytes, err := exec.Command("otool", "-L", file).Output()
 	if err != nil {
 		return "", err
@@ -83,18 +83,18 @@ func GetOtoolVersion(name string, file string) (version string, err error) {
 	return "", nil
 }
 
-func FindOsxLibFile(name string) (match string, err error) {
+func findOsxLibFile(name string) (match string, err error) {
 	if strings.HasSuffix(name, ".dylib") {
     if _, err := os.Stat(name); os.IsNotExist(err) {
       return "", err
     }
 		return name,nil
 	} else {
-		return FindLibFile("lib", name, ".dylib")
+		return findLibFile("lib", name, ".dylib")
 	}
 }
 
-func GetOsxSymlinkVersion(file string) (version string, err error) {
+func getOsxSymlinkVersion(file string) (version string, err error) {
 	path,err := filepath.EvalSymlinks(file)
 
 	if err != nil {
@@ -114,11 +114,11 @@ func GetOsxSymlinkVersion(file string) (version string, err error) {
 	return matches[1], nil
 }
 
-func GetOsxLibraryPathRegexPattern() (result string) {
+func getOsxLibraryPathRegexPattern() (result string) {
 	return "[a-zA-Z0-9_/\\.]+\\.dylib"
 }
 
 
-func GetOsxLibraryFileRegexPattern() (result string) {
+func getOsxLibraryFileRegexPattern() (result string) {
 	return "([a-zA-Z0-9_]+)\\.[0-9\\.]+\\.dylib"
 }

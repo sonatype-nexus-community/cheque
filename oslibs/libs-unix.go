@@ -25,14 +25,14 @@ import (
 	// "bytes"
 )
 
-func GetLinuxDistro() (name string) {
+func getLinuxDistro() (name string) {
 
 	return "Unknown";
 }
 
-func GetUnixLibraryId(name string) (project types.Projects, err error) {
+func getUnixLibraryId(name string) (project types.Projects, err error) {
   project = types.Projects{}
-	file, err := FindUnixLibFile(name)
+	file, err := findUnixLibFile(name)
 	// fmt.Fprintf(os.Stderr, "GetUnixLibraryVersion 1 %s\n", file)
 
   if (err == nil) {
@@ -66,7 +66,7 @@ func GetUnixLibraryId(name string) (project types.Projects, err error) {
 				}
 			}
 		}
-		project.Version,err = GetUnixSymlinkVersion(file)
+		project.Version,err = getUnixSymlinkVersion(file)
 		return project,err;
   }
 
@@ -88,7 +88,7 @@ func GetUnixLibraryId(name string) (project types.Projects, err error) {
   return project, nil
 }
 
-func FindUnixLibFile(name string) (match string, err error) {
+func findUnixLibFile(name string) (match string, err error) {
 	if strings.Contains(name, ".so.") || strings.HasSuffix(name, ".so") {
 		// fmt.Fprintf(os.Stderr, "BUH 1 %s\n", name)
     if _, err := os.Stat(name); os.IsNotExist(err) {
@@ -98,14 +98,14 @@ func FindUnixLibFile(name string) (match string, err error) {
 	} else {
 		// fmt.Fprintf(os.Stderr, "BUH 2 %s\n", name)
 
-		return FindLibFile("lib", name, ".so")
+		return findLibFile("lib", name, ".so")
 	}
 }
 
 /** In some cases the library is a symbolic link to a file with an embedded version
  * number. Try and extract a version from there.
  */
-func GetUnixSymlinkVersion(file string) (version string, err error) {
+func getUnixSymlinkVersion(file string) (version string, err error) {
 	path,err := filepath.EvalSymlinks(file)
 
 	// fmt.Fprintf(os.Stderr, "GetUnixSymlinkVersion 2 %s\n", path)
@@ -133,11 +133,11 @@ func GetUnixSymlinkVersion(file string) (version string, err error) {
 	return matches[1], nil
 }
 
-func GetUnixLibraryPathRegexPattern() (result string) {
+func getUnixLibraryPathRegexPattern() (result string) {
 	return "[a-zA-Z0-9_/\\.\\-]+\\.so\\.[a-zA-Z0-9_/\\.]+";
 }
 
 
-func GetUnixLibraryFileRegexPattern() (result string) {
+func getUnixLibraryFileRegexPattern() (result string) {
 	return "([a-zA-Z0-9_\\-]+)\\.so\\.[0-9\\.]+"
 }
