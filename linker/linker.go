@@ -15,15 +15,13 @@ package linker
 
 import (
 	"github.com/sonatype-nexus-community/cheque/audit"
+	"github.com/sonatype-nexus-community/cheque/oslibs"
 	"strings"
   "github.com/golang/glog"
 )
 
 func DoLink(args []string) (count int) {
-	libPaths := make(map[string]bool)
-	libPaths["/usr/lib/"] = true
-	libPaths["/usr/local/lib/"] = true
-	libPaths["/usr/lib/x86_64-linux-gnu/"] = true
+	libPaths := oslibs.GetLibPaths()
 	libs := make(map[string]bool)
 	files := make(map[string]bool)
 

@@ -141,3 +141,11 @@ func getUnixLibraryPathRegexPattern() (result string) {
 func getUnixLibraryFileRegexPattern() (result string) {
 	return "([a-zA-Z0-9_\\-]+)\\.so\\.[0-9\\.]+"
 }
+
+func getLinuxLibPaths() (map[string]bool) {
+	libPaths := make(map[string]bool)
+	libPaths["/usr/lib/"] = true
+	libPaths["/usr/local/lib/"] = true
+	libPaths["/usr/lib/x86_64-linux-gnu/"] = true
+	return libPaths
+}

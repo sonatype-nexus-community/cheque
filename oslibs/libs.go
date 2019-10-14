@@ -80,3 +80,16 @@ func GetCommandPath(cmd string) (path string) {
 	}
 	return path;
 }
+
+func GetLibPaths() (map[string]bool) {
+	if runtime.GOOS == "windows" {
+		return make(map[string]bool)
+  }
+
+	if runtime.GOOS == "darwin" {
+    return getOsxLibPaths()
+  }
+
+	// Fall back to unix variant
+  return getLinuxLibPaths()
+}

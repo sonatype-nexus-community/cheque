@@ -122,3 +122,10 @@ func getOsxLibraryPathRegexPattern() (result string) {
 func getOsxLibraryFileRegexPattern() (result string) {
 	return "([a-zA-Z0-9_]+)\\.[0-9\\.]+\\.dylib"
 }
+
+func getOsxLibPaths() (map[string]bool) {
+	libPaths := make(map[string]bool)
+	libPaths["/usr/lib/"] = true
+	libPaths["/usr/local/lib/"] = true
+	return libPaths
+}
