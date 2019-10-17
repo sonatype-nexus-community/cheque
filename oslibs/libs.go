@@ -20,8 +20,6 @@ import (
 	"os"
 )
 
-var libpaths = []string {"/usr/lib/", "/usr/local/lib/", "/usr/lib/x86_64-linux-gnu/"}
-
 // Depending on the operating system, we need to find library versions in
 // different ways.
 //
