@@ -17,7 +17,7 @@ import (
 	"github.com/sonatype-nexus-community/cheque/audit"
 	"github.com/sonatype-nexus-community/cheque/oslibs"
 	"strings"
-  "github.com/golang/glog"
+	"github.com/sonatype-nexus-community/cheque/logger"
 )
 
 func DoLink(args []string) (count int) {
@@ -29,12 +29,12 @@ func DoLink(args []string) (count int) {
     arg := args[i]
     if (strings.HasPrefix(arg, "-l")) {
       if (len(arg) > 2) {
-        glog.Info("lib: " + arg)
+        logger.Info("lib: " + arg)
         libs[arg[2:]] = true
       } else {
         i++
         arg := args[i]
-        glog.Info("lib: " + arg)
+        logger.Info("lib: " + arg)
 				libs[arg] = true
       }
       continue;
@@ -43,12 +43,12 @@ func DoLink(args []string) (count int) {
     // Additional library path
     if (strings.HasPrefix(arg, "-L")) {
       if (len(arg) > 2) {
-        glog.Info("LibPath: " + arg)
+        logger.Info("LibPath: " + arg)
 				libPaths[arg[2:]] = true
       } else {
         i++
         arg := args[i]
-        glog.Info("LibPath: " + arg)
+        logger.Info("LibPath: " + arg)
 				libPaths[arg] = true
       }
       continue;
@@ -63,27 +63,27 @@ func DoLink(args []string) (count int) {
     // If we get here, it is a file of some sort
     // -----------------------------------------
     if (strings.HasSuffix(arg, ".dylib")) {
-      glog.Info("OSX DLL: " + arg)
+      logger.Info("OSX DLL: " + arg)
 			files[arg] = true
       continue;
     }
     if (strings.HasSuffix(arg, ".so")) {
-      glog.Info("Linux DLL: " + arg)
+      logger.Info("Linux DLL: " + arg)
 			files[arg] = true
       continue;
     }
     if (strings.Contains(arg, ".so.")) {
-      glog.Info("Linux DLL: " + arg)
+      logger.Info("Linux DLL: " + arg)
 			files[arg] = true
       continue;
     }
     if (strings.HasSuffix(arg, ".a")) {
-      glog.Info("Static lib: " + arg)
+      logger.Info("Static lib: " + arg)
 			files[arg] = true
       continue;
     }
     if (strings.Contains(arg, ".a.")) {
-      glog.Info("Static lib: " + arg)
+      logger.Info("Static lib: " + arg)
 			files[arg] = true
       continue;
     }

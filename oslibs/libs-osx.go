@@ -19,10 +19,19 @@ import (
 	"strings"
   "regexp"
   "path/filepath"
+	"runtime"
+	"flag"
 
 	// Required to run external commands
 	"os/exec"
 )
+
+func getOsxArchiveId(name string) (version string, err error) {
+	_, _ = fmt.Fprintf(os.Stderr, "Unsupported OS: %s\n", runtime.GOOS)
+	flag.PrintDefaults()
+	os.Exit(2)
+	return "", nil
+}
 
 
 func getOsxLibraryId(name string) (version string, err error) {

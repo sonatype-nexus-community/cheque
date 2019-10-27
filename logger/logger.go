@@ -11,28 +11,26 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package oslibs
+package logger
 
 import (
-	"fmt"
-	"os"
-	"flag"
-
-	// Required to get OS
-	"runtime"
+  "fmt"
+  "os"
 )
 
-
-func getWindowsLibraryId(name string) (version string, err error) {
-	_, _ = fmt.Fprintf(os.Stderr, "Unsupported OS: %s\n", runtime.GOOS)
-	flag.PrintDefaults()
-	os.Exit(2)
-	return "", nil
+func Info(msg string) {
+  fmt.Fprintf(os.Stdout, "Cheque INFO: %s\n", msg)
 }
 
-func getWindowsArchiveId(name string) (version string, err error) {
-	_, _ = fmt.Fprintf(os.Stderr, "Unsupported OS: %s\n", runtime.GOOS)
-	flag.PrintDefaults()
-	os.Exit(2)
-	return "", nil
+func Warning(msg string) {
+  fmt.Fprintf(os.Stdout, "Cheque WARNING: %s\n", msg)
+}
+
+func Error(msg string) {
+  fmt.Fprintf(os.Stdout, "Cheque ERROR: %s\n", msg)
+}
+
+func Fatal(msg string) {
+  fmt.Fprintf(os.Stdout, "Cheque FATAL: %s\n", msg)
+  os.Exit(99)
 }

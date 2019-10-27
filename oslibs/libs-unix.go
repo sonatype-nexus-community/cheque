@@ -15,12 +15,14 @@ package oslibs
 
 import (
 	"github.com/sonatype-nexus-community/nancy/types"
+	"github.com/sonatype-nexus-community/cheque/logger"
 	"regexp"
 	"os"
 	"strings"
 	// "fmt"
 	"path/filepath"
 	"errors"
+	"bufio"
 
 	"os/exec"
 	// "bytes"
@@ -29,6 +31,63 @@ import (
 func getLinuxDistro() (name string) {
 
 	return "Unknown";
+}
+
+
+func getUnixArchiveId(name string) (project types.Projects, err error) {
+  // fmt.Fprintf(os.Stderr, "getUnixArchiveId 1: %s\n", name)
+  project = types.Projects{}
+	file, err := findUnixLibFile(name)
+	// fmt.Fprintf(os.Stderr, "getUnixArchiveId 1 %s\n", file)
+	// fmt.Fprintf(os.Stderr, "getUnixArchiveId 2: %s\n", file)
+
+  if (err == nil) {
+		// fmt.Fprintf(os.Stderr, "getUnixArchiveId 3: %s\n", file)
+    if (file == "") {
+      return project, nil
+    }
+
+		// fmt.Fprintf(os.Stderr, "getUnixArchiveId 2 %s\n", file)
+		// distro := strings.ToLower(GetLinuxDistro())
+		// fmt.Fprintf(os.Stderr, "getUnixArchiveId 3 %s\n", distro)
+
+		// try dpkg
+		debProject,err := getDebianPackage(file)
+		if err == nil {
+			return debProject,err
+		}
+		// TODO: try rpm
+
+		// fmt.Fprintf(os.Stderr, "getUnixArchiveId 4: %s\n", file)
+
+		// Look for pkgconfig files related to this file
+		pkgConfigProject,err := getPkgConfigVersion(file)
+		if err == nil {
+			return pkgConfigProject,err
+		}
+
+		// Fallback to looking at the file version, if we can find one
+		project.Version,err = getUnixSymlinkVersion(file)
+		// fmt.Fprintf(os.Stderr, "getUnixArchiveId 1: %s\n", project.Version)
+		return project,err;
+  }
+
+  // Try to fallback to pulling a version out of the filename
+  if strings.HasSuffix(name, ".so") {
+    // Extract a version
+    r, err := regexp.Compile("\\.([0-9\\.]+)\\.so")
+    if err != nil {
+      return project, err
+    }
+    matches := r.FindStringSubmatch(name)
+    if matches == nil {
+      return project, nil
+    }
+		project.Version = matches[1]
+    return project, nil
+  }
+
+  return project, nil
 }
 
 func getUnixLibraryId(name string) (project types.Projects, err error) {
@@ -80,6 +139,45 @@ func getUnixLibraryId(name string) (project types.Projects, err error) {
   return project, nil
 }
 
+func getPkgConfigVersion(fpath string) (project types.Projects, err error) {
+	project = types.Projects{}
+
+	path := filepath.Dir(fpath)
+	base := filepath.Base(fpath)
+	extension := filepath.Ext(base)
+	base = base[0:len(base)-len(extension)]
+	path = path + "/pkgconfig/" + base + ".pc";
+
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return project, errors.New("PkgConfig: Cannot find package config")
+	}
+	// fmt.Fprintf(os.Stderr, "getPkgConfigVersion 1: %s\n", path)
+
+	file, err := os.Open(path)
+	if err != nil {
+	    logger.Fatal(err.Error())
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.HasPrefix(line, "Name:") {
+			project.Name = strings.TrimSpace(line[5:])
+		} else if strings.HasPrefix(line, "Version:") {
+			project.Version = strings.TrimSpace(line[8:])
+		}
+	}
+
+	// fmt.Fprintf(os.Stderr, "getPkgConfigVersion 2: %s %s\n", project.Name, project.Version)
+
+	if err := scanner.Err(); err != nil {
+	    logger.Fatal(err.Error())
+	}
+
+	return project, nil
+}
+
 func getDebianPackage(file string) (project types.Projects, err error) {
 	project = types.Projects{}
 
@@ -108,7 +206,7 @@ func getDebianPackage(file string) (project types.Projects, err error) {
 }
 
 func findUnixLibFile(name string) (match string, err error) {
-	if strings.Contains(name, ".so.") || strings.HasSuffix(name, ".so") {
+	if strings.Contains(name, ".so.") || strings.HasSuffix(name, ".so") || strings.HasSuffix(name, ".a") {
 		// fmt.Fprintf(os.Stderr, "BUH 1 %s\n", name)
     if _, err := os.Stat(name); os.IsNotExist(err) {
       return "", err
@@ -156,6 +254,10 @@ func getUnixLibraryPathRegexPattern() (result string) {
 
 func getUnixLibraryFileRegexPattern() (result string) {
 	return "([a-zA-Z0-9_\\-]+)\\.so\\.[0-9\\.]+"
+}
+
+func getUnixArchiveFileRegexPattern() (result string) {
+	return "([a-zA-Z0-9_\\-]+)\\.a"
 }
 
 /** FIXME: Use gcc/ld to get search Paths

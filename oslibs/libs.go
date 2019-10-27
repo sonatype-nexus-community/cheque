@@ -42,6 +42,22 @@ func GetLibraryId(name string) (project types.Projects, err error) {
   return project, err;
 }
 
+func GetArchiveId(name string) (project types.Projects, err error) {
+  project = types.Projects{}
+
+  switch (runtime.GOOS) {
+    case "windows":
+        project.Version,err = getWindowsArchiveId(name)
+
+    case "darwin":
+        project.Version,err = getOsxArchiveId(name)
+
+    default:
+      return getUnixArchiveId(name)
+  }
+  return project, err;
+}
+
 func GetLibraryPathRegexPattern() (result string) {
 
 	if runtime.GOOS == "windows" {
@@ -55,6 +71,18 @@ func GetLibraryPathRegexPattern() (result string) {
   return getUnixLibraryPathRegexPattern()
 }
 
+
+func GetArchiveFileRegexPattern() (result string) {
+
+	if runtime.GOOS == "windows" {
+  }
+
+	if runtime.GOOS == "darwin" {
+  }
+
+	// Fall back to unix variant
+  return getUnixArchiveFileRegexPattern()
+}
 
 func GetLibraryFileRegexPattern() (result string) {
 

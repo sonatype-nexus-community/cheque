@@ -16,19 +16,21 @@ package audit
 import (
   "github.com/sonatype-nexus-community/cheque/oslibs"
   "github.com/sonatype-nexus-community/cheque/packages"
+  "github.com/sonatype-nexus-community/cheque/logger"
   "github.com/sonatype-nexus-community/nancy/types"
   "github.com/sonatype-nexus-community/nancy/customerrors"
   "github.com/sonatype-nexus-community/nancy/audit"
   "github.com/sonatype-nexus-community/nancy/ossindex"
-  "github.com/golang/glog"
 	"regexp"
   "strings"
+  // "fmt"
+  // "os"
 )
 
 func ProcessPaths(libPaths []string, libs []string, files []string) (count int) {
-  // glog.Info("libPaths: " + strings.Join(libPaths, ", "))
-  // glog.Info("libs: " + strings.Join(libs, ", "))
-  // glog.Info("files: " + strings.Join(files, ", "))
+  // logger.Info("libPaths: " + strings.Join(libPaths, ", "))
+  // logger.Info("libs: " + strings.Join(libs, ", "))
+  // logger.Info("files: " + strings.Join(files, ", "))
 
   bom := packages.Make{}
   bom.ProjectList, _ = CreateBom(libPaths, libs, files)
@@ -38,7 +40,7 @@ func ProcessPaths(libPaths []string, libs []string, files []string) (count int) 
 func CreateBom(_ []string, libs []string, files []string) (deps types.ProjectList, err error) {
   // Library names
   for _,lib := range libs {
-    // glog.Info("CreateBom 1: " + lib)
+    // logger.Info("CreateBom 1: " + lib)
     project, err := oslibs.GetLibraryId(lib)
     customerrors.Check(err, "Error finding file/version")
 
@@ -49,26 +51,49 @@ func CreateBom(_ []string, libs []string, files []string) (deps types.ProjectLis
         }
       deps.Projects = append(deps.Projects, project)
     } else {
-      glog.Warning("Cannot find " + lib + " library... skipping")
+      logger.Warning("Cannot find " + lib + " library... skipping")
     }
   }
 
   // Paths to libraries
   for _,lib := range files {
-    // glog.Info("CreateBom 2: " + lib)
+    // logger.Info("CreateBom 2: " + lib)
+
     rn, _ := regexp.Compile(oslibs.GetLibraryFileRegexPattern())
     nameMatch := rn.FindStringSubmatch(lib)
+    if nameMatch != nil {
+      // This is a dynamic library (DLL)
+      // logger.Info("CreateBom 2: " + fmt.Sprintf("%v", nameMatch))
 
-    project, err := oslibs.GetLibraryId(lib)
-    customerrors.Check(err, "Error finding file/version")
+      project, err := oslibs.GetLibraryId(lib)
+      customerrors.Check(err, "Error finding file/version")
 
-    if (project.Version != "") {
-      if (project.Name == "") {
-        project.Name = nameMatch[1];
+      if (project.Version != "") {
+        if (project.Name == "") {
+          project.Name = nameMatch[1];
+        }
+        deps.Projects = append(deps.Projects, project)
+      } else {
+        logger.Warning("Cannot find " + lib + " library... skipping")
       }
-      deps.Projects = append(deps.Projects, project)
     } else {
-      glog.Warning("Cannot find " + lib + " library... skipping")
+      // This is a static library (archive)
+      rn, _ := regexp.Compile(oslibs.GetArchiveFileRegexPattern())
+      nameMatch := rn.FindStringSubmatch(lib)
+
+      // logger.Info("CreateBom 3: " + fmt.Sprintf("%v", nameMatch))
+
+      project, err := oslibs.GetArchiveId(lib)
+      customerrors.Check(err, "Error finding file/version")
+
+      if (project.Version != "") {
+        if (project.Name == "") {
+          project.Name = nameMatch[1];
+        }
+        deps.Projects = append(deps.Projects, project)
+      } else {
+        logger.Warning("Cannot find " + lib + " archive... skipping")
+      }
     }
   }
   return deps,nil
@@ -86,6 +111,8 @@ func AuditBom(deps types.ProjectList) (count int){
   purls = append(purls, conanPurls...)
   purls = append(purls, debPurls...)
   purls = append(purls, rpmPurls...)
+
+  // fmt.Fprintf(os.Stderr, "AUDIT: %v\n", purls)
 
   coordinates, err := ossindex.AuditPackages(purls)
   customerrors.Check(err, "Error auditing packages")
@@ -114,7 +141,6 @@ func AuditBom(deps types.ProjectList) (count int){
     // v.Coordinates = "pkg:cpp/" + k
     results = append(results, v)
   }
-
   count = audit.LogResults(false, packageCount, results)
   return count
 }
@@ -165,9 +191,10 @@ func ConanPurls(purls []string) (results []string, err error) {
 		tokens := strings.Split(purl, ":")
 		tokens = strings.Split(tokens[1], "/")
 
-		// For now lets assume bincrafters. This is actually only one namespace
+		// For now lets assume conan OR bincrafters. These are actually only two namespaces
 		// of possibly many. We will want to get more clever here.
-		results = append(results, "pkg:conan/bincrafters/" + tokens[len(tokens) - 1]);
+    results = append(results, "pkg:conan/conan/" + tokens[len(tokens) - 1]);
+    results = append(results, "pkg:conan/bincrafters/" + tokens[len(tokens) - 1]);
 	}
 	return results, nil
 }
