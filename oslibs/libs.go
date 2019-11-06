@@ -15,10 +15,68 @@ package oslibs
 
 import (
 	"github.com/sonatype-nexus-community/nancy/types"
-
+	// "github.com/sonatype-nexus-community/cheque/logger"
+  "errors"
 	"runtime"
 	"os"
+	"fmt"
 )
+
+func GetLibraryPath(name string) (path string, err error) {
+	switch (runtime.GOOS) {
+		case "windows":
+				_, _ = fmt.Fprintf(os.Stderr, "Unsupported OS: %s\n", runtime.GOOS)
+				os.Exit(2)
+				return name, errors.New("GetLibraryPath: Unsupported OS")
+
+		case "darwin":
+				_, _ = fmt.Fprintf(os.Stderr, "Unsupported OS: %s\n", runtime.GOOS)
+				os.Exit(2)
+			return name, errors.New("GetLibraryPath: Unsupported OS")
+
+		default:
+			file, err := findUnixLibFile(name)
+			if (err != nil || file == "") {
+				return file, errors.New("GetLibraryPath: Cannot find path to " + name)
+			}
+
+			return file, err
+	}
+}
+
+func GetLibraryName(name string) (path string, err error) {
+	switch (runtime.GOOS) {
+		case "windows":
+				_, _ = fmt.Fprintf(os.Stderr, "Unsupported OS: %s\n", runtime.GOOS)
+				os.Exit(2)
+				return name, errors.New("GetLibraryName: Unsupported OS")
+
+		case "darwin":
+				_, _ = fmt.Fprintf(os.Stderr, "Unsupported OS: %s\n", runtime.GOOS)
+				os.Exit(2)
+			return name, errors.New("GetLibraryName: Unsupported OS")
+
+		default:
+			return getUnixLibraryName(name)
+	}
+}
+
+func GetLibraryVersion(name string) (path string, err error) {
+	switch (runtime.GOOS) {
+		case "windows":
+				_, _ = fmt.Fprintf(os.Stderr, "Unsupported OS: %s\n", runtime.GOOS)
+				os.Exit(2)
+				return name, errors.New("GetLibraryVersion: Unsupported OS")
+
+		case "darwin":
+				_, _ = fmt.Fprintf(os.Stderr, "Unsupported OS: %s\n", runtime.GOOS)
+				os.Exit(2)
+			return name, errors.New("GetLibraryVersion: Unsupported OS")
+
+		default:
+			return getUnixLibraryVersion(name)
+	}
+}
 
 // Depending on the operating system, we need to find library versions in
 // different ways.

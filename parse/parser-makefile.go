@@ -15,8 +15,8 @@ package parse
 
 import (
 	"github.com/sonatype-nexus-community/nancy/types"
-	"github.com/sonatype-nexus-community/cheque/audit"
 	"github.com/sonatype-nexus-community/cheque/oslibs"
+	"github.com/sonatype-nexus-community/cheque/bom"
   "os"
 	"io/ioutil"
 	"regexp"
@@ -59,5 +59,5 @@ func parseMakefile(path string) (deps types.ProjectList, err error) {
 		}
 	}
 
-	return audit.CreateBom(libPaths, libs, files)
+	return bom.CreateBom(libPaths, libs, files)
 }

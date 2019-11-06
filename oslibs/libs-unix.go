@@ -28,11 +28,24 @@ import (
 	// "bytes"
 )
 
+/** Given a file path, extract a library name from the path.
+ */
+func getUnixLibraryName(name string) (path string, err error) {
+	path, _, err = getUnixLibraryNameAndVersion(name)
+	return path, err
+}
+
+/** Given a file path, extract a library name from the path.
+ */
+func getUnixLibraryVersion(name string) (version string, err error) {
+	_, version, err = getUnixLibraryNameAndVersion(name)
+	return version, err
+}
+
 func getLinuxDistro() (name string) {
 
 	return "Unknown";
 }
-
 
 func getUnixArchiveId(name string) (project types.Projects, err error) {
   // fmt.Fprintf(os.Stderr, "getUnixArchiveId 1: %s\n", name)
@@ -217,6 +230,37 @@ func findUnixLibFile(name string) (match string, err error) {
 
 		return findLibFile("lib", name, ".so")
 	}
+}
+
+func getUnixLibraryNameAndVersion(path string) (name string, version string, err error) {
+
+	// Extract a name
+	fname := filepath.Base(path)
+	r, _ := regexp.Compile("^(.*)\\.so\\.([0-9\\.]+)")
+	matches := r.FindStringSubmatch(path)
+	if matches == nil {
+		r, _ = regexp.Compile("^(.*)\\.([0-9\\.]+)\\.so")
+		matches = r.FindStringSubmatch(path)
+	}
+	if matches == nil {
+		return "", "", errors.New("getUnixLibraryNameAndVersion: cannot get name from " + path + " (" + fname + ")")
+	}
+	name = matches[1]
+
+	// Extract a version
+	r, _ = regexp.Compile("\\.so\\.([0-9\\.]+)")
+	matches = r.FindStringSubmatch(path)
+	if matches != nil {
+		return name, matches[1], nil
+	}
+
+	r, _ = regexp.Compile("([0-9\\.]+)\\.so")
+	matches = r.FindStringSubmatch(path)
+	if matches != nil {
+		return name, matches[1], nil
+	}
+
+	return name, "", errors.New("getUnixLibraryNameAndVersion: cannot get version from " + fname)
 }
 
 /** In some cases the library is a symbolic link to a file with an embedded version

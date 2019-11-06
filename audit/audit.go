@@ -14,14 +14,14 @@
 package audit
 
 import (
-  "github.com/sonatype-nexus-community/cheque/oslibs"
   "github.com/sonatype-nexus-community/cheque/packages"
+  "github.com/sonatype-nexus-community/cheque/bom"
   "github.com/sonatype-nexus-community/cheque/logger"
   "github.com/sonatype-nexus-community/nancy/types"
   "github.com/sonatype-nexus-community/nancy/customerrors"
   "github.com/sonatype-nexus-community/nancy/audit"
   "github.com/sonatype-nexus-community/nancy/ossindex"
-	"regexp"
+	// "regexp"
   "strings"
   // "fmt"
   // "os"
@@ -32,77 +32,19 @@ func ProcessPaths(libPaths []string, libs []string, files []string) (count int) 
   // logger.Info("libs: " + strings.Join(libs, ", "))
   // logger.Info("files: " + strings.Join(files, ", "))
 
-  bom := packages.Make{}
-  bom.ProjectList, _ = CreateBom(libPaths, libs, files)
-  return AuditBom(bom.ProjectList)
-}
-
-func CreateBom(_ []string, libs []string, files []string) (deps types.ProjectList, err error) {
-  // Library names
-  for _,lib := range libs {
-    // logger.Info("CreateBom 1: " + lib)
-    project, err := oslibs.GetLibraryId(lib)
-    customerrors.Check(err, "Error finding file/version")
-
-    if (project.Version != "") {
-      // Add the simple name
-        if (project.Name == "") {
-          project.Name = "lib" + lib
-        }
-      deps.Projects = append(deps.Projects, project)
-    } else {
-      logger.Warning("Cannot find " + lib + " library... skipping")
-    }
-  }
-
-  // Paths to libraries
-  for _,lib := range files {
-    // logger.Info("CreateBom 2: " + lib)
-
-    rn, _ := regexp.Compile(oslibs.GetLibraryFileRegexPattern())
-    nameMatch := rn.FindStringSubmatch(lib)
-    if nameMatch != nil {
-      // This is a dynamic library (DLL)
-      // logger.Info("CreateBom 2: " + fmt.Sprintf("%v", nameMatch))
-
-      project, err := oslibs.GetLibraryId(lib)
-      customerrors.Check(err, "Error finding file/version")
-
-      if (project.Version != "") {
-        if (project.Name == "") {
-          project.Name = nameMatch[1];
-        }
-        deps.Projects = append(deps.Projects, project)
-      } else {
-        logger.Warning("Cannot find " + lib + " library... skipping")
-      }
-    } else {
-      // This is a static library (archive)
-      rn, _ := regexp.Compile(oslibs.GetArchiveFileRegexPattern())
-      nameMatch := rn.FindStringSubmatch(lib)
-
-      // logger.Info("CreateBom 3: " + fmt.Sprintf("%v", nameMatch))
-
-      project, err := oslibs.GetArchiveId(lib)
-      customerrors.Check(err, "Error finding file/version")
-
-      if (project.Version != "") {
-        if (project.Name == "") {
-          project.Name = nameMatch[1];
-        }
-        deps.Projects = append(deps.Projects, project)
-      } else {
-        logger.Warning("Cannot find " + lib + " archive... skipping")
-      }
-    }
-  }
-  return deps,nil
+  myBom := packages.Make{}
+  myBom.ProjectList, _ = bom.CreateBom(libPaths, libs, files)
+  return AuditBom(myBom.ProjectList)
 }
 
 func AuditBom(deps types.ProjectList) (count int){
   var canonicalPurls,_ = RootPurls(deps)
   var purls,_ = DefinedPurls(deps)
   var packageCount = CountDistinctLibraries(append(canonicalPurls, purls...))
+
+  if (packageCount == 0) {
+    return 0;
+  }
 
   // For speed purposes, check all possible types simultaneously
   var conanPurls,_ = ConanPurls(canonicalPurls)
@@ -135,10 +77,13 @@ func AuditBom(deps types.ProjectList) (count int){
     lookup[name] = coordinate
   }
 
+  logger.Info("TEST 3")
+
   // Now report the final/best value found for the libraries
   for _, v := range lookup {
     // Uncomment this to hide the source of the vulnerability
     // v.Coordinates = "pkg:cpp/" + k
+    logger.Info(v.Coordinates)
     results = append(results, v)
   }
   count = audit.LogResults(false, packageCount, results)

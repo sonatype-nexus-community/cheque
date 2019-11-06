@@ -1,4 +1,0 @@
-
-
-all:
-	gcc -lau /usr/lib/x86_64-linux-gnu/libpng.so.3 hello.c
