@@ -77,8 +77,6 @@ func AuditBom(deps types.ProjectList) (count int){
     lookup[name] = coordinate
   }
 
-  logger.Info("TEST 3")
-
   // Now report the final/best value found for the libraries
   for _, v := range lookup {
     // Uncomment this to hide the source of the vulnerability

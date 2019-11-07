@@ -151,24 +151,51 @@ func CreateBom(_ []string, libs []string, files []string) (deps types.ProjectLis
 
 func getDllCoordinate(path string) (project types.Projects, err error) {
   project = types.Projects{}
+  var collector Collector
   // Check each collector in turn to see which gives us a good result.
-  pc := path_collector{path: path}
-  _, err = pc.GetPurl()
+
+  // pkgconfig_collector
+
+  // rpm_collector
+  collector = rpm_collector{path: path}
+  _, err = collector.GetPurl()
   if (err == nil) {
-    project.Name,_ = pc.GetName();
-    project.Version,_ = pc.GetVersion();
+    project.Name,_ = collector.GetName();
+    project.Version,_ = collector.GetVersion();
+    return project, err
   }
+
+  // deb_collector
+
+  // path_collector
+  collector = path_collector{path: path}
+  _, err = collector.GetPurl()
+  if (err == nil) {
+    project.Name,_ = collector.GetName();
+    project.Version,_ = collector.GetVersion();
+    return project, err
+  }
+
+  // name_collector
+
   return project, err
 }
 
 func getArchiveCoordinate(path string) (project types.Projects, err error) {
   project = types.Projects{}
   // Check each collector in turn to see which gives us a good result.
+
+  // pkgconfig_collector
   pc := pkgconfig_collector{path: path}
   _, err = pc.GetPurl()
   if (err == nil) {
     project.Name,_ = pc.GetName();
     project.Version,_ = pc.GetVersion();
   }
+
+  // rpm_collector
+
+  // deb_collector
+
   return project, err
 }
