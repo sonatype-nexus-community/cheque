@@ -83,11 +83,17 @@ func CreateBom(_ []string, libs []string, files []string) (deps types.ProjectLis
        continue
      }
 
-     // Minor repair to names to make them consistent
-     if (!strings.HasPrefix(project.Name, "lib")) {
-       project.Name = "lib" + project.Name
-     }
+     // We need both the "lib<name>" and "<name>" versions, since which is used
+     // depends on the repo.
      deps.Projects = append(deps.Projects, project)
+     name := project.Name
+     if (!strings.HasPrefix(name, "lib")) {
+       project.Name = "lib" + name
+       deps.Projects = append(deps.Projects, project)
+     } else {
+       project.Name = name[3:]
+       deps.Projects = append(deps.Projects, project)
+     }
 
      // // logger.Info("CreateBom 2: " + fmt.Sprintf("%v", nameMatch))
      //
@@ -109,11 +115,17 @@ func CreateBom(_ []string, libs []string, files []string) (deps types.ProjectLis
        continue
      }
 
-     // Minor repair to names to make them consistent
-     if (!strings.HasPrefix(project.Name, "lib")) {
-       project.Name = "lib" + project.Name
-     }
+     // We need both the "lib<name>" and "<name>" versions, since which is used
+     // depends on the repo.
      deps.Projects = append(deps.Projects, project)
+     name := project.Name
+     if (!strings.HasPrefix(name, "lib")) {
+       project.Name = "lib" + name
+       deps.Projects = append(deps.Projects, project)
+     } else {
+       project.Name = name[3:]
+       deps.Projects = append(deps.Projects, project)
+     }
 
      // // This is a static library (archive)
      // rn, _ := regexp.Compile(oslibs.GetArchiveFileRegexPattern())
