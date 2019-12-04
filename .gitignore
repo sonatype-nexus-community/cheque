@@ -3,3 +3,7 @@ vendor
 .DS_Store
 a.out
 cheque
+cbins
+linux
+osx
+example.list

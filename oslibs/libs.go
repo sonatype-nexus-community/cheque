@@ -30,16 +30,17 @@ func GetLibraryPath(name string) (path string, err error) {
 				return name, errors.New("GetLibraryPath: Unsupported OS")
 
 		case "darwin":
-				_, _ = fmt.Fprintf(os.Stderr, "Unsupported OS: %s\n", runtime.GOOS)
-				os.Exit(2)
-			return name, errors.New("GetLibraryPath: Unsupported OS")
+			file, err := findOsxLibFile(name)
+			if (err != nil || file == "") {
+				return file, errors.New("GetLibraryPath: Cannot find path to " + name)
+			}
+			return file, err
 
 		default:
 			file, err := findUnixLibFile(name)
 			if (err != nil || file == "") {
 				return file, errors.New("GetLibraryPath: Cannot find path to " + name)
 			}
-
 			return file, err
 	}
 }
@@ -52,9 +53,7 @@ func GetLibraryName(name string) (path string, err error) {
 				return name, errors.New("GetLibraryName: Unsupported OS")
 
 		case "darwin":
-				_, _ = fmt.Fprintf(os.Stderr, "Unsupported OS: %s\n", runtime.GOOS)
-				os.Exit(2)
-			return name, errors.New("GetLibraryName: Unsupported OS")
+			return getOsxLibraryName(name)
 
 		default:
 			return getUnixLibraryName(name)
@@ -69,9 +68,7 @@ func GetLibraryVersion(name string) (path string, err error) {
 				return name, errors.New("GetLibraryVersion: Unsupported OS")
 
 		case "darwin":
-				_, _ = fmt.Fprintf(os.Stderr, "Unsupported OS: %s\n", runtime.GOOS)
-				os.Exit(2)
-			return name, errors.New("GetLibraryVersion: Unsupported OS")
+			return getOsxLibraryVersion(name)
 
 		default:
 			return getUnixLibraryVersion(name)

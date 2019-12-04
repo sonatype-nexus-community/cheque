@@ -21,13 +21,49 @@ import (
   "path/filepath"
 	"runtime"
 	"flag"
+	"errors"
 
 	// Required to run external commands
 	"os/exec"
 )
 
+/** Given a file path, extract a library name from the path.
+ */
+func getOsxLibraryName(name string) (path string, err error) {
+	path, _, err = getOsxLibraryNameAndVersion(name)
+	return path, err
+}
+
+/** Given a file path, extract a library name from the path.
+ */
+func getOsxLibraryVersion(name string) (version string, err error) {
+	_, version, err = getOsxLibraryNameAndVersion(name)
+	return version, err
+}
+
+func getOsxLibraryNameAndVersion(path string) (name string, version string, err error) {
+
+	// Extract a name
+	fname := filepath.Base(path)
+	r, _ := regexp.Compile("^(.*)\\.([0-9\\.]+)\\.dylib")
+	matches := r.FindStringSubmatch(path)
+	if matches == nil {
+		return "", "", errors.New("getOsxLibraryNameAndVersion: cannot get name from " + path + " (" + fname + ")")
+	}
+	name = matches[1]
+
+	// Extract a version
+	r, _ = regexp.Compile("\\.([0-9\\.]+)\\.dylib")
+	matches = r.FindStringSubmatch(path)
+	if matches != nil {
+		return name, matches[1], nil
+	}
+
+	return name, "", errors.New("getOsxLibraryNameAndVersion: cannot get version from " + fname)
+}
+
 func getOsxArchiveId(name string) (version string, err error) {
-	_, _ = fmt.Fprintf(os.Stderr, "Unsupported OS: %s\n", runtime.GOOS)
+	_, _ = fmt.Fprintf(os.Stderr, "getOsxArchiveId; Unsupported OS: %s\n", runtime.GOOS)
 	flag.PrintDefaults()
 	os.Exit(2)
 	return "", nil
