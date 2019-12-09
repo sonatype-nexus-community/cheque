@@ -47,111 +47,6 @@ func getLinuxDistro() (name string) {
 	return "Unknown";
 }
 
-func getUnixArchiveId(name string) (project types.Projects, err error) {
-  // fmt.Fprintf(os.Stderr, "getUnixArchiveId 1: %s\n", name)
-  project = types.Projects{}
-	file, err := findUnixLibFile(name)
-	// fmt.Fprintf(os.Stderr, "getUnixArchiveId 1 %s\n", file)
-	// fmt.Fprintf(os.Stderr, "getUnixArchiveId 2: %s\n", file)
-
-  if (err == nil) {
-		// fmt.Fprintf(os.Stderr, "getUnixArchiveId 3: %s\n", file)
-    if (file == "") {
-      return project, nil
-    }
-
-		// fmt.Fprintf(os.Stderr, "getUnixArchiveId 2 %s\n", file)
-		// distro := strings.ToLower(GetLinuxDistro())
-		// fmt.Fprintf(os.Stderr, "getUnixArchiveId 3 %s\n", distro)
-
-		// try dpkg
-		debProject,err := getDebianPackage(file)
-		if err == nil {
-			return debProject,err
-		}
-		// TODO: try rpm
-
-		// fmt.Fprintf(os.Stderr, "getUnixArchiveId 4: %s\n", file)
-
-		// Look for pkgconfig files related to this file
-		pkgConfigProject,err := getPkgConfigVersion(file)
-		if err == nil {
-			return pkgConfigProject,err
-		}
-
-		// Fallback to looking at the file version, if we can find one
-		project.Version,err = getUnixSymlinkVersion(file)
-		// fmt.Fprintf(os.Stderr, "getUnixArchiveId 1: %s\n", project.Version)
-		return project,err;
-  }
-
-  // Try to fallback to pulling a version out of the filename
-  if strings.HasSuffix(name, ".so") {
-    // Extract a version
-    r, err := regexp.Compile("\\.([0-9\\.]+)\\.so")
-    if err != nil {
-      return project, err
-    }
-    matches := r.FindStringSubmatch(name)
-    if matches == nil {
-      return project, nil
-    }
-		project.Version = matches[1]
-    return project, nil
-  }
-
-  return project, nil
-}
-
-func getUnixLibraryId(name string) (project types.Projects, err error) {
-  // fmt.Fprintf(os.Stderr, "getUnixLibraryId 1: %s\n", name)
-  project = types.Projects{}
-	file, err := findUnixLibFile(name)
-	// fmt.Fprintf(os.Stderr, "GetUnixLibraryVersion 1 %s\n", file)
-	// fmt.Fprintf(os.Stderr, "getUnixLibraryId 2: %s\n", file)
-
-  if (err == nil) {
-		// fmt.Fprintf(os.Stderr, "getUnixLibraryId 3: %s\n", file)
-    if (file == "") {
-      return project, nil
-    }
-
-		// fmt.Fprintf(os.Stderr, "GetUnixLibraryVersion 2 %s\n", file)
-		// distro := strings.ToLower(GetLinuxDistro())
-		// fmt.Fprintf(os.Stderr, "GetUnixLibraryVersion 3 %s\n", distro)
-
-		// try dpkg
-		debProject,err := getDebianPackage(file)
-		if err == nil {
-			return debProject,err
-		}
-		// TODO: try rpm
-
-		// fmt.Fprintf(os.Stderr, "getUnixLibraryId 4: %s\n", file)
-
-		project.Version,err = getUnixSymlinkVersion(file)
-		// fmt.Fprintf(os.Stderr, "getUnixLibraryId 1: %s\n", project.Version)
-		return project,err;
-  }
-
-  // Try to fallback to pulling a version out of the filename
-  if strings.HasSuffix(name, ".so") {
-    // Extract a version
-    r, err := regexp.Compile("\\.([0-9\\.]+)\\.so")
-    if err != nil {
-      return project, err
-    }
-    matches := r.FindStringSubmatch(name)
-    if matches == nil {
-      return project, nil
-    }
-		project.Version = matches[1]
-    return project, nil
-  }
-
-  return project, nil
-}
-
 func getPkgConfigVersion(fpath string) (project types.Projects, err error) {
 	project = types.Projects{}
 
@@ -218,7 +113,7 @@ func getDebianPackage(file string) (project types.Projects, err error) {
 	return project, errors.New("Dpkg: Cannot find package")
 }
 
-func findUnixLibFile(name string) (match string, err error) {
+func findUnixLibFile(libPaths []string, name string) (match string, err error) {
 	if strings.Contains(name, ".so.") || strings.HasSuffix(name, ".so") || strings.HasSuffix(name, ".a") {
 		// fmt.Fprintf(os.Stderr, "BUH 1 %s\n", name)
     if _, err := os.Stat(name); os.IsNotExist(err) {
@@ -228,7 +123,7 @@ func findUnixLibFile(name string) (match string, err error) {
 	} else {
 		// fmt.Fprintf(os.Stderr, "findUnixLibFile 1 %s\n", name)
 
-		return findLibFile("lib", name, ".so")
+		return findLibFile(libPaths, "lib", name, ".so")
 	}
 }
 
@@ -320,20 +215,20 @@ func getUnixArchiveFileRegexPattern() (result string) {
 		programs: =/usr/libexec/gcc/x86_64-amazon-linux/4.8.5/:/usr/libexec/gcc/x86_64-amazon-linux/4.8.5/:/usr/libexec/gcc/x86_64-amazon-linux/:/usr/lib/gcc/x86_64-amazon-linux/4.8.5/:/usr/lib/gcc/x86_64-amazon-linux/:/usr/lib/gcc/x86_64-amazon-linux/4.8.5/../../../../x86_64-amazon-linux/bin/x86_64-amazon-linux/4.8.5/:/usr/lib/gcc/x86_64-amazon-linux/4.8.5/../../../../x86_64-amazon-linux/bin/
 		libraries: =/usr/lib/gcc/x86_64-amazon-linux/4.8.5/:/usr/lib/gcc/x86_64-amazon-linux/4.8.5/../../../../x86_64-amazon-linux/lib/x86_64-amazon-linux/4.8.5/:/usr/lib/gcc/x86_64-amazon-linux/4.8.5/../../../../x86_64-amazon-linux/lib/../lib64/:/usr/lib/gcc/x86_64-amazon-linux/4.8.5/../../../x86_64-amazon-linux/4.8.5/:/usr/lib/gcc/x86_64-amazon-linux/4.8.5/../../../../lib64/:/lib/x86_64-amazon-linux/4.8.5/:/lib/../lib64/:/usr/lib/x86_64-amazon-linux/4.8.5/:/usr/lib/../lib64/:/usr/lib/gcc/x86_64-amazon-linux/4.8.5/../../../../x86_64-amazon-linux/lib/:/usr/lib/gcc/x86_64-amazon-linux/4.8.5/../../../:/lib/:/usr/lib/
  */
-func getLinuxLibPaths() (map[string]bool) {
-	libPaths := make(map[string]bool)
+func getLinuxLibPaths() (paths []string) {
 	// libPaths["/usr/lib/"] = true
 	// libPaths["/usr/local/lib/"] = true
 	// libPaths["/usr/lib/x86_64-linux-gnu/"] = true
 
-	libPaths["/usr/x86_64-amazon-linux/lib64"] = true
-	libPaths["/usr/lib64"] = true
-	libPaths["/usr/local/lib64"] = true
-	libPaths["/lib64"] = true
-	libPaths["/usr/x86_64-amazon-linux/lib"] = true
-	libPaths["/usr/local/lib"] = true
-	libPaths["/lib"] = true
-	libPaths["/usr/lib"] = true
 
-	return libPaths
+	paths = append(paths, []string {"/usr/x86_64-amazon-linux/lib64"}...)
+	paths = append(paths, []string {"/usr/lib64"}...)
+	paths = append(paths, []string {"/usr/local/lib64"}...)
+	paths = append(paths, []string {"/lib64"}...)
+	paths = append(paths, []string {"/usr/x86_64-amazon-linux/lib"}...)
+	paths = append(paths, []string {"/usr/local/lib"}...)
+	paths = append(paths, []string {"/lib"}...)
+	paths = append(paths, []string {"/usr/lib"}...)
+
+	return paths
 }

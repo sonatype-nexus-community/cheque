@@ -14,7 +14,6 @@
 package oslibs
 
 import (
-	"github.com/sonatype-nexus-community/nancy/types"
 	// "github.com/sonatype-nexus-community/cheque/logger"
   "errors"
 	"runtime"
@@ -22,7 +21,7 @@ import (
 	"fmt"
 )
 
-func GetLibraryPath(name string) (path string, err error) {
+func GetLibraryPath(libPaths []string, name string) (path string, err error) {
 	switch (runtime.GOOS) {
 		case "windows":
 				_, _ = fmt.Fprintf(os.Stderr, "Unsupported OS: %s\n", runtime.GOOS)
@@ -30,14 +29,14 @@ func GetLibraryPath(name string) (path string, err error) {
 				return name, errors.New("GetLibraryPath: Unsupported OS")
 
 		case "darwin":
-			file, err := findOsxLibFile(name)
+			file, err := findOsxLibFile(libPaths, name)
 			if (err != nil || file == "") {
 				return file, errors.New("GetLibraryPath: Cannot find path to " + name)
 			}
 			return file, err
 
 		default:
-			file, err := findUnixLibFile(name)
+			file, err := findUnixLibFile(libPaths, name)
 			if (err != nil || file == "") {
 				return file, errors.New("GetLibraryPath: Cannot find path to " + name)
 			}
@@ -73,44 +72,6 @@ func GetLibraryVersion(name string) (path string, err error) {
 		default:
 			return getUnixLibraryVersion(name)
 	}
-}
-
-// Depending on the operating system, we need to find library versions in
-// different ways.
-//
-//   OSX: otool -L <path>
-//   Linux: Get file name (may be symbolically linked)
-//   Windows: There is a way...
-func GetLibraryId(name string) (project types.Projects, err error) {
-  project = types.Projects{}
-
-  switch (runtime.GOOS) {
-    case "windows":
-        project.Version,err = getWindowsLibraryId(name)
-
-    case "darwin":
-        project.Version,err = getOsxLibraryId(name)
-
-    default:
-      return getUnixLibraryId(name)
-  }
-  return project, err;
-}
-
-func GetArchiveId(name string) (project types.Projects, err error) {
-  project = types.Projects{}
-
-  switch (runtime.GOOS) {
-    case "windows":
-        project.Version,err = getWindowsArchiveId(name)
-
-    case "darwin":
-        project.Version,err = getOsxArchiveId(name)
-
-    default:
-      return getUnixArchiveId(name)
-  }
-  return project, err;
 }
 
 func GetLibraryPathRegexPattern() (result string) {
@@ -162,9 +123,9 @@ func GetCommandPath(cmd string) (path string) {
 	return path;
 }
 
-func GetLibPaths() (map[string]bool) {
+func GetLibPaths() (paths []string) {
 	if runtime.GOOS == "windows" {
-		return make(map[string]bool)
+		return paths
   }
 
 	if runtime.GOOS == "darwin" {

@@ -30,10 +30,10 @@ import (
  * - Import Bom from file
  */
 
-func CreateBom(_ []string, libs []string, files []string) (deps types.ProjectList, err error) {
+func CreateBom(libPaths []string, libs []string, files []string) (deps types.ProjectList, err error) {
  // Library names
  for _,lib := range libs {
-   path, err := oslibs.GetLibraryPath(lib)
+   path, err := oslibs.GetLibraryPath(libPaths, lib)
    if (err != nil) {
      logger.Error("Error finding path to library '" + lib + "'")
      continue
@@ -155,6 +155,13 @@ func getDllCoordinate(path string) (project types.Projects, err error) {
   // Check each collector in turn to see which gives us a good result.
 
   // pkgconfig_collector
+  pc := pkgconfig_collector{path: path}
+  _, err = pc.GetPurl()
+  if (err == nil) {
+    project.Name,_ = pc.GetName();
+    project.Version,_ = pc.GetVersion();
+    return project, err
+  }
 
   // rpm_collector
   collector = rpm_collector{path: path}
@@ -191,6 +198,7 @@ func getArchiveCoordinate(path string) (project types.Projects, err error) {
   if (err == nil) {
     project.Name,_ = pc.GetName();
     project.Version,_ = pc.GetVersion();
+    return project, err
   }
 
   // rpm_collector

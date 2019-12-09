@@ -21,7 +21,7 @@ import (
 )
 
 func DoLink(args []string) (count int) {
-	libPaths := oslibs.GetLibPaths()
+	libPaths := []string {}
 	libs := make(map[string]bool)
 	files := make(map[string]bool)
 
@@ -43,13 +43,13 @@ func DoLink(args []string) (count int) {
     // Additional library path
     if (strings.HasPrefix(arg, "-L")) {
       if (len(arg) > 2) {
-        logger.Info("LibPath: " + arg)
-				libPaths[arg[2:]] = true
+        // logger.Info("LibPath: " + arg)
+				libPaths = append(libPaths, arg[2:])
       } else {
         i++
         arg := args[i]
-        logger.Info("LibPath: " + arg)
-				libPaths[arg] = true
+        // logger.Info("LibPath: " + arg)
+				libPaths = append(libPaths, arg)
       }
       continue;
     }
@@ -91,9 +91,10 @@ func DoLink(args []string) (count int) {
 
 	if len(libs) > 0 || len(files) > 0 {
 		libPathsSlice := []string{}
-		for key, _ := range libPaths {
+		for _, key := range libPaths {
 				libPathsSlice = append(libPathsSlice, key)
 		}
+		libPathsSlice = append(libPathsSlice, oslibs.GetLibPaths()...)
 		libsSlice := []string{}
 		for key, _ := range libs {
 				libsSlice = append(libsSlice, key)

@@ -19,8 +19,6 @@ import (
 	"strings"
   "regexp"
   "path/filepath"
-	"runtime"
-	"flag"
 	"errors"
 
 	// Required to run external commands
@@ -62,52 +60,6 @@ func getOsxLibraryNameAndVersion(path string) (name string, version string, err 
 	return name, "", errors.New("getOsxLibraryNameAndVersion: cannot get version from " + fname)
 }
 
-func getOsxArchiveId(name string) (version string, err error) {
-	_, _ = fmt.Fprintf(os.Stderr, "getOsxArchiveId; Unsupported OS: %s\n", runtime.GOOS)
-	flag.PrintDefaults()
-	os.Exit(2)
-	return "", nil
-}
-
-
-func getOsxLibraryId(name string) (version string, err error) {
-  file, err := findOsxLibFile(name)
-
-  if (err == nil) {
-    if (file == "") {
-      return "", nil
-    }
-
-		// version, err := GetOtoolVersion(name, file)
-		//
-		// if err == nil && version != "" {
-		// 	return version, err
-		// }
-
-    return getOsxSymlinkVersion(file)
-
-    // return GetOtoolVersion("lib" + name, file)
-    return "", nil
-  }
-
-  // Try to fallback to pulling a version out of the filename
-  if strings.HasSuffix(name, ".dylib") {
-    // Extract a version
-    r, err := regexp.Compile("\\.([0-9\\.]+)\\.dylib")
-    if err != nil {
-      return "", err
-    }
-    matches := r.FindStringSubmatch(name)
-    if matches == nil {
-      return "", nil
-    }
-
-    return matches[1], nil
-  }
-
-  return "", nil
-}
-
 /** Run otool and get version strings from it
  *
  * 	/usr/lib/libpam.2.dylib (compatibility version 3.0.0, current version 3.0.0)
@@ -128,14 +80,14 @@ func getOtoolVersion(name string, file string) (version string, err error) {
 	return "", nil
 }
 
-func findOsxLibFile(name string) (match string, err error) {
+func findOsxLibFile(libPaths []string, name string) (match string, err error) {
 	if strings.HasSuffix(name, ".dylib") {
     if _, err := os.Stat(name); os.IsNotExist(err) {
       return "", err
     }
 		return name,nil
 	} else {
-		return findLibFile("lib", name, ".dylib")
+		return findLibFile(libPaths, "lib", name, ".dylib")
 	}
 }
 
@@ -168,9 +120,8 @@ func getOsxLibraryFileRegexPattern() (result string) {
 	return "([a-zA-Z0-9_]+)\\.[0-9\\.]+\\.dylib"
 }
 
-func getOsxLibPaths() (map[string]bool) {
-	libPaths := make(map[string]bool)
-	libPaths["/usr/lib/"] = true
-	libPaths["/usr/local/lib/"] = true
-	return libPaths
+func getOsxLibPaths() (paths []string) {
+	paths = append(paths, []string {"/usr/lib/"}...)
+	paths = append(paths, []string {"/usr/local/lib/"}...)
+	return paths
 }
