@@ -121,6 +121,22 @@ func getOsxLibraryFileRegexPattern() (result string) {
 }
 
 func getOsxLibPaths() (paths []string) {
+	dpkgCmd := exec.Command("gcc", "-print-search-dirs")
+	out,err := dpkgCmd.Output()
+	if (err == nil) {
+		buf := string(out)
+		lines := strings.Split(buf, "\n")
+		for _, line := range lines {
+
+			kv := strings.Split(line, "=")
+			if (strings.HasPrefix(kv[0], "libraries:")) {
+				gccPaths := strings.Split(kv[1], ":")
+				paths = append(paths, gccPaths...)
+			}
+		}
+	}
+
+	// Fallback paths cause gcc/clang on OSX is not playing nice at the moment
 	paths = append(paths, []string {"/usr/lib/"}...)
 	paths = append(paths, []string {"/usr/local/lib/"}...)
 	return paths

@@ -216,19 +216,30 @@ func getUnixArchiveFileRegexPattern() (result string) {
 		libraries: =/usr/lib/gcc/x86_64-amazon-linux/4.8.5/:/usr/lib/gcc/x86_64-amazon-linux/4.8.5/../../../../x86_64-amazon-linux/lib/x86_64-amazon-linux/4.8.5/:/usr/lib/gcc/x86_64-amazon-linux/4.8.5/../../../../x86_64-amazon-linux/lib/../lib64/:/usr/lib/gcc/x86_64-amazon-linux/4.8.5/../../../x86_64-amazon-linux/4.8.5/:/usr/lib/gcc/x86_64-amazon-linux/4.8.5/../../../../lib64/:/lib/x86_64-amazon-linux/4.8.5/:/lib/../lib64/:/usr/lib/x86_64-amazon-linux/4.8.5/:/usr/lib/../lib64/:/usr/lib/gcc/x86_64-amazon-linux/4.8.5/../../../../x86_64-amazon-linux/lib/:/usr/lib/gcc/x86_64-amazon-linux/4.8.5/../../../:/lib/:/usr/lib/
  */
 func getLinuxLibPaths() (paths []string) {
-	// libPaths["/usr/lib/"] = true
-	// libPaths["/usr/local/lib/"] = true
-	// libPaths["/usr/lib/x86_64-linux-gnu/"] = true
+	dpkgCmd := exec.Command("gcc", "-print-search-dirs")
+	out,err := dpkgCmd.Output()
+	if (err == nil) {
+		buf := string(out)
+		lines := strings.Split(buf, "\n")
+		for _, line := range lines {
+
+			kv := strings.Split(line, "=")
+			if (strings.HasPrefix(kv[0], "libraries:")) {
+				gccPaths := strings.Split(kv[1], ":")
+				paths = append(paths, gccPaths...)
+			}
+		}
+	}
 
 
-	paths = append(paths, []string {"/usr/x86_64-amazon-linux/lib64"}...)
-	paths = append(paths, []string {"/usr/lib64"}...)
-	paths = append(paths, []string {"/usr/local/lib64"}...)
-	paths = append(paths, []string {"/lib64"}...)
-	paths = append(paths, []string {"/usr/x86_64-amazon-linux/lib"}...)
-	paths = append(paths, []string {"/usr/local/lib"}...)
-	paths = append(paths, []string {"/lib"}...)
-	paths = append(paths, []string {"/usr/lib"}...)
+	// paths = append(paths, []string {"/usr/x86_64-amazon-linux/lib64"}...)
+	// paths = append(paths, []string {"/usr/lib64"}...)
+	// paths = append(paths, []string {"/usr/local/lib64"}...)
+	// paths = append(paths, []string {"/lib64"}...)
+	// paths = append(paths, []string {"/usr/x86_64-amazon-linux/lib"}...)
+	// paths = append(paths, []string {"/usr/local/lib"}...)
+	// paths = append(paths, []string {"/lib"}...)
+	// paths = append(paths, []string {"/usr/lib"}...)
 
 	return paths
 }
