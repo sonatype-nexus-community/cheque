@@ -18,14 +18,13 @@ import (
 
 	// Required to search file system
 	"path/filepath"
-  "fmt"
 )
 
 func findLibFile(libpaths []string, prefix string, lib string, suffix string) (match string, err error) {
 
   for _, libpath := range libpaths {
     globPattern := libpath + "/" + prefix + lib + suffix + "*";
-    fmt.Fprintf(os.Stderr, "findLibFile 1: %s\n", globPattern)
+    // fmt.Fprintf(os.Stderr, "findLibFile 1: %s\n", globPattern)
     // fmt.Fprintf(os.Stderr, "FindLibFile 1 %s\n", globPattern)
    	matches, err := filepath.Glob(globPattern)
 

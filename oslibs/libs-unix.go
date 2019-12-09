@@ -199,17 +199,7 @@ func getUnixArchiveFileRegexPattern() (result string) {
 	return "([a-zA-Z0-9_\\-]+)\\.a"
 }
 
-/** FIXME: Use gcc/ld to get search Paths
-		> ld --verbose | grep SEARCH_DIR | tr -s ' ;' \\012
-		SEARCH_DIR("/usr/x86_64-amazon-linux/lib64")
-		SEARCH_DIR("/usr/lib64")
-		SEARCH_DIR("/usr/local/lib64")
-		SEARCH_DIR("/lib64")
-		SEARCH_DIR("/usr/x86_64-amazon-linux/lib")
-		SEARCH_DIR("/usr/local/lib")
-		SEARCH_DIR("/lib")
-		SEARCH_DIR("/usr/lib")
-
+/** FIXME: Use gcc to get search Paths
 		> gcc -print-search-dirs
 		install: /usr/lib/gcc/x86_64-amazon-linux/4.8.5/
 		programs: =/usr/libexec/gcc/x86_64-amazon-linux/4.8.5/:/usr/libexec/gcc/x86_64-amazon-linux/4.8.5/:/usr/libexec/gcc/x86_64-amazon-linux/:/usr/lib/gcc/x86_64-amazon-linux/4.8.5/:/usr/lib/gcc/x86_64-amazon-linux/:/usr/lib/gcc/x86_64-amazon-linux/4.8.5/../../../../x86_64-amazon-linux/bin/x86_64-amazon-linux/4.8.5/:/usr/lib/gcc/x86_64-amazon-linux/4.8.5/../../../../x86_64-amazon-linux/bin/
@@ -222,7 +212,6 @@ func getLinuxLibPaths() (paths []string) {
 		buf := string(out)
 		lines := strings.Split(buf, "\n")
 		for _, line := range lines {
-
 			kv := strings.Split(line, "=")
 			if (strings.HasPrefix(kv[0], "libraries:")) {
 				gccPaths := strings.Split(kv[1], ":")
@@ -230,16 +219,6 @@ func getLinuxLibPaths() (paths []string) {
 			}
 		}
 	}
-
-
-	// paths = append(paths, []string {"/usr/x86_64-amazon-linux/lib64"}...)
-	// paths = append(paths, []string {"/usr/lib64"}...)
-	// paths = append(paths, []string {"/usr/local/lib64"}...)
-	// paths = append(paths, []string {"/lib64"}...)
-	// paths = append(paths, []string {"/usr/x86_64-amazon-linux/lib"}...)
-	// paths = append(paths, []string {"/usr/local/lib"}...)
-	// paths = append(paths, []string {"/lib"}...)
-	// paths = append(paths, []string {"/usr/lib"}...)
 
 	return paths
 }
