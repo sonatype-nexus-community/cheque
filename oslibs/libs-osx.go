@@ -20,6 +20,8 @@ import (
   "regexp"
   "path/filepath"
 	"errors"
+	"io"
+	"bufio"
 
 	// Required to run external commands
 	"os/exec"
@@ -121,23 +123,40 @@ func getOsxLibraryFileRegexPattern() (result string) {
 }
 
 func getOsxLibPaths() (paths []string) {
-	dpkgCmd := exec.Command("gcc", "-print-search-dirs")
-	out,err := dpkgCmd.Output()
-	if (err == nil) {
-		buf := string(out)
-		lines := strings.Split(buf, "\n")
-		for _, line := range lines {
+	// clang -Xlinker -v
+	clangCmd := exec.Command("clang", "-Xlinker", "-v")
 
-			kv := strings.Split(line, "=")
-			if (strings.HasPrefix(kv[0], "libraries:")) {
-				gccPaths := strings.Split(kv[1], ":")
-				paths = append(paths, gccPaths...)
+	stderr, err := clangCmd.StderrPipe()
+	if err != nil {
+		// log.Fatalf("could not get stderr pipe: %v", err)
+	}
+	stdout, err := clangCmd.StdoutPipe()
+	if err != nil {
+		// log.Fatalf("could not get stdout pipe: %v", err)
+	}
+	go func() {
+		merged := io.MultiReader(stderr, stdout)
+		scanner := bufio.NewScanner(merged)
+		matching := false
+		for scanner.Scan() {
+			msg := scanner.Text()
+			if matching {
+				if strings.HasPrefix(msg, "\t") {
+					paths = append(paths, strings.TrimSpace(msg))
+				} else {
+					matching = false;
+				}
+			}
+			if strings.HasPrefix(msg, "Library search paths") {
+				matching = true
 			}
 		}
+	}()
+	if err := clangCmd.Run(); err != nil {
+		// log.Fatalf("could not run clangCmd: %v", err)
 	}
-
-	// Fallback paths cause gcc/clang on OSX is not playing nice at the moment
-	paths = append(paths, []string {"/usr/lib/"}...)
-	paths = append(paths, []string {"/usr/local/lib/"}...)
+	if err != nil {
+		// log.Fatalf("could not wait for clangCmd: %v", err)
+	}
 	return paths
 }
