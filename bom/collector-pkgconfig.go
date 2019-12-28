@@ -38,8 +38,12 @@ func (c pkgconfig_collector) GetName() (string, error) {
     c.parsePkgConfig()
   }
 
+  if (c.pkgconfig == "") {
+    return "", errors.New("pkgconfig_collector: No pkgconfig file for " + c.path)
+  }
+
   if (c.name == "") {
-    return "", errors.New("pkgconfig_collector: No pkgconfig name found")
+    return "", errors.New("pkgconfig_collector: No pkgconfig name found for " + c.pkgconfig)
   }
 
   return c.name, nil

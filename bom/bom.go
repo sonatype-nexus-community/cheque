@@ -205,5 +205,14 @@ func getArchiveCoordinate(path string) (project types.Projects, err error) {
 
   // deb_collector
 
+  // path_collector
+  collector := path_collector{path: path}
+  _, err = collector.GetPurl()
+  if (err == nil) {
+    project.Name,_ = collector.GetName();
+    project.Version,_ = collector.GetVersion();
+    return project, err
+  }
+
   return project, err
 }

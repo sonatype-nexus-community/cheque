@@ -54,6 +54,26 @@ func DoLink(args []string) (count int) {
       continue;
     }
 
+		if (strings.HasPrefix(arg, "-o")) {
+			if (len(arg) > 2) {
+				logger.Info("output: " + arg)
+			} else {
+				i++
+				arg := args[i]
+				logger.Info("output: " + arg)
+			}
+			continue;
+		}
+
+		// Ignore some arguments and their options
+		if (strings.HasPrefix(arg, "-install_name")) {
+			if (len(arg) > 14) {
+				i++
+			}
+			continue;
+		}
+
+
     if (strings.HasPrefix(arg, "-")) {
       // Ignore any other arguments
       continue;
