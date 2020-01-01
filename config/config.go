@@ -22,9 +22,6 @@ import (
 )
 
 var bom = false
-var isBom = false
-var isMakefile = false
-var isLog = false
 var noColorPtr = false
 var version = false
 var path string
@@ -37,6 +34,7 @@ func init() {
   args := os.Args[1:]
 
   if len(args) < 1 {
+    fmt.Fprintf(os.Stderr, "Error: No input files\n\n")
     usage()
     os.Exit(1)
   }
@@ -52,9 +50,6 @@ func init() {
     switch(arg) {
       case "help": usage()
       case "export-bom": bom = true
-      case "parse-bom": isBom = true
-      case "parse-makefile": isMakefile = true
-      case "parse-log": isLog = true
       case "noColor": noColorPtr = true
       case "version": version = true
       case "working-directory": i++; workingDir = args[i]
@@ -70,40 +65,33 @@ func init() {
 }
 
 func usage() {
-  fmt.Fprintf(os.Stderr, "Usage: \nauditcpp [options] </path/to/Makefile>\n\nOptions:\n")
-  fmt.Fprintf(os.Stderr, "Usage of cheque:\n")
-  fmt.Fprintf(os.Stderr, "  -export-bom\n")
-  fmt.Fprintf(os.Stderr, "    	generate a Bill Of Materials only\n")
-  fmt.Fprintf(os.Stderr, "  -noColor\n")
-  fmt.Fprintf(os.Stderr, "    	indicate output should not be colorized\n")
-  fmt.Fprintf(os.Stderr, "  -parse-bom\n")
-  fmt.Fprintf(os.Stderr, "    	The input file is a Bill Of Materials\n")
-  fmt.Fprintf(os.Stderr, "  -parse-log\n")
-  fmt.Fprintf(os.Stderr, "    	The input file is a Make log\n")
-  fmt.Fprintf(os.Stderr, "  -parse-makefile\n")
-  fmt.Fprintf(os.Stderr, "    	The input file is a Makefile\n")
-  fmt.Fprintf(os.Stderr, "  -version\n")
-  fmt.Fprintf(os.Stderr, "    	prints current auditcpp version\n")
+  fmt.Fprintf(os.Stderr, "Usage: cheque [options] <filename> ...\n\n")
+  fmt.Fprintf(os.Stderr, "When you invoke cheque, it identifies static and dynamic library dependencies\n")
+  fmt.Fprintf(os.Stderr, "and identifies known vulnerabilities using the OSS Index vulnerability database.\n\n")
+  fmt.Fprintf(os.Stderr, "Cheque can be used as a wrapper around the compiler/linker by making symbolic\n")
+  fmt.Fprintf(os.Stderr, "links to cheque with the compiler name, and ensuring they are in the front of\n")
+  fmt.Fprintf(os.Stderr, "your PATH. Cheque will run, and also execute the compiler/linker appropriately.\n")
+  fmt.Fprintf(os.Stderr, "This allows cheque to be embedded in most builds.\n\n")
+  fmt.Fprintf(os.Stderr, "Option summary: (Many cheque options match those of the underlying compiler/linker)\n")
+  fmt.Fprintf(os.Stderr, "  -L<dir>\n")
+  fmt.Fprintf(os.Stderr, "    	Add the specified directory to the front of the library search path\n")
+  fmt.Fprintf(os.Stderr, "  -l<library>\n")
+  fmt.Fprintf(os.Stderr, "    	Specify the name of a DLL required for compiling/linking\n")
   fmt.Fprintf(os.Stderr, "  -working-directory string\n")
   fmt.Fprintf(os.Stderr, "    	Resolve file paths relative to the specified directory (default '.')\n")
+
+  // fmt.Fprintf(os.Stderr, "  -export-bom\n")
+  // fmt.Fprintf(os.Stderr, "    	generate a Bill Of Materials only\n")
+  fmt.Fprintf(os.Stderr, "  -noColor\n")
+  fmt.Fprintf(os.Stderr, "    	indicate output should not be colorized\n")
+  fmt.Fprintf(os.Stderr, "  -version\n")
+  fmt.Fprintf(os.Stderr, "    	prints current cheque version\n")
 
   os.Exit(2)
 }
 
 func GetCommand() (s string) {
   return cmd
-}
-
-func IsMakefile() (b bool) {
-  return isMakefile
-}
-
-func IsLog() (b bool) {
-  return isLog
-}
-
-func IsBom() (b bool) {
-  return isBom
 }
 
 func GetBom() (b bool) {

@@ -15,24 +15,16 @@ package main
 
 import (
 	"github.com/sonatype-nexus-community/cheque/config"
-	"github.com/sonatype-nexus-community/cheque/parse"
 	"github.com/sonatype-nexus-community/cheque/linker"
 	"github.com/sonatype-nexus-community/cheque/oslibs"
+	"github.com/sonatype-nexus-community/cheque/logger"
 	"os"
 	"os/exec"
-	"github.com/golang/glog"
 	"fmt"
 )
 
 func main() {
 	args := os.Args[1:]
-
-	if config.IsBom() || config.IsMakefile() || config.IsLog() {
-		path := args[len(args)-1]
-		// Currently only checks Makefile, can eventually check directory, cmake, etc...
-		parse.DoCheckExistenceAndParse(path)
-		os.Exit(0)
-	}
 
 	// Otherwise act like a compiler
 	count := linker.DoLink(args);
@@ -43,7 +35,7 @@ func main() {
 	default:
 		cmd := oslibs.GetCommandPath(config.GetCommand())
 		if cmd == "" {
-			glog.Fatal("Cannot find official command: " + config.GetCommand())
+			logger.Fatal("Cannot find official command: " + config.GetCommand())
 		} else {
 			// Run external command
 			externalCmd := exec.Command(cmd, args...)
@@ -54,12 +46,15 @@ func main() {
 			if err != nil {
 				// FIXME: Return actual error code from command
 				fmt.Fprintf(os.Stderr, "Error running %s: %v\n", config.GetCommand(), err)
+				os.Exit(1)
 			}
 		}
 		break;
 	}
 
 	if count > 0 {
-		os.Exit(count)
+		fmt.Fprintf(os.Stderr, "Vulnerabilities found: %i\n", count)
+		// logger.Error("Vulnerabilities found: " + count)
   }
+	os.Exit(0)
 }
