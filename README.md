@@ -22,6 +22,12 @@ reading Makefiles.
 
 And its completely free! Beauty, eh?
 
+## Supported platforms
+
+Currently only gcc on Linux is supported. There is marginal support for other
+compilers (clang) and operating systems (osx) but it is far more rudimentary and
+not to be trusted.
+
 ## Usage
 
 ```
@@ -100,7 +106,3 @@ lrwxrwxrwx 1 ec2-user ec2-user 27 Oct 17 14:39 ld -> /path/to/cheque
 [2/3] conan/bincrafters/libpng@1.2.49  [Vulnerable]    9 known vulnerabilities affecting installed version
 ...
 ```
-
-Currently only gcc on Linux is supported. There is marginal support for other
-compilers (clang) and operating systems (osx) but it is far more rudimentary and
-not to be trusted.
