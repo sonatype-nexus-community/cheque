@@ -25,8 +25,10 @@ var bom = false
 var noColorPtr = false
 var version = false
 var path string
-var workingDir string
 var cmd string
+
+var exitWithError = false
+
 
 func init() {
   cmd = filepath.Base(os.Args[0])
@@ -50,9 +52,9 @@ func init() {
     switch(arg) {
       case "help": usage()
       case "export-bom": bom = true
+      case "Werror=cheque": exitWithError = true
       case "noColor": noColorPtr = true
       case "version": version = true
-      case "working-directory": i++; workingDir = args[i]
     }
   }
 
@@ -77,13 +79,13 @@ func usage() {
   fmt.Fprintf(os.Stderr, "    	Add the specified directory to the front of the library search path\n")
   fmt.Fprintf(os.Stderr, "  -l<library>\n")
   fmt.Fprintf(os.Stderr, "    	Specify the name of a DLL required for compiling/linking\n")
-  fmt.Fprintf(os.Stderr, "  -working-directory string\n")
-  fmt.Fprintf(os.Stderr, "    	Resolve file paths relative to the specified directory (default '.')\n")
+  fmt.Fprintf(os.Stderr, "  -Werror=cheque\n")
+  fmt.Fprintf(os.Stderr, "    	Treat cheque warnings as errors\n")
 
   // fmt.Fprintf(os.Stderr, "  -export-bom\n")
   // fmt.Fprintf(os.Stderr, "    	generate a Bill Of Materials only\n")
-  fmt.Fprintf(os.Stderr, "  -noColor\n")
-  fmt.Fprintf(os.Stderr, "    	indicate output should not be colorized\n")
+  // fmt.Fprintf(os.Stderr, "  -noColor\n")
+  // fmt.Fprintf(os.Stderr, "    	indicate output should not be colorized\n")
   fmt.Fprintf(os.Stderr, "  -version\n")
   fmt.Fprintf(os.Stderr, "    	prints current cheque version\n")
 
@@ -96,4 +98,8 @@ func GetCommand() (s string) {
 
 func GetBom() (b bool) {
   return bom
+}
+
+func ExitWithError() (b bool) {
+  return exitWithError
 }

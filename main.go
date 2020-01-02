@@ -24,10 +24,25 @@ import (
 )
 
 func main() {
-	args := os.Args[1:]
+	args := []string {}
 
-	// Otherwise act like a compiler
+	// Remove cheque custom arguments
+	for _, arg := range os.Args[1:] {
+		switch(arg) {
+		case "-Werror=cheque":
+			default: args = append(args, arg)
+    }
+	}
+
 	count := linker.DoLink(args);
+	if count > 0 {
+		if (config.ExitWithError()) {
+			fmt.Fprintf(os.Stderr, "Error: Vulnerabilities found: %v\n", count)
+			os.Exit(count)
+		} else {
+			fmt.Fprintf(os.Stderr, "Warning: Vulnerabilities found: %v\n", count)
+		}
+	}
 
 	switch(config.GetCommand()) {
 	case "cheque":
@@ -38,6 +53,7 @@ func main() {
 			logger.Fatal("Cannot find official command: " + config.GetCommand())
 		} else {
 			// Run external command
+			// fmt.Fprintf(os.Stderr, "Running %s\n", config.GetCommand())
 			externalCmd := exec.Command(cmd, args...)
 			externalCmd.Stdout = os.Stdout
 			externalCmd.Stderr = os.Stderr
@@ -52,9 +68,5 @@ func main() {
 		break;
 	}
 
-	if count > 0 {
-		fmt.Fprintf(os.Stderr, "Vulnerabilities found: %i\n", count)
-		// logger.Error("Vulnerabilities found: " + count)
-  }
 	os.Exit(0)
 }
