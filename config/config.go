@@ -26,6 +26,7 @@ var noColorPtr = false
 var version = false
 var path string
 var cmd string
+var verbose = false
 
 var exitWithError = false
 
@@ -55,6 +56,7 @@ func init() {
       case "Werror=cheque": exitWithError = true
       case "noColor": noColorPtr = true
       case "version": version = true
+      case "v": verbose = true
     }
   }
 
@@ -102,4 +104,8 @@ func GetBom() (b bool) {
 
 func ExitWithError() (b bool) {
   return exitWithError
+}
+
+func GetVerbose() (b bool) {
+  return verbose
 }

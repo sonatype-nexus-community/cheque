@@ -116,10 +116,11 @@ func getDebianPackage(file string) (project types.Projects, err error) {
 func findUnixLibFile(libPaths []string, name string) (match string, err error) {
 	if strings.Contains(name, ".so.") || strings.HasSuffix(name, ".so") || strings.HasSuffix(name, ".a") {
 		// fmt.Fprintf(os.Stderr, "BUH 1 %s\n", name)
-    if _, err := os.Stat(name); os.IsNotExist(err) {
-      return "", err
-    }
-		return name,nil
+    // if _, err := os.Stat(name); os.IsNotExist(err) {
+    //   return "", err
+    // }
+		// return name,nil
+		return findLibFile(libPaths, "", name, "")
 	} else {
 		// fmt.Fprintf(os.Stderr, "findUnixLibFile 1 %s\n", name)
 

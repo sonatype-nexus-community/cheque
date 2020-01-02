@@ -24,7 +24,12 @@ import (
 func findLibFile(libpaths []string, prefix string, lib string, suffix string) (match string, err error) {
 
   for _, libpath := range libpaths {
-    globPattern := libpath + "/" + prefix + lib + suffix + "*";
+    // If we are provided a suffix, then this is a wildcard search, otherwise we
+    // have an absolute name.
+    globPattern := libpath + "/" + prefix + lib + suffix;
+    if suffix != "" {
+      globPattern = globPattern + "*";
+    }
     // fmt.Fprintf(os.Stderr, "FindLibFile 1 %s\n", globPattern)
    	matches, err := filepath.Glob(globPattern)
 

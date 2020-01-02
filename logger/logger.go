@@ -14,12 +14,21 @@
 package logger
 
 import (
+  "github.com/sonatype-nexus-community/cheque/config"
   "fmt"
   "os"
 )
 
 func Info(msg string) {
-  fmt.Fprintf(os.Stdout, "Cheque INFO: %s\n", msg)
+  if config.GetVerbose() {
+    fmt.Fprintf(os.Stdout, "Cheque INFO: %s\n", msg)
+  }
+}
+
+func Debug(msg string) {
+  if config.GetVerbose() {
+    fmt.Fprintf(os.Stdout, "Cheque DEBUG: %s\n", msg)
+  }
 }
 
 func Warning(msg string) {

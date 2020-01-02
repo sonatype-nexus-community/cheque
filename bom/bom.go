@@ -19,8 +19,10 @@ import (
   "github.com/sonatype-nexus-community/nancy/types"
 	"regexp"
   "strings"
+  "os/exec"
+  "path/filepath"
   // "errors"
-  // "fmt"
+  "fmt"
   // "os"
 )
 
@@ -32,13 +34,18 @@ import (
 
 func CreateBom(libPaths []string, libs []string, files []string) (deps types.ProjectList, err error) {
  // Library names
+ lookup := make(map[string]bool)
+
+ // Recursively get all transitive library paths
  for _,lib := range libs {
-   path, err := oslibs.GetLibraryPath(libPaths, lib)
+   lookup, err = recursiveGetLibraryPaths(lookup, libPaths, lib)
    if (err != nil) {
-     logger.Error("Error finding path to library '" + lib + "'")
+     logger.Error(err.Error())
      continue
    }
+ }
 
+ for path, _ := range lookup {
    project, err := getDllCoordinate(path)
    if (err != nil) {
      logger.Error(err.Error())
@@ -147,6 +154,37 @@ func CreateBom(libPaths []string, libs []string, files []string) (deps types.Pro
    }
  }
  return deps,nil
+}
+
+func recursiveGetLibraryPaths(lookup map[string]bool, libPaths []string, lib string) (results map[string]bool, err error) {
+  path, err := oslibs.GetLibraryPath(libPaths, lib)
+  if (err != nil) {
+    logger.Debug(fmt.Sprintf("%v", err))
+    return lookup, nil
+  }
+
+  lookup[path] = true
+
+  lddCmd := exec.Command("ldd", path)
+  out,err := lddCmd.Output()
+  if (err == nil) {
+    buf := string(out)
+    lines := strings.Split(buf, "\n")
+    for _,line := range lines {
+      if (line != "") {
+        tokens := strings.Split(line, " ")
+        token := strings.TrimSpace(tokens[0])
+        lookup, err = recursiveGetLibraryPaths(lookup, append(libPaths, filepath.Dir(path)), token)
+        if (err != nil) {
+          return lookup, err
+        }
+      }
+    }
+  } else {
+    return lookup, err
+  }
+
+  return lookup, nil
 }
 
 func getDllCoordinate(path string) (project types.Projects, err error) {
