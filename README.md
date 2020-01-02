@@ -79,12 +79,19 @@ This allows cheque to be embedded in most builds.
 For example:
 
 ```
+> pwd
+/path/to/links
+
 >  ls -l
 total 0
 lrwxrwxrwx 1 ec2-user ec2-user 27 Dec 30 01:48 cc -> /path/to/cheque
 lrwxrwxrwx 1 ec2-user ec2-user 27 Oct 17 14:39 g++ -> /path/to/cheque
 lrwxrwxrwx 1 ec2-user ec2-user 27 Oct 17 14:39 gcc -> /path/to/cheque
 lrwxrwxrwx 1 ec2-user ec2-user 27 Oct 17 14:39 ld -> /path/to/cheque
+
+> export PATH=`pwd`:$PATH
+
+> cd /path/to/test
 
 > gcc -lpng hello.c
 
