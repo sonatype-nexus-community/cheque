@@ -135,7 +135,7 @@ func getUnixLibraryNameAndVersion(path string) (name string, version string, err
 	r, _ := regexp.Compile("^(.*)\\.so\\.([0-9\\.]+)")
 	matches := r.FindStringSubmatch(path)
 	if matches == nil {
-		r, _ = regexp.Compile("^(.*)\\.([0-9\\.]+)\\.so")
+		r, _ = regexp.Compile("^(.*?)\\.([0-9\\.]+)so")
 		matches = r.FindStringSubmatch(path)
 	}
 	if matches == nil {

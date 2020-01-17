@@ -14,6 +14,8 @@
 package oslibs
 
 import (
+	// "github.com/sonatype-nexus-community/cheque/logger"
+
 	"fmt"
 	"os"
 	"strings"
@@ -45,7 +47,7 @@ func getOsxLibraryNameAndVersion(path string) (name string, version string, err 
 
 	// Extract a name
 	fname := filepath.Base(path)
-	r, _ := regexp.Compile("^(.*)\\.([0-9\\.]+)\\.dylib")
+	r, _ := regexp.Compile("^(.*?)\\.([0-9\\.]+)dylib")
 	matches := r.FindStringSubmatch(path)
 	if matches == nil {
 		return "", "", errors.New("getOsxLibraryNameAndVersion: cannot get name from " + path + " (" + fname + ")")

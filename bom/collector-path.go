@@ -15,7 +15,7 @@ package bom
 
 import (
   "github.com/sonatype-nexus-community/cheque/oslibs"
-  // "github.com/sonatype-nexus-community/cheque/logger"
+  "github.com/sonatype-nexus-community/cheque/logger"
   "path/filepath"
 )
 

@@ -115,6 +115,9 @@ func RootPurls(deps types.ProjectList) (purls []string, err error) {
 	for _,dep := range deps.Projects {
 		if !strings.HasPrefix(dep.Name, "pkg:") {
 			purls = append(purls, "pkg:cpp/" + dep.Name + "@" + dep.Version);
+      if strings.HasPrefix(dep.Name, "lib") {
+        purls = append(purls, "pkg:cpp/" + dep.Name[3:] + "@" + dep.Version);
+      }
 		}
 	}
 	return purls, nil
