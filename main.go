@@ -14,58 +14,54 @@
 package main
 
 import (
-	"github.com/sonatype-nexus-community/cheque/config"
-	"github.com/sonatype-nexus-community/cheque/linker"
-	"github.com/sonatype-nexus-community/cheque/oslibs"
-	"github.com/sonatype-nexus-community/cheque/logger"
+	"fmt"
 	"os"
 	"os/exec"
-	"fmt"
+
+	"github.com/sonatype-nexus-community/cheque/config"
+	"github.com/sonatype-nexus-community/cheque/linker"
 )
 
 func main() {
-	args := []string {}
+	args := []string{}
 
 	// Remove cheque custom arguments
 	for _, arg := range os.Args[1:] {
-		switch(arg) {
+		switch arg {
 		case "-Werror=cheque":
-			default: args = append(args, arg)
-    }
+		default:
+			args = append(args, arg)
+		}
 	}
 
-	count := linker.DoLink(args);
+	count := linker.DoLink(args)
 	if count > 0 {
-		if (config.ExitWithError()) {
-			fmt.Fprintf(os.Stderr, "Error: Vulnerabilities found: %v\n", count)
-			os.Exit(count)
+		if config.ExitWithError() {
+			fmt.Errorf("Error: Vulnerabilities found: %v", count)
 		} else {
 			fmt.Fprintf(os.Stderr, "Warning: Vulnerabilities found: %v\n", count)
 		}
 	}
 
-	switch(config.GetCommand()) {
+	switch config.GetCommand() {
 	case "cheque":
-		break;
+		break
 	default:
-		cmd := oslibs.GetCommandPath(config.GetCommand())
-		if cmd == "" {
-			logger.Fatal("Cannot find official command: " + config.GetCommand())
+		_, err := os.Stat(fmt.Sprint("/usr/bin/%s", config.GetCommand()))
+		if err != nil {
+			panic(fmt.Errorf("Cannot find official command: %s", config.GetCommand()))
 		} else {
-			// Run external command
-			// fmt.Fprintf(os.Stderr, "Running %s\n", config.GetCommand())
-			externalCmd := exec.Command(cmd, args...)
+			externalCmd := exec.Command(config.GetCommand(), args...)
 			externalCmd.Stdout = os.Stdout
 			externalCmd.Stderr = os.Stderr
-			err := externalCmd.Run()
 
-			if err != nil {
-				// FIXME: Return actual error code from command
-				fmt.Fprintf(os.Stderr, "Error running %s: %v\n", config.GetCommand(), err)
-				os.Exit(1)
+			if err := externalCmd.Run(); err != nil {
+				if exitError, ok := err.(*exec.ExitError); ok {
+					fmt.Errorf("There was an issue running the command %s, and the issue is %s", config.GetCommand(), os.Stderr)
+					os.Exit(exitError.ExitCode())
+				}
 			}
 		}
-		break;
 	}
 
 	os.Exit(0)

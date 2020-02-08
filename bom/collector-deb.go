@@ -13,100 +13,120 @@
 // limitations under the License.
 package bom
 
-/** Check dpkg (if it exists).
- */
 import (
-  "github.com/sonatype-nexus-community/cheque/logger"
-  // "path/filepath"
-  "errors"
-  // "os"
-  // "bufio"
-  "strings"
-  "regexp"
-  "os/exec"
+	"errors"
+	"fmt"
+	"os/exec"
+	"regexp"
+	"strings"
+
+	"github.com/package-url/packageurl-go"
+	"github.com/sonatype-nexus-community/cheque/logger"
 )
 
 /** Identify the coordinate using file path information
  */
-type deb_collector struct {
-    path string
-    pkgconfig string
-    name string
-    version string
-    dist string
+type debCollector struct {
+	path      string
+	pkgconfig string
+	name      string
+	version   string
+	dist      string
 }
 
-func (c deb_collector) GetName() (string, error) {
-  if (c.dist == "") {
-    c.findPackage()
-  }
-  if (c.name != "") {
-    return c.name, nil
-  }
-  return "", errors.New("deb_collector: Cannot get name for " + c.path)
+func (c debCollector) IsValid() bool {
+	_, err := exec.LookPath("dpkg")
+	if err != nil {
+		return false
+	}
+	return true
 }
 
-func (c deb_collector) GetVersion() (string, error) {
-  if (c.dist == "") {
-    c.findPackage()
-  }
-  if (c.version != "") {
-    return c.version, nil
-  }
-  return "", errors.New("deb_collector: Cannot get version for " + c.path)
+func (c debCollector) GetName() (string, error) {
+	if c.dist == "" {
+		c.findPackage()
+	}
+	if c.name != "" {
+		return c.name, nil
+	}
+	return "", errors.New("debCollector: Cannot get name for " + c.path)
 }
 
-
-func (c deb_collector) GetPurl() (string, error) {
-  name, err := c.GetName()
-  if (err != nil) {
-    return c.path, err
-  }
-  version, err := c.GetVersion()
-  if (err != nil) {
-    return name, err
-  }
-  return "pkg:deb/" + c.dist + "/" + name + "@" + version, nil
+func (c debCollector) GetVersion() (string, error) {
+	if c.dist == "" {
+		c.findPackage()
+	}
+	if c.version != "" {
+		return c.version, nil
+	}
+	return "", errors.New("debCollector: Cannot get version for " + c.path)
 }
 
-func (c deb_collector) GetPath() (string, error) {
-  return c.path, nil
+func (c debCollector) GetPurl() (string, error) {
+	name, err := c.GetName()
+	if err != nil {
+		return c.path, err
+	}
+	version, err := c.GetVersion()
+	if err != nil {
+		return name, err
+	}
+	return "pkg:deb/" + c.dist + "/" + name + "@" + version, nil
 }
 
-func (c *deb_collector) findPackage() {
-  // Default distribution
-  c.dist = "ubuntu"
+func (c debCollector) GetPurlObject() (purl packageurl.PackageURL, err error) {
+	name, err := c.GetName()
+	if err != nil {
+		return purl, err
+	}
+	version, err := c.GetVersion()
+	if err != nil {
+		return purl, err
+	}
+	purl, err = packageurl.FromString(fmt.Sprintf("pkg:rpm/%s/%s@%s", c.dist, name, version))
+	if err != nil {
+		return purl, err
+	}
+	return
+}
 
+func (c debCollector) GetPath() (string, error) {
+	return c.path, nil
+}
 
-  	dpkgCmd := exec.Command("dpkg", "-S", c.path)
-  	out,err := dpkgCmd.Output()
-  	if (err == nil) {
-  		// fmt.Fprintf(os.Stderr, "GetUnixLibraryVersion 3.1 %s\n", out)
-  		buf := string(out)
-  		tokens := strings.Split(buf, ":")
-  		libname := tokens[0]
+func (c *debCollector) findPackage() {
+	// Default distribution
+	c.dist = "ubuntu"
 
-  		dpkgCmd := exec.Command("dpkg", "-s", libname)
-  		out,err := dpkgCmd.Output()
-  		if (err == nil) {
-        r, _ := regexp.Compile("Name *: ([^\\n]+)")
-        matches := r.FindStringSubmatch(string(out))
-        if matches != nil {
-          c.name = strings.TrimSpace(matches[1])
-        } else {
-          logger.Error(err.Error())
-          logger.Error(string(out))
-          return
-        }
+	dpkgCmd := exec.Command("dpkg", "-S", c.path)
+	out, err := dpkgCmd.Output()
+	if err == nil {
+		// fmt.Fprintf(os.Stderr, "GetUnixLibraryVersion 3.1 %s\n", out)
+		buf := string(out)
+		tokens := strings.Split(buf, ":")
+		libname := tokens[0]
 
-  			r, _ = regexp.Compile("Version *: ([^\\n]+)")
-  			matches = r.FindStringSubmatch(string(out))
-  			if matches != nil {
-          c.version = strings.TrimSpace(matches[1])
-  			}
-  		} else {
-        logger.Error(err.Error())
-        logger.Error(string(out))
-      }
-  	}
+		dpkgCmd := exec.Command("dpkg", "-s", libname)
+		out, err := dpkgCmd.Output()
+		if err == nil {
+			r, _ := regexp.Compile("Name *: ([^\\n]+)")
+			matches := r.FindStringSubmatch(string(out))
+			if matches != nil {
+				c.name = strings.TrimSpace(matches[1])
+			} else {
+				logger.Error(err.Error())
+				logger.Error(string(out))
+				return
+			}
+
+			r, _ = regexp.Compile("Version *: ([^\\n]+)")
+			matches = r.FindStringSubmatch(string(out))
+			if matches != nil {
+				c.version = strings.TrimSpace(matches[1])
+			}
+		} else {
+			logger.Error(err.Error())
+			logger.Error(string(out))
+		}
+	}
 }

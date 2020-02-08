@@ -13,91 +13,112 @@
 // limitations under the License.
 package bom
 
-/** Find and parse package config files.
- */
 import (
-  "github.com/sonatype-nexus-community/cheque/logger"
-  "path/filepath"
-  "errors"
-  "os"
-  "bufio"
-  "strings"
+	"bufio"
+	"errors"
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+
+	"github.com/package-url/packageurl-go"
+	"github.com/sonatype-nexus-community/cheque/logger"
 )
 
 /** Identify the coordinate using file path information
  */
-type pkgconfig_collector struct {
-    path string
-    pkgconfig string
-    name string
-    version string
+type pkgConfigCollector struct {
+	path      string
+	pkgconfig string
+	name      string
+	version   string
 }
 
-func (c pkgconfig_collector) GetName() (string, error) {
-  if (c.pkgconfig == "") {
-    c.parsePkgConfig()
-  }
-
-  if (c.pkgconfig == "") {
-    return "", errors.New("pkgconfig_collector: No pkgconfig file for " + c.path)
-  }
-
-  if (c.name == "") {
-    return "", errors.New("pkgconfig_collector: No pkgconfig name found for " + c.pkgconfig)
-  }
-
-  return c.name, nil
+func (c pkgConfigCollector) IsValid() bool {
+	return true
 }
 
-func (c pkgconfig_collector) GetVersion() (string, error) {
-  if (c.pkgconfig == "") {
-    c.parsePkgConfig()
-  }
+func (c pkgConfigCollector) GetName() (string, error) {
+	if c.pkgconfig == "" {
+		c.parsePkgConfig()
+	}
 
-  if (c.version == "") {
-    return "", errors.New("pkgconfig_collector: No pkgconfig version found")
-  }
+	if c.pkgconfig == "" {
+		return "", errors.New("pkgconfig_collector: No pkgconfig file for " + c.path)
+	}
 
-  return c.version, nil
+	if c.name == "" {
+		return "", errors.New("pkgconfig_collector: No pkgconfig name found for " + c.pkgconfig)
+	}
+
+	return c.name, nil
 }
 
-func (c pkgconfig_collector) GetPurl() (string, error) {
-  name, err := c.GetName()
-  if (err != nil) {
-    return c.path, err
-  }
-  version, err := c.GetVersion()
-  if (err != nil) {
-    return name, err
-  }
-  return "pkg:cpp/" + name + "@" + version, nil
+func (c pkgConfigCollector) GetVersion() (string, error) {
+	if c.pkgconfig == "" {
+		c.parsePkgConfig()
+	}
+
+	if c.version == "" {
+		return "", errors.New("pkgconfig_collector: No pkgconfig version found")
+	}
+
+	return c.version, nil
 }
 
-func (c pkgconfig_collector) GetPath() (string, error) {
-  return c.path, nil
+func (c pkgConfigCollector) GetPurl() (string, error) {
+	name, err := c.GetName()
+	if err != nil {
+		return c.path, err
+	}
+	version, err := c.GetVersion()
+	if err != nil {
+		return name, err
+	}
+	return "pkg:cpp/" + name + "@" + version, nil
 }
 
-func (c *pkgconfig_collector) parsePkgConfig() {
-  fpath := c.path
+func (c pkgConfigCollector) GetPurlObject() (purl packageurl.PackageURL, err error) {
+	name, err := c.GetName()
+	if err != nil {
+		return purl, err
+	}
+	version, err := c.GetVersion()
+	if err != nil {
+		return purl, err
+	}
+	purl, err = packageurl.FromString(fmt.Sprintf("pkg:cpp/%s@%s", name, version))
+	if err != nil {
+		return purl, err
+	}
+	return
+}
+
+func (c pkgConfigCollector) GetPath() (string, error) {
+	return c.path, nil
+}
+
+func (c *pkgConfigCollector) parsePkgConfig() {
+	fpath := c.path
 	dpath := filepath.Dir(fpath)
 	base := filepath.Base(fpath)
 	extension := filepath.Ext(base)
-	base = base[0:len(base)-len(extension)]
-	path := dpath + "/pkgconfig/" + base + ".pc";
+	base = base[0 : len(base)-len(extension)]
+	path := dpath + "/pkgconfig/" + base + ".pc"
 
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-    path = dpath + "/" + base + ".pc";
-    if _, err := os.Stat(path); os.IsNotExist(err) {
-      c.pkgconfig = "unknown"
-  		return
-  	}
+		path = dpath + "/" + base + ".pc"
+		if _, err := os.Stat(path); os.IsNotExist(err) {
+			c.pkgconfig = "unknown"
+			return
+		}
 	}
 
-  c.pkgconfig = path
+	c.pkgconfig = path
 
 	file, err := os.Open(path)
 	if err != nil {
-	    logger.Fatal(err.Error())
+		logger.Fatal(err.Error())
 	}
 	defer file.Close()
 
@@ -112,6 +133,6 @@ func (c *pkgconfig_collector) parsePkgConfig() {
 	}
 
 	if err := scanner.Err(); err != nil {
-	    logger.Fatal(err.Error())
+		logger.Fatal(err.Error())
 	}
 }

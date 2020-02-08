@@ -14,124 +14,91 @@
 package oslibs
 
 import (
-	// "github.com/sonatype-nexus-community/cheque/logger"
-  "errors"
-	"runtime"
-	"os"
 	"fmt"
+	"runtime"
 )
 
 func GetLibraryPath(libPaths []string, name string) (path string, err error) {
-	switch (runtime.GOOS) {
-		case "windows":
-				_, _ = fmt.Fprintf(os.Stderr, "Unsupported OS: %s\n", runtime.GOOS)
-				os.Exit(2)
-				return name, errors.New("GetLibraryPath: Unsupported OS")
-
-		case "darwin":
-			file, err := findOsxLibFile(libPaths, name)
-			if (err != nil || file == "") {
-				return file, errors.New("GetLibraryPath: Cannot find path to " + name)
-			}
-			return file, err
-
-		default:
-			file, err := findUnixLibFile(libPaths, name)
-			if (err != nil || file == "") {
-				return file, errors.New("GetLibraryPath: Cannot find path to " + name)
-			}
-			return file, err
+	switch operating := runtime.GOOS; operating {
+	case "windows":
+		panic(fmt.Sprintf("GetLibraryPath: Unsupported OS: %s\n", operating))
+	case "darwin":
+		file, err := findOsxLibFile(libPaths, name)
+		if err != nil || file == "" {
+			return file, fmt.Errorf("GetLibraryPath: Cannot find path to %s", name)
+		}
+		return file, err
+	default:
+		file, err := findUnixLibFile(libPaths, name)
+		if err != nil || file == "" {
+			return file, fmt.Errorf("GetLibraryPath: Cannot find path to %s", name)
+		}
+		return file, err
 	}
 }
 
 func GetLibraryName(name string) (path string, err error) {
-	switch (runtime.GOOS) {
-		case "windows":
-				_, _ = fmt.Fprintf(os.Stderr, "Unsupported OS: %s\n", runtime.GOOS)
-				os.Exit(2)
-				return name, errors.New("GetLibraryName: Unsupported OS")
-
-		case "darwin":
-			return getOsxLibraryName(name)
-
-		default:
-			return getUnixLibraryName(name)
+	switch operating := runtime.GOOS; operating {
+	case "windows":
+		panic(fmt.Sprintf("GetLibraryName: Unsupported OS: %s\n", operating))
+	case "darwin":
+		return getOsxLibraryName(name)
+	default:
+		return getUnixLibraryName(name)
 	}
 }
 
 func GetLibraryVersion(name string) (path string, err error) {
-	switch (runtime.GOOS) {
-		case "windows":
-				_, _ = fmt.Fprintf(os.Stderr, "Unsupported OS: %s\n", runtime.GOOS)
-				os.Exit(2)
-				return name, errors.New("GetLibraryVersion: Unsupported OS")
-
-		case "darwin":
-			return getOsxLibraryVersion(name)
-
-		default:
-			return getUnixLibraryVersion(name)
+	switch operating := runtime.GOOS; operating {
+	case "windows":
+		panic(fmt.Sprintf("GetLibraryVersion: Unsupported OS: %s\n", operating))
+	case "darwin":
+		return getOsxLibraryVersion(name)
+	default:
+		return getUnixLibraryVersion(name)
 	}
 }
 
 func GetLibraryPathRegexPattern() (result string) {
-
-	if runtime.GOOS == "windows" {
-  }
-
-	if runtime.GOOS == "darwin" {
-    return getOsxLibraryPathRegexPattern()
-  }
-
-	// Fall back to unix variant
-  return getUnixLibraryPathRegexPattern()
+	switch os := runtime.GOOS; os {
+	case "darwin":
+		return getOsxLibraryPathRegexPattern()
+	case "windows":
+		return ""
+	default:
+		return getUnixLibraryPathRegexPattern()
+	}
 }
 
-
 func GetArchiveFileRegexPattern() (result string) {
-
-	if runtime.GOOS == "windows" {
-  }
-
-	if runtime.GOOS == "darwin" {
-  }
-
-	// Fall back to unix variant
-  return getUnixArchiveFileRegexPattern()
+	switch os := runtime.GOOS; os {
+	case "darwin":
+		return ""
+	case "windows":
+		return ""
+	default:
+		return getUnixArchiveFileRegexPattern()
+	}
 }
 
 func GetLibraryFileRegexPattern() (result string) {
-
-	if runtime.GOOS == "windows" {
-  }
-
-	if runtime.GOOS == "darwin" {
-    return getOsxLibraryFileRegexPattern()
-  }
-
-	// Fall back to unix variant
-  return getUnixLibraryFileRegexPattern()
-}
-
-/** FIXME: Actually search paths to find actual binary
- */
-func GetCommandPath(cmd string) (path string) {
-	path = "/usr/bin/" + cmd;
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-	  return ""
+	switch os := runtime.GOOS; os {
+	case "darwin":
+		return getOsxLibraryFileRegexPattern()
+	case "windows":
+		return ""
+	default:
+		return getUnixLibraryFileRegexPattern()
 	}
-	return path;
 }
 
 func GetLibPaths() (paths []string) {
-	if runtime.GOOS == "windows" {
+	switch os := runtime.GOOS; os {
+	case "darwin":
+		return getOsxLibPaths()
+	case "windows":
 		return paths
-  }
-
-	if runtime.GOOS == "darwin" {
-    return getOsxLibPaths()
-  }
-
-	// Fall back to unix variant
-  return getLinuxLibPaths()
+	default:
+		return getLinuxLibPaths()
+	}
 }

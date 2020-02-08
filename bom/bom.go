@@ -14,243 +14,172 @@
 package bom
 
 import (
-  "github.com/sonatype-nexus-community/cheque/oslibs"
-  "github.com/sonatype-nexus-community/cheque/logger"
-  "github.com/sonatype-nexus-community/nancy/types"
+	"os/exec"
+	"path/filepath"
 	"regexp"
-  "strings"
-  "os/exec"
-  "path/filepath"
-  // "errors"
-  "fmt"
-  // "os"
+	"strings"
+
+	"github.com/package-url/packageurl-go"
+	"github.com/sonatype-nexus-community/cheque/logger"
+	"github.com/sonatype-nexus-community/cheque/oslibs"
+	"github.com/sonatype-nexus-community/cheque/types"
+
+	"fmt"
 )
 
 /**
- * - Create Bom through a variety of mechanisms.
- * - Export Bom to file
- * - Import Bom from file
+ * CreateBom does stuff
  */
-
 func CreateBom(libPaths []string, libs []string, files []string) (deps types.ProjectList, err error) {
- // Library names
- lookup := make(map[string]bool)
+	// Library names
+	lookup := make(map[string]bool)
 
- // Recursively get all transitive library paths
- for _,lib := range libs {
-   lookup, err = recursiveGetLibraryPaths(lookup, libPaths, lib)
-   if (err != nil) {
-     logger.Error(err.Error())
-     continue
-   }
- }
+	// Recursively get all transitive library paths
+	for _, lib := range libs {
+		lookup, err = recursiveGetLibraryPaths(lookup, libPaths, lib)
+		if err != nil {
+			logger.Error(err.Error())
+			continue
+		}
+	}
 
- for path, _ := range lookup {
-   project, err := getDllCoordinate(path)
-   if (err != nil) {
-     logger.Error(err.Error())
-     continue
-   }
+	for path := range lookup {
+		project, err := getDllCoordinate(path)
+		if err != nil {
+			logger.Error(err.Error())
+			continue
+		}
 
-   // Minor repair to names to make them consistent
-   if (!strings.HasPrefix(project.Name, "lib")) {
-     project.Name = "lib" + project.Name
-   }
-   deps.Projects = append(deps.Projects, project)
+		if !strings.HasPrefix(project.Name, "lib") {
+			project.Name = "lib" + project.Name
+		}
+		deps.Projects = append(deps.Projects, project)
+	}
 
+	for _, lib := range files {
+		rn, _ := regexp.Compile(oslibs.GetLibraryFileRegexPattern())
+		nameMatch := rn.FindStringSubmatch(lib)
 
+		if nameMatch != nil {
+			project, err := getDllCoordinate(lib)
+			if err != nil {
+				logger.Error(err.Error())
+				continue
+			}
 
-   // // logger.Info("CreateBom 1: " + lib)
-   // project, err := oslibs.GetLibraryId(lib)
-   // customerrors.Check(err, "Error finding file/version")
-   //
-   // if (project.Version != "") {
-   //   // Add the simple name
-   //     if (project.Name == "") {
-   //       project.Name = "lib" + lib
-   //     }
-   //   deps.Projects = append(deps.Projects, project)
-   // } else {
-   //   logger.Warning("Cannot find " + lib + " library... skipping")
-   // }
- }
+			// We need both the "lib<name>" and "<name>" versions, since which is used
+			// depends on the repo.
+			deps.Projects = append(deps.Projects, project)
+			name := project.Name
+			if !strings.HasPrefix(name, "lib") {
+				project.Name = "lib" + name
+				deps.Projects = append(deps.Projects, project)
+			} else {
+				project.Name = name[3:]
+				deps.Projects = append(deps.Projects, project)
+			}
+		} else {
+			purl, err := getArchiveCoordinate(lib)
+			if err != nil {
+				logger.Error(err.Error())
+				continue
+			}
 
- // Paths to libraries
- for _,lib := range files {
-   // logger.Info("CreateBom 2: " + lib)
-
-   rn, _ := regexp.Compile(oslibs.GetLibraryFileRegexPattern())
-   nameMatch := rn.FindStringSubmatch(lib)
-
-   if nameMatch != nil {
-     // This is a dynamic library (DLL)
-     project, err := getDllCoordinate(lib)
-     if (err != nil) {
-       logger.Error(err.Error())
-       continue
-     }
-
-     // We need both the "lib<name>" and "<name>" versions, since which is used
-     // depends on the repo.
-     deps.Projects = append(deps.Projects, project)
-     name := project.Name
-     if (!strings.HasPrefix(name, "lib")) {
-       project.Name = "lib" + name
-       deps.Projects = append(deps.Projects, project)
-     } else {
-       project.Name = name[3:]
-       deps.Projects = append(deps.Projects, project)
-     }
-
-     // // logger.Info("CreateBom 2: " + fmt.Sprintf("%v", nameMatch))
-     //
-     // project, err := oslibs.GetLibraryId(lib)
-     // customerrors.Check(err, "Error finding file/version")
-     //
-     // if (project.Version != "") {
-     //   if (project.Name == "") {
-     //     project.Name = nameMatch[1];
-     //   }
-     //   deps.Projects = append(deps.Projects, project)
-     // } else {
-     //   logger.Warning("Cannot find " + lib + " library... skipping")
-     // }
-   } else {
-     project, err := getArchiveCoordinate(lib)
-     if (err != nil) {
-       logger.Error(err.Error())
-       continue
-     }
-
-     // We need both the "lib<name>" and "<name>" versions, since which is used
-     // depends on the repo.
-     deps.Projects = append(deps.Projects, project)
-     name := project.Name
-     if (!strings.HasPrefix(name, "lib")) {
-       project.Name = "lib" + name
-       deps.Projects = append(deps.Projects, project)
-     } else {
-       project.Name = name[3:]
-       deps.Projects = append(deps.Projects, project)
-     }
-
-     // // This is a static library (archive)
-     // rn, _ := regexp.Compile(oslibs.GetArchiveFileRegexPattern())
-     // nameMatch := rn.FindStringSubmatch(lib)
-     //
-     // // logger.Info("CreateBom 3: " + fmt.Sprintf("%v", nameMatch))
-     //
-     // project, err := oslibs.GetArchiveId(lib)
-     // customerrors.Check(err, "Error finding file/version")
-     //
-     // if (project.Version != "") {
-     //   if (project.Name == "") {
-     //     project.Name = nameMatch[1];
-     //   }
-     //   deps.Projects = append(deps.Projects, project)
-     // } else {
-     //   logger.Warning("Cannot find " + lib + " archive... skipping")
-     // }
-   }
- }
- return deps,nil
+			// We need both the "lib<name>" and "<name>" versions, since which is used
+			// depends on the repo.
+			deps.Projects = append(deps.Projects, purl)
+			name := purl.Name
+			if !strings.HasPrefix(name, "lib") {
+				purl.Name = "lib" + name
+				deps.Projects = append(deps.Projects, purl)
+			} else {
+				purl.Name = name[3:]
+				deps.Projects = append(deps.Projects, purl)
+			}
+		}
+	}
+	return deps, nil
 }
 
 func recursiveGetLibraryPaths(lookup map[string]bool, libPaths []string, lib string) (results map[string]bool, err error) {
-  path, err := oslibs.GetLibraryPath(libPaths, lib)
-  if (err != nil) {
-    logger.Debug(fmt.Sprintf("%v", err))
-    return lookup, nil
-  }
+	path, err := oslibs.GetLibraryPath(libPaths, lib)
+	if err != nil {
+		logger.Debug(fmt.Sprintf("%v", err))
+		return lookup, nil
+	}
 
-  lookup[path] = true
+	lookup[path] = true
 
-  lddCmd := exec.Command("ldd", path)
-  out,err := lddCmd.Output()
-  if (err == nil) {
-    buf := string(out)
-    lines := strings.Split(buf, "\n")
-    for _,line := range lines {
-      if (line != "") {
-        tokens := strings.Split(line, " ")
-        token := strings.TrimSpace(tokens[0])
-        lookup, err = recursiveGetLibraryPaths(lookup, append(libPaths, filepath.Dir(path)), token)
-        if (err != nil) {
-          return lookup, err
-        }
-      }
-    }
-  } else {
-    return lookup, err
-  }
+	lddCmd := exec.Command("ldd", path)
+	out, err := lddCmd.Output()
+	if err == nil {
+		buf := string(out)
+		lines := strings.Split(buf, "\n")
+		for _, line := range lines {
+			if line != "" {
+				tokens := strings.Split(line, " ")
+				token := strings.TrimSpace(tokens[0])
+				lookup, err = recursiveGetLibraryPaths(lookup, append(libPaths, filepath.Dir(path)), token)
+				if err != nil {
+					return lookup, err
+				}
+			}
+		}
+	} else {
+		return lookup, err
+	}
 
-  return lookup, nil
+	return lookup, nil
 }
 
-func getDllCoordinate(path string) (project types.Projects, err error) {
-  project = types.Projects{}
-  var collector Collector
-  // Check each collector in turn to see which gives us a good result.
+func getDllCoordinate(path string) (purl packageurl.PackageURL, err error) {
+	var collector Collector
 
-  // pkgconfig_collector
-  pc := pkgconfig_collector{path: path}
-  _, err = pc.GetPurl()
-  if (err == nil) {
-    project.Name,_ = pc.GetName();
-    project.Version,_ = pc.GetVersion();
-    return project, err
-  }
+	collector = pkgConfigCollector{path: path}
+	purl, err = collector.GetPurlObject()
+	if err == nil {
+		return purl, nil
+	}
 
-  // rpm_collector
-  collector = rpm_collector{path: path}
-  _, err = collector.GetPurl()
-  if (err == nil) {
-    project.Name,_ = collector.GetName();
-    project.Version,_ = collector.GetVersion();
-    return project, err
-  }
+	collector = rpmCollector{path: path}
+	if collector.IsValid() {
+		purl, err = collector.GetPurlObject()
+		if err == nil {
+			return purl, nil
+		}
+	}
 
-  // deb_collector
+	collector = debCollector{path: path}
+	if collector.IsValid() {
+		purl, err = collector.GetPurlObject()
+		if err == nil {
+			return purl, nil
+		}
+	}
 
-  // path_collector
-  collector = path_collector{path: path}
-  _, err = collector.GetPurl()
-  if (err == nil) {
-    project.Name,_ = collector.GetName();
-    project.Version,_ = collector.GetVersion();
-    return project, err
-  }
+	collector = pathCollector{path: path}
+	purl, err = collector.GetPurlObject()
+	if err == nil {
+		return purl, nil
+	}
 
-  // name_collector
-
-  return project, err
+	return
 }
 
-func getArchiveCoordinate(path string) (project types.Projects, err error) {
-  project = types.Projects{}
-  // Check each collector in turn to see which gives us a good result.
+func getArchiveCoordinate(path string) (purl packageurl.PackageURL, err error) {
+	var collector Collector
 
-  // pkgconfig_collector
-  pc := pkgconfig_collector{path: path}
-  _, err = pc.GetPurl()
-  if (err == nil) {
-    project.Name,_ = pc.GetName();
-    project.Version,_ = pc.GetVersion();
-    return project, err
-  }
+	collector = pkgConfigCollector{path: path}
+	purl, err = collector.GetPurlObject()
+	if err == nil {
+		return purl, nil
+	}
 
-  // rpm_collector
+	collector = pathCollector{path: path}
+	purl, err = collector.GetPurlObject()
+	if err == nil {
+		return purl, nil
+	}
 
-  // deb_collector
-
-  // path_collector
-  collector := path_collector{path: path}
-  _, err = collector.GetPurl()
-  if (err == nil) {
-    project.Name,_ = collector.GetName();
-    project.Version,_ = collector.GetVersion();
-    return project, err
-  }
-
-  return project, err
+	return
 }

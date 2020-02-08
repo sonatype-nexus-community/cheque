@@ -14,16 +14,13 @@
 package oslibs
 
 import (
-	// "github.com/sonatype-nexus-community/cheque/logger"
-
-	"fmt"
-	"os"
-	"strings"
-  "regexp"
-  "path/filepath"
-	"errors"
-	"io"
 	"bufio"
+	"fmt"
+	"io"
+	"os"
+	"path/filepath"
+	"regexp"
+	"strings"
 
 	// Required to run external commands
 	"os/exec"
@@ -33,35 +30,31 @@ import (
  */
 func getOsxLibraryName(name string) (path string, err error) {
 	path, _, err = getOsxLibraryNameAndVersion(name)
-	return path, err
+	return
 }
 
 /** Given a file path, extract a library name from the path.
  */
 func getOsxLibraryVersion(name string) (version string, err error) {
 	_, version, err = getOsxLibraryNameAndVersion(name)
-	return version, err
+	return
 }
 
 func getOsxLibraryNameAndVersion(path string) (name string, version string, err error) {
-
-	// Extract a name
-	fname := filepath.Base(path)
 	r, _ := regexp.Compile("^(.*?)\\.([0-9\\.]+)dylib")
 	matches := r.FindStringSubmatch(path)
 	if matches == nil {
-		return "", "", errors.New("getOsxLibraryNameAndVersion: cannot get name from " + path + " (" + fname + ")")
+		return "", "", fmt.Errorf("getOsxLibraryNameAndVersion: cannot get name from %s", path)
 	}
 	name = matches[1]
 
-	// Extract a version
 	r, _ = regexp.Compile("\\.([0-9\\.]+)\\.dylib")
 	matches = r.FindStringSubmatch(path)
 	if matches != nil {
 		return name, matches[1], nil
 	}
 
-	return name, "", errors.New("getOsxLibraryNameAndVersion: cannot get version from " + fname)
+	return name, "", fmt.Errorf("getOsxLibraryNameAndVersion: cannot get version from %s", path)
 }
 
 /** Run otool and get version strings from it
@@ -86,23 +79,21 @@ func getOtoolVersion(name string, file string) (version string, err error) {
 
 func findOsxLibFile(libPaths []string, name string) (match string, err error) {
 	if strings.HasSuffix(name, ".dylib") {
-    if _, err := os.Stat(name); os.IsNotExist(err) {
-      return "", err
-    }
-		return name,nil
+		if _, err := os.Stat(name); os.IsNotExist(err) {
+			return "", err
+		}
+		return name, nil
 	} else {
 		return findLibFile(libPaths, "lib", name, ".dylib")
 	}
 }
 
 func getOsxSymlinkVersion(file string) (version string, err error) {
-	path,err := filepath.EvalSymlinks(file)
-
+	path, err := filepath.EvalSymlinks(file)
 	if err != nil {
 		return "", err
 	}
 
-	// Extract a version
 	r, err := regexp.Compile("\\.([0-9\\.]+)\\.dylib")
 	if err != nil {
 		return "", err
@@ -119,13 +110,11 @@ func getOsxLibraryPathRegexPattern() (result string) {
 	return "[a-zA-Z0-9_/\\.]+\\.dylib"
 }
 
-
 func getOsxLibraryFileRegexPattern() (result string) {
 	return "([a-zA-Z0-9_]+)\\.[0-9\\.]+\\.dylib"
 }
 
 func getOsxLibPaths() (paths []string) {
-	// clang -Xlinker -v
 	clangCmd := exec.Command("clang", "-Xlinker", "-v")
 
 	stderr, err := clangCmd.StderrPipe()
@@ -146,7 +135,7 @@ func getOsxLibPaths() (paths []string) {
 				if strings.HasPrefix(msg, "\t") {
 					paths = append(paths, strings.TrimSpace(msg))
 				} else {
-					matching = false;
+					matching = false
 				}
 			}
 			if strings.HasPrefix(msg, "Library search paths") {
@@ -160,5 +149,5 @@ func getOsxLibPaths() (paths []string) {
 	if err != nil {
 		// log.Fatalf("could not wait for clangCmd: %v", err)
 	}
-	return paths
+	return
 }

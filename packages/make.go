@@ -14,22 +14,10 @@
 package packages
 
 import (
-	"fmt"
-	"github.com/sonatype-nexus-community/nancy/customerrors"
-	"github.com/sonatype-nexus-community/nancy/types"
-	"os"
+	"github.com/sonatype-nexus-community/cheque/types"
 )
 
-// Dep is an implementation of Packages interface
 type Make struct {
 	MakefilePath string
-	ProjectList types.ProjectList
-}
-
-// CheckExistenceOfManifest will see if a Gopkg exists at the given path
-func (d Make) CheckExistenceOfManifest() bool {
-	if _, err := os.Stat(d.MakefilePath); os.IsNotExist(err) {
-		customerrors.Check(err, fmt.Sprint("No file found at path: "+d.MakefilePath))
-	}
-	return true
+	ProjectList  types.ProjectList
 }

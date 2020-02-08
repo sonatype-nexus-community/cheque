@@ -13,9 +13,13 @@
 // limitations under the License.
 package bom
 
+import "github.com/package-url/packageurl-go"
+
 type Collector interface {
-    GetName() (string, error)
-    GetVersion() (string, error)
-    GetPurl() (string, error)
-    GetPath() (string, error)
+	GetName() (string, error)
+	GetVersion() (string, error)
+	GetPurl() (string, error)
+	GetPurlObject() (packageurl.PackageURL, error)
+	GetPath() (string, error)
+	IsValid() bool
 }
