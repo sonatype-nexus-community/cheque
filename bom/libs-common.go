@@ -13,14 +13,30 @@
 // limitations under the License.
 package bom
 
-import "github.com/package-url/packageurl-go"
+import (
+	"os"
 
-type Collector interface {
-	GetName() (string, error)
-	GetVersion() (string, error)
-	GetPurl() (string, error)
-	GetPurlObject() (packageurl.PackageURL, error)
-	GetPath() (string, error)
-	IsValid() bool
-	SetExternalCommand(e ExternalCommand)
+	"github.com/spf13/afero"
+)
+
+func findLibFile(libpaths []string, prefix string, lib string, suffix string) (match string, err error) {
+	for _, libpath := range libpaths {
+		globPattern := libpath + "/" + prefix + lib + suffix
+		if suffix != "" {
+			globPattern = globPattern + "*"
+		}
+		matches, err := afero.Glob(AppFs, globPattern)
+
+		if err == nil {
+			if len(matches) > 0 {
+				for _, match := range matches {
+					if _, err := AppFs.Stat(match); os.IsNotExist(err) {
+					} else {
+						return match, nil
+					}
+				}
+			}
+		}
+	}
+	return "", nil
 }

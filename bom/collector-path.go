@@ -17,7 +17,6 @@ import (
 	"fmt"
 
 	"github.com/package-url/packageurl-go"
-	"github.com/sonatype-nexus-community/cheque/oslibs"
 
 	"path/filepath"
 )
@@ -27,6 +26,10 @@ import (
 type pathCollector struct {
 	path    string
 	symlink string
+}
+
+func (c pathCollector) SetExternalCommand(e ExternalCommand) {
+	// NO-OP, no external command
 }
 
 func (c pathCollector) IsValid() bool {
@@ -39,7 +42,7 @@ func (c pathCollector) GetName() (string, error) {
 		return symlink, err
 	}
 
-	return oslibs.GetLibraryName(symlink)
+	return GetLibraryName(symlink)
 }
 
 func (c pathCollector) GetVersion() (string, error) {
@@ -48,7 +51,7 @@ func (c pathCollector) GetVersion() (string, error) {
 		return symlink, err
 	}
 
-	return oslibs.GetLibraryVersion(symlink)
+	return GetLibraryVersion(symlink)
 }
 
 func (c *pathCollector) getSymlink() (string, error) {

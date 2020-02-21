@@ -16,7 +16,6 @@ package bom
 import (
 	"errors"
 	"fmt"
-	"os/exec"
 	"regexp"
 	"strings"
 
@@ -27,19 +26,20 @@ import (
 /** Identify the coordinate using file path information
  */
 type debCollector struct {
-	path      string
-	pkgconfig string
-	name      string
-	version   string
-	dist      string
+	path            string
+	pkgconfig       string
+	name            string
+	version         string
+	dist            string
+	externalCommand ExternalCommand
 }
 
 func (c debCollector) IsValid() bool {
-	_, err := exec.LookPath("dpkg")
-	if err != nil {
-		return false
-	}
-	return true
+	return c.externalCommand.IsValid()
+}
+
+func (c debCollector) SetExternalCommand(e ExternalCommand) {
+	c.externalCommand = e
 }
 
 func (c debCollector) GetName() (string, error) {
@@ -98,16 +98,13 @@ func (c *debCollector) findPackage() {
 	// Default distribution
 	c.dist = "ubuntu"
 
-	dpkgCmd := exec.Command("dpkg", "-S", c.path)
-	out, err := dpkgCmd.Output()
+	out, err := c.externalCommand.ExecCommand("-S", c.path)
 	if err == nil {
-		// fmt.Fprintf(os.Stderr, "GetUnixLibraryVersion 3.1 %s\n", out)
 		buf := string(out)
 		tokens := strings.Split(buf, ":")
 		libname := tokens[0]
 
-		dpkgCmd := exec.Command("dpkg", "-s", libname)
-		out, err := dpkgCmd.Output()
+		out, err = c.externalCommand.ExecCommand("-s", libname)
 		if err == nil {
 			r, _ := regexp.Compile("Name *: ([^\\n]+)")
 			matches := r.FindStringSubmatch(string(out))

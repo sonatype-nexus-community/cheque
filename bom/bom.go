@@ -14,22 +14,26 @@
 package bom
 
 import (
-	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
 
 	"github.com/package-url/packageurl-go"
 	"github.com/sonatype-nexus-community/cheque/logger"
-	"github.com/sonatype-nexus-community/cheque/oslibs"
 	"github.com/sonatype-nexus-community/cheque/types"
 
 	"fmt"
 )
 
-/**
- * CreateBom does stuff
- */
+var RPMExtCmd = RpmExternalCommand{}
+var DEBExtCmd = DebExternalCommand{}
+var LDDCommand ExternalCommand
+
+func init() {
+	LDDCommand = LddExternalCommand{}
+}
+
+// CreateBom does stuff
 func CreateBom(libPaths []string, libs []string, files []string) (deps types.ProjectList, err error) {
 	// Library names
 	lookup := make(map[string]bool)
@@ -57,7 +61,7 @@ func CreateBom(libPaths []string, libs []string, files []string) (deps types.Pro
 	}
 
 	for _, lib := range files {
-		rn, _ := regexp.Compile(oslibs.GetLibraryFileRegexPattern())
+		rn, _ := regexp.Compile(GetLibraryFileRegexPattern())
 		nameMatch := rn.FindStringSubmatch(lib)
 
 		if nameMatch != nil {
@@ -102,7 +106,7 @@ func CreateBom(libPaths []string, libs []string, files []string) (deps types.Pro
 }
 
 func recursiveGetLibraryPaths(lookup map[string]bool, libPaths []string, lib string) (results map[string]bool, err error) {
-	path, err := oslibs.GetLibraryPath(libPaths, lib)
+	path, err := GetLibraryPath(libPaths, lib)
 	if err != nil {
 		logger.Debug(fmt.Sprintf("%v", err))
 		return lookup, nil
@@ -110,8 +114,7 @@ func recursiveGetLibraryPaths(lookup map[string]bool, libPaths []string, lib str
 
 	lookup[path] = true
 
-	lddCmd := exec.Command("ldd", path)
-	out, err := lddCmd.Output()
+	out, err := LDDCommand.ExecCommand(path)
 	if err == nil {
 		buf := string(out)
 		lines := strings.Split(buf, "\n")
@@ -141,7 +144,7 @@ func getDllCoordinate(path string) (purl packageurl.PackageURL, err error) {
 		return purl, nil
 	}
 
-	collector = rpmCollector{path: path}
+	collector = rpmCollector{path: path, externalCommand: RPMExtCmd}
 	if collector.IsValid() {
 		purl, err = collector.GetPurlObject()
 		if err == nil {
@@ -149,7 +152,7 @@ func getDllCoordinate(path string) (purl packageurl.PackageURL, err error) {
 		}
 	}
 
-	collector = debCollector{path: path}
+	collector = debCollector{path: path, externalCommand: DEBExtCmd}
 	if collector.IsValid() {
 		purl, err = collector.GetPurlObject()
 		if err == nil {

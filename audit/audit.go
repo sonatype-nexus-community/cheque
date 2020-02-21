@@ -21,6 +21,7 @@ import (
 	"github.com/sonatype-nexus-community/nancy/audit"
 	"github.com/sonatype-nexus-community/nancy/customerrors"
 	"github.com/sonatype-nexus-community/nancy/ossindex"
+	typesNancy "github.com/sonatype-nexus-community/nancy/types"
 
 	"strings"
 )
@@ -32,32 +33,30 @@ func ProcessPaths(libPaths []string, libs []string, files []string) (count int) 
 }
 
 func AuditBom(deps types.ProjectList) (count int) {
-	var canonicalPurls, _ = RootPurls(deps)
-	var purls, _ = DefinedPurls(deps)
-	var packageCount = CountDistinctLibraries(append(canonicalPurls, purls...))
+	var canonicalPurls, _ = rootPurls(deps)
+	var purls, _ = definedPurls(deps)
+	var packageCount = countDistinctLibraries(append(canonicalPurls, purls...))
 
 	if packageCount == 0 {
 		return 0
 	}
 
-	var conanPurls, _ = ConanPurls(canonicalPurls)
-	var debPurls, _ = DebPurls(canonicalPurls)
-	var rpmPurls, _ = RpmPurls(canonicalPurls)
+	var conanPurls, _ = conanPurls(canonicalPurls)
+	var debPurls, _ = debPurls(canonicalPurls)
+	var rpmPurls, _ = rpmPurls(canonicalPurls)
 	purls = append(purls, conanPurls...)
 	purls = append(purls, debPurls...)
 	purls = append(purls, rpmPurls...)
 
-	// fmt.Fprintf(os.Stderr, "AUDIT: %v\n", purls)
-
 	coordinates, err := ossindex.AuditPackages(purls)
 	customerrors.Check(err, "Error auditing packages")
 
-	var results []types.Coordinate
-	lookup := make(map[string]types.Coordinate)
+	var results []typesNancy.Coordinate
+	lookup := make(map[string]typesNancy.Coordinate)
 
 	for i := 0; i < len(coordinates); i++ {
 		coordinate := coordinates[i]
-		name := GetCanonicalNameAndVersion(coordinate.Coordinates)
+		name := getCanonicalNameAndVersion(coordinate.Coordinates)
 
 		// If the lookup is true, and there are vulnerabilities, then this name is done
 		if val, ok := lookup[name]; ok {
@@ -81,7 +80,7 @@ func AuditBom(deps types.ProjectList) (count int) {
 	return count
 }
 
-func CountDistinctLibraries(purls []string) (result int) {
+func countDistinctLibraries(purls []string) (result int) {
 	lookup := make(map[string]bool)
 
 	for _, purl := range purls {
@@ -94,7 +93,7 @@ func CountDistinctLibraries(purls []string) (result int) {
 	return len(lookup)
 }
 
-func GetCanonicalNameAndVersion(path string) (result string) {
+func getCanonicalNameAndVersion(path string) (result string) {
 	tokens := strings.Split(path, ":")
 	tokens = strings.Split(tokens[1], "/")
 
@@ -104,19 +103,21 @@ func GetCanonicalNameAndVersion(path string) (result string) {
 
 // The root Purls are a generic purl which is not used for querying. It will
 // subsequently be used to build *real* PURLs for OSS Index queries.
-func RootPurls(deps types.ProjectList) (purls []string, err error) {
+func rootPurls(deps types.ProjectList) (purls []string, err error) {
 	for _, dep := range deps.Projects {
 		if !strings.HasPrefix(dep.Name, "pkg:") {
-			purls = append(purls, "pkg:cpp/"+dep.Name+"@"+dep.Version)
+			purls = append(purls, dep.String())
 			if strings.HasPrefix(dep.Name, "lib") {
-				purls = append(purls, "pkg:cpp/"+dep.Name[3:]+"@"+dep.Version)
+				libDep := dep
+				libDep.Name = libDep.Name[3:]
+				purls = append(purls, libDep.String())
 			}
 		}
 	}
 	return purls, nil
 }
 
-func DefinedPurls(deps types.ProjectList) (purls []string, err error) {
+func definedPurls(deps types.ProjectList) (purls []string, err error) {
 	for _, dep := range deps.Projects {
 		if strings.HasPrefix(dep.Name, "pkg:") {
 			purls = append(purls, dep.Name+"@"+dep.Version)
@@ -125,7 +126,7 @@ func DefinedPurls(deps types.ProjectList) (purls []string, err error) {
 	return purls, nil
 }
 
-func ConanPurls(purls []string) (results []string, err error) {
+func conanPurls(purls []string) (results []string, err error) {
 	for _, purl := range purls {
 		tokens := strings.Split(purl, ":")
 		tokens = strings.Split(tokens[1], "/")
@@ -138,7 +139,7 @@ func ConanPurls(purls []string) (results []string, err error) {
 	return results, nil
 }
 
-func DebPurls(misses []string) (results []string, err error) {
+func debPurls(misses []string) (results []string, err error) {
 	for _, purl := range misses {
 		tokens := strings.Split(purl, ":")
 		tokens = strings.Split(tokens[1], "/")
@@ -148,7 +149,7 @@ func DebPurls(misses []string) (results []string, err error) {
 	return results, nil
 }
 
-func RpmPurls(misses []string) (results []string, err error) {
+func rpmPurls(misses []string) (results []string, err error) {
 	for _, purl := range misses {
 		tokens := strings.Split(purl, ":")
 		tokens = strings.Split(tokens[1], "/")

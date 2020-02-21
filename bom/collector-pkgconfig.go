@@ -34,6 +34,10 @@ type pkgConfigCollector struct {
 	version   string
 }
 
+func (c pkgConfigCollector) SetExternalCommand(e ExternalCommand) {
+	// NO OP, no external command
+}
+
 func (c pkgConfigCollector) IsValid() bool {
 	return true
 }

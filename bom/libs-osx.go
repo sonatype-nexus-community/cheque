@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package oslibs
+package bom
 
 import (
 	"bufio"
@@ -78,14 +78,17 @@ func getOtoolVersion(name string, file string) (version string, err error) {
 }
 
 func findOsxLibFile(libPaths []string, name string) (match string, err error) {
+	// TODO: Probably buggy, copied Unix version for now
+	// if strings.HasSuffix(name, ".dylib") {
+	// 	if _, err := AppFs.Stat(name); os.IsNotExist(err) {
+	// 		return "", err
+	// 	}
+	// 	return name, nil
+	// }
 	if strings.HasSuffix(name, ".dylib") {
-		if _, err := os.Stat(name); os.IsNotExist(err) {
-			return "", err
-		}
-		return name, nil
-	} else {
-		return findLibFile(libPaths, "lib", name, ".dylib")
+		return findLibFile(libPaths, "", name, "")
 	}
+	return findLibFile(libPaths, "lib", name, ".dylib")
 }
 
 func getOsxSymlinkVersion(file string) (version string, err error) {

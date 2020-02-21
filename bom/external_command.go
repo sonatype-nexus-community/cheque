@@ -1,4 +1,4 @@
-// Copyright 2019 Sonatype Inc.
+// Copyright 2020 Sonatype Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,28 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package oslibs
+package bom
 
-import (
-	"fmt"
-	"os"
-	"flag"
-
-	// Required to get OS
-	"runtime"
-)
-
-
-func getWindowsLibraryId(name string) (version string, err error) {
-	_, _ = fmt.Fprintf(os.Stderr, "Unsupported OS: %s\n", runtime.GOOS)
-	flag.PrintDefaults()
-	os.Exit(2)
-	return "", nil
-}
-
-func getWindowsArchiveId(name string) (version string, err error) {
-	_, _ = fmt.Fprintf(os.Stderr, "Unsupported OS: %s\n", runtime.GOOS)
-	flag.PrintDefaults()
-	os.Exit(2)
-	return "", nil
+type ExternalCommand interface {
+	IsValid() bool
+	ExecCommand(a ...string) ([]byte, error)
 }

@@ -20,7 +20,6 @@ import (
 	"github.com/sonatype-nexus-community/cheque/logger"
 
 	"errors"
-	"os/exec"
 	"regexp"
 	"strings"
 )
@@ -28,19 +27,20 @@ import (
 /** Identify the coordinate using file path information
  */
 type rpmCollector struct {
-	path      string
-	pkgconfig string
-	name      string
-	version   string
-	dist      string
+	path            string
+	pkgconfig       string
+	name            string
+	version         string
+	dist            string
+	externalCommand ExternalCommand
+}
+
+func (c rpmCollector) SetExternalCommand(e ExternalCommand) {
+	c.externalCommand = e
 }
 
 func (c rpmCollector) IsValid() bool {
-	_, err := exec.LookPath("rpm")
-	if err != nil {
-		return false
-	}
-	return true
+	return c.externalCommand.IsValid()
 }
 
 func (c rpmCollector) GetName() (string, error) {
@@ -99,14 +99,11 @@ func (c *rpmCollector) findPackage() {
 	// Default distribution
 	c.dist = "fedora"
 
-	rpmCmd := exec.Command("rpm", "-q", "--whatprovides", c.path)
-	out, err := rpmCmd.Output()
+	out, err := c.externalCommand.ExecCommand("-q", "--whatprovides", c.path)
 	if err == nil {
-		// fmt.Fprintf(os.Stderr, "GetUnixLibraryVersion 3.1 %s\n", out)
 		libname := strings.TrimSpace(string(out))
 
-		rpmCmd = exec.Command("rpm", "-q", "-i", libname)
-		out, err := rpmCmd.Output()
+		out, err = c.externalCommand.ExecCommand("-q", "-i", libname)
 		if err == nil {
 			r, _ := regexp.Compile("Name *: ([^\\n]+)")
 			matches := r.FindStringSubmatch(string(out))
