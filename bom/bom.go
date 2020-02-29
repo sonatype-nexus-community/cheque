@@ -54,8 +54,12 @@ func CreateBom(libPaths []string, libs []string, files []string) (deps types.Pro
 			continue
 		}
 
+		deps.Projects = append(deps.Projects, project)
+
 		if !strings.HasPrefix(project.Name, "lib") {
 			project.Name = "lib" + project.Name
+		} else {
+			project.Name = project.Name[3:]
 		}
 		deps.Projects = append(deps.Projects, project)
 	}

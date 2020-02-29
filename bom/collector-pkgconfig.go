@@ -92,10 +92,7 @@ func (c pkgConfigCollector) GetPurlObject() (purl packageurl.PackageURL, err err
 		return purl, err
 	}
 	purl, err = packageurl.FromString(fmt.Sprintf("pkg:cpp/%s@%s", name, version))
-	if err != nil {
-		return purl, err
-	}
-	return
+	return purl, err
 }
 
 func (c pkgConfigCollector) GetPath() (string, error) {
@@ -110,9 +107,9 @@ func (c *pkgConfigCollector) parsePkgConfig() {
 	base = base[0 : len(base)-len(extension)]
 	path := dpath + "/pkgconfig/" + base + ".pc"
 
-	if _, err := os.Stat(path); os.IsNotExist(err) {
+	if _, err := AppFs.Stat(path); os.IsNotExist(err) {
 		path = dpath + "/" + base + ".pc"
-		if _, err := os.Stat(path); os.IsNotExist(err) {
+		if _, err := AppFs.Stat(path); os.IsNotExist(err) {
 			c.pkgconfig = "unknown"
 			return
 		}
@@ -120,7 +117,7 @@ func (c *pkgConfigCollector) parsePkgConfig() {
 
 	c.pkgconfig = path
 
-	file, err := os.Open(path)
+	file, err := AppFs.Open(path)
 	if err != nil {
 		logger.Fatal(err.Error())
 	}

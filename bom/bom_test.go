@@ -53,10 +53,10 @@ func TestUnixCreateBom(t *testing.T) {
 	assertResultContains(t, deps, "pkg:cpp/buh@1.2.3")
 
 	// pkgconfig based results
-	assertResultContains(t, deps, "pkg:cpp/libken@1.2.3")
-	assertResultContains(t, deps, "pkg:cpp/ken@1.2.3")
-	assertResultContains(t, deps, "pkg:cpp/pkgtest@1.2.3")
-	assertResultContains(t, deps, "pkg:cpp/pkgtest@1.2.3")
+	assertResultContains(t, deps, "pkg:cpp/libken@2.3.4")
+	assertResultContains(t, deps, "pkg:cpp/ken@2.3.4")
+	assertResultContains(t, deps, "pkg:cpp/pkgtest@3.4.5")
+	assertResultContains(t, deps, "pkg:cpp/pkgtest@3.4.5")
 
 	// OS based results
 	assertResultContains(t, deps, "pkg:rpm/fedora/rpmtest@1.2.3")

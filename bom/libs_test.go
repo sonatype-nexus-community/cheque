@@ -158,18 +158,21 @@ func SetupTestUnixFileSystem(operating string) {
 	Goose = operating
 	AppFs = afero.NewMemMapFs()
 
-	AppFs.MkdirAll("/lib/", 0755)
+	AppFs.MkdirAll("/lib/pkgconfig", 0755)
 	afero.WriteFile(AppFs, "/lib/libpng.so", []byte("file b"), 0644)
 	afero.WriteFile(AppFs, "/lib/libtiff.a", []byte("file c"), 0644)
 	afero.WriteFile(AppFs, "/lib/libsnuh.so.1.2.3", []byte("file d"), 0644)
 	afero.WriteFile(AppFs, "/lib/libbuh.1.2.3.so", []byte("file e"), 0644)
 
-	AppFs.MkdirAll("/usrdefined/path", 0755)
+	AppFs.MkdirAll("/usrdefined/path/pkgconfig", 0755)
 	afero.WriteFile(AppFs, "/usrdefined/path/libbob.so.1.2.3", []byte("file b"), 0644)
-	afero.WriteFile(AppFs, "/usrdefined/path/libken.a", []byte("file c"), 0644)
+	afero.WriteFile(AppFs, "/usrdefined/path/libken.so", []byte("file c"), 0644)
+	afero.WriteFile(AppFs, "/usrdefined/path/pkgconfig/libken.pc", []byte("Name: ken\nVersion: 2.3.4"), 0644)
 	afero.WriteFile(AppFs, "/usrdefined/path/libpkgtest.so", []byte("file c"), 0644)
+	afero.WriteFile(AppFs, "/usrdefined/path/pkgconfig/libpkgtest.pc", []byte("Name: pkgtest\nVersion: 3.4.5"), 0644)
 	afero.WriteFile(AppFs, "/usrdefined/path/librpmtest.so", []byte("file c"), 0644)
 	afero.WriteFile(AppFs, "/usrdefined/path/libdebtest.so", []byte("file c"), 0644)
+	afero.WriteFile(AppFs, "/usrdefined/path/libstatic.a", []byte("file c"), 0644)
 }
 
 func SetupTestOSXFileSystem(operating string) {
