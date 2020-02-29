@@ -61,8 +61,10 @@ func CreateBom(libPaths []string, libs []string, files []string) (deps types.Pro
 	}
 
 	for _, lib := range files {
-		rn, _ := regexp.Compile(GetLibraryFileRegexPattern())
-		nameMatch := rn.FindStringSubmatch(lib)
+		pattern := GetLibraryFileRegexPattern()
+		rn, _ := regexp.Compile(pattern)
+		fname := filepath.Base(lib)
+		nameMatch := rn.FindStringSubmatch(fname)
 
 		if nameMatch != nil {
 			project, err := getDllCoordinate(lib)

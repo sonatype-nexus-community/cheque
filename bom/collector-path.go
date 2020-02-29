@@ -58,7 +58,10 @@ func (c *pathCollector) getSymlink() (string, error) {
 	if c.symlink == "" {
 		symlink, err := filepath.EvalSymlinks(c.path)
 		if err != nil {
-			return "", err
+			// Ignore the error in this case. If we cannot follow the symlink, try and
+			// figure things out from the given path. This is particularly important
+			// for testing, since afero does not support symlinks yet.
+			return c.path, nil
 		}
 		c.symlink = symlink
 	}
@@ -86,7 +89,6 @@ func (c pathCollector) GetPurlObject() (purl packageurl.PackageURL, err error) {
 	if err != nil {
 		return purl, err
 	}
-	// If it says lib remove it, if it doesn't, add it so we end up with libname and name purls
 	purl, err = packageurl.FromString(fmt.Sprintf("pkg:cpp/%s@%s", name, version))
 	if err != nil {
 		return purl, err

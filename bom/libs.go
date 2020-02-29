@@ -51,26 +51,26 @@ func GetLibraryPath(libPaths []string, name string) (path string, err error) {
 }
 
 // GetLibraryName depending on your operating system (see Goose), returns the name of your library, given a full name
-func GetLibraryName(name string) (path string, err error) {
+func GetLibraryName(path string) (nam string, err error) {
 	switch Goose {
 	case "windows":
 		panic(fmt.Sprintf("GetLibraryName: Unsupported OS: %s\n", Goose))
 	case "darwin":
-		return getOsxLibraryName(name)
+		return getOsxLibraryName(path)
 	default:
-		return getUnixLibraryName(name)
+		return getUnixLibraryName(path)
 	}
 }
 
 // GetLibraryVersion depending on your operating system (see Goose), returns the version of your library, given a full name
-func GetLibraryVersion(name string) (path string, err error) {
+func GetLibraryVersion(path string) (version string, err error) {
 	switch Goose {
 	case "windows":
 		panic(fmt.Sprintf("GetLibraryVersion: Unsupported OS: %s\n", Goose))
 	case "darwin":
-		return getOsxLibraryVersion(name)
+		return getOsxLibraryVersion(path)
 	default:
-		return getUnixLibraryVersion(name)
+		return getUnixLibraryVersion(path)
 	}
 }
 

@@ -32,15 +32,15 @@ import (
 
 /** Given a file path, extract a library name from the path.
  */
-func getUnixLibraryName(name string) (path string, err error) {
-	path, _, err = getUnixLibraryNameAndVersion(name)
+func getUnixLibraryName(path string) (name string, err error) {
+	path, _, err = getUnixLibraryNameAndVersion(path)
 	return path, err
 }
 
 /** Given a file path, extract a library name from the path.
  */
-func getUnixLibraryVersion(name string) (version string, err error) {
-	_, version, err = getUnixLibraryNameAndVersion(name)
+func getUnixLibraryVersion(path string) (version string, err error) {
+	_, version, err = getUnixLibraryNameAndVersion(path)
 	return version, err
 }
 
@@ -127,10 +127,10 @@ func getUnixLibraryNameAndVersion(path string) (name string, version string, err
 	// Extract a name
 	fname := filepath.Base(path)
 	r, _ := regexp.Compile("^(.*)\\.so\\.([0-9\\.]+)")
-	matches := r.FindStringSubmatch(path)
+	matches := r.FindStringSubmatch(fname)
 	if matches == nil {
 		r, _ = regexp.Compile("^(.*?)\\.([0-9\\.]+)so")
-		matches = r.FindStringSubmatch(path)
+		matches = r.FindStringSubmatch(fname)
 	}
 	if matches == nil {
 		return "", "", errors.New("getUnixLibraryNameAndVersion: cannot get name from " + path + " (" + fname + ")")
@@ -186,7 +186,7 @@ func getUnixLibraryPathRegexPattern() (result string) {
 }
 
 func getUnixLibraryFileRegexPattern() (result string) {
-	return "([a-zA-Z0-9_\\-]+)\\.so\\.[0-9\\.]+"
+	return "([a-zA-Z0-9_\\-]+)\\.so[\\.[0-9\\.]*]?"
 }
 
 func getUnixArchiveFileRegexPattern() (result string) {

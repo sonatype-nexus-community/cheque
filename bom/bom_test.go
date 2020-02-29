@@ -30,7 +30,7 @@ func (f FakeLDDCommand) IsValid() bool {
 	return true
 }
 
-func TestCreateBom(t *testing.T) {
+func TestUnixCreateBom(t *testing.T) {
 	SetupTestUnixFileSystem(UBUNTU)
 	LDDCommand = FakeLDDCommand{}
 	deps, err := CreateBom([]string{"/usrdefined/path"},
@@ -38,10 +38,10 @@ func TestCreateBom(t *testing.T) {
 		[]string{"/lib/libpng.so", "/lib/libtiff.a"})
 
 	fmt.Print(deps)
-	if err == nil {
-		t.Error("What Error")
+	if err != nil {
+		t.Error(err)
 	}
-	if len(deps.Projects) > 0 {
-		t.Error("What")
+	if len(deps.Projects) != 1 {
+		t.Error(fmt.Sprintf("Expecting one (1) package in BOM, found %v", len(deps.Projects)))
 	}
 }
