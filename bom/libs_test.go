@@ -167,6 +167,9 @@ func SetupTestUnixFileSystem(operating string) {
 	AppFs.MkdirAll("/usrdefined/path", 0755)
 	afero.WriteFile(AppFs, "/usrdefined/path/libbob.so.1.2.3", []byte("file b"), 0644)
 	afero.WriteFile(AppFs, "/usrdefined/path/libken.a", []byte("file c"), 0644)
+	afero.WriteFile(AppFs, "/usrdefined/path/libpkgtest.so", []byte("file c"), 0644)
+	afero.WriteFile(AppFs, "/usrdefined/path/librpmtest.so", []byte("file c"), 0644)
+	afero.WriteFile(AppFs, "/usrdefined/path/libdebtest.so", []byte("file c"), 0644)
 }
 
 func SetupTestOSXFileSystem(operating string) {

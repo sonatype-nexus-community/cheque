@@ -16,6 +16,9 @@ package bom
 import (
 	"fmt"
 	"testing"
+
+	"github.com/package-url/packageurl-go"
+	"github.com/sonatype-nexus-community/cheque/types"
 )
 
 type FakeLDDCommand struct {
@@ -34,14 +37,52 @@ func TestUnixCreateBom(t *testing.T) {
 	SetupTestUnixFileSystem(UBUNTU)
 	LDDCommand = FakeLDDCommand{}
 	deps, err := CreateBom([]string{"/usrdefined/path"},
-		[]string{"bob", "ken"},
-		[]string{"/lib/libpng.so", "/lib/libtiff.a"})
+		[]string{"bob", "ken", "pkgtest", "rpmtest", "debtest"},
+		[]string{"/lib/libpng.so", "/lib/libtiff.a", "/lib/libsnuh.so.1.2.3", "/lib/libbuh.1.2.3.so"})
 
 	fmt.Print(deps)
 	if err != nil {
 		t.Error(err)
 	}
-	if len(deps.Projects) != 1 {
-		t.Error(fmt.Sprintf("Expecting one (1) package in BOM, found %v", len(deps.Projects)))
+	// Path based results
+	assertResultContains(t, deps, "pkg:cpp/libbob@1.2.3")
+	assertResultContains(t, deps, "pkg:cpp/bob@1.2.3")
+	assertResultContains(t, deps, "pkg:cpp/libsnuh@1.2.3")
+	assertResultContains(t, deps, "pkg:cpp/snuh@1.2.3")
+	assertResultContains(t, deps, "pkg:cpp/libbuh@1.2.3")
+	assertResultContains(t, deps, "pkg:cpp/buh@1.2.3")
+
+	// pkgconfig based results
+	assertResultContains(t, deps, "pkg:cpp/libken@1.2.3")
+	assertResultContains(t, deps, "pkg:cpp/ken@1.2.3")
+	assertResultContains(t, deps, "pkg:cpp/pkgtest@1.2.3")
+	assertResultContains(t, deps, "pkg:cpp/pkgtest@1.2.3")
+
+	// OS based results
+	assertResultContains(t, deps, "pkg:rpm/fedora/rpmtest@1.2.3")
+	assertResultContains(t, deps, "pkg:deb/ubuntu/debtest@1.2.3")
+
+	// Should not get more than 12 results
+	if len(deps.Projects) != 12 {
+		t.Error(fmt.Sprintf("Expecting twelve (12) package in BOM, found %v", len(deps.Projects)))
 	}
+}
+
+func assertResultContains(t *testing.T, deps types.ProjectList, pstring string) {
+	purl, err := packageurl.FromString(pstring)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	for _, p := range deps.Projects {
+		if p.Type == purl.Type &&
+			p.Namespace == purl.Namespace &&
+			p.Name == purl.Name &&
+			p.Version == purl.Version {
+			return
+		}
+	}
+
+	t.Error("Missing expected PURL: " + purl.String())
 }
