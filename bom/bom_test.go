@@ -68,6 +68,37 @@ func TestUnixCreateBom(t *testing.T) {
 	}
 }
 
+func TestOsxCreateBom(t *testing.T) {
+	SetupTestUnixFileSystem(OSX)
+	LDDCommand = FakeLDDCommand{}
+	deps, err := CreateBom([]string{"/usrdefined/path"},
+		[]string{"bob", "ken", "pkgtest"},
+		[]string{"/lib/libpng.dylib", "/lib/libsnuh.1.2.3.dylib", "/lib/libbuh.4.5.6.dylib"})
+
+	fmt.Print(deps)
+	if err != nil {
+		t.Error(err)
+	}
+	// Path based results
+	assertResultContains(t, deps, "pkg:cpp/libbob@1.2.3")
+	assertResultContains(t, deps, "pkg:cpp/bob@1.2.3")
+	assertResultContains(t, deps, "pkg:cpp/libsnuh@1.2.3")
+	assertResultContains(t, deps, "pkg:cpp/snuh@1.2.3")
+	assertResultContains(t, deps, "pkg:cpp/libbuh@4.5.6")
+	assertResultContains(t, deps, "pkg:cpp/buh@4.5.6")
+
+	// pkgconfig based results
+	assertResultContains(t, deps, "pkg:cpp/libken@2.3.4")
+	assertResultContains(t, deps, "pkg:cpp/ken@2.3.4")
+	assertResultContains(t, deps, "pkg:cpp/pkgtest@3.4.5")
+	assertResultContains(t, deps, "pkg:cpp/pkgtest@3.4.5")
+
+	// Should not get more than 12 results
+	if len(deps.Projects) != 12 {
+		t.Error(fmt.Sprintf("Expecting twelve (10) package in BOM, found %v", len(deps.Projects)))
+	}
+}
+
 func assertResultContains(t *testing.T, deps types.ProjectList, pstring string) {
 	purl, err := packageurl.FromString(pstring)
 	if err != nil {
