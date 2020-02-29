@@ -162,7 +162,7 @@ func SetupTestUnixFileSystem(operating string) {
 	afero.WriteFile(AppFs, "/lib/libpng.so", []byte("file b"), 0644)
 	afero.WriteFile(AppFs, "/lib/libtiff.a", []byte("file c"), 0644)
 	afero.WriteFile(AppFs, "/lib/libsnuh.so.1.2.3", []byte("file d"), 0644)
-	afero.WriteFile(AppFs, "/lib/libbuh.1.2.3.so", []byte("file e"), 0644)
+	afero.WriteFile(AppFs, "/lib/libbuh.4.5.6.so", []byte("file e"), 0644)
 
 	AppFs.MkdirAll("/usrdefined/path/pkgconfig", 0755)
 	afero.WriteFile(AppFs, "/usrdefined/path/libbob.so.1.2.3", []byte("file b"), 0644)

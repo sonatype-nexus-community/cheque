@@ -38,7 +38,7 @@ func TestUnixCreateBom(t *testing.T) {
 	LDDCommand = FakeLDDCommand{}
 	deps, err := CreateBom([]string{"/usrdefined/path"},
 		[]string{"bob", "ken", "pkgtest", "rpmtest", "debtest"},
-		[]string{"/lib/libpng.so", "/lib/libtiff.a", "/lib/libsnuh.so.1.2.3", "/lib/libbuh.1.2.3.so"})
+		[]string{"/lib/libpng.so", "/lib/libtiff.a", "/lib/libsnuh.so.1.2.3", "/lib/libbuh.4.5.6.so"})
 
 	fmt.Print(deps)
 	if err != nil {
@@ -49,8 +49,8 @@ func TestUnixCreateBom(t *testing.T) {
 	assertResultContains(t, deps, "pkg:cpp/bob@1.2.3")
 	assertResultContains(t, deps, "pkg:cpp/libsnuh@1.2.3")
 	assertResultContains(t, deps, "pkg:cpp/snuh@1.2.3")
-	assertResultContains(t, deps, "pkg:cpp/libbuh@1.2.3")
-	assertResultContains(t, deps, "pkg:cpp/buh@1.2.3")
+	assertResultContains(t, deps, "pkg:cpp/libbuh@4.5.6")
+	assertResultContains(t, deps, "pkg:cpp/buh@4.5.6")
 
 	// pkgconfig based results
 	assertResultContains(t, deps, "pkg:cpp/libken@2.3.4")

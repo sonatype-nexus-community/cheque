@@ -126,10 +126,14 @@ func getUnixLibraryNameAndVersion(path string) (name string, version string, err
 
 	// Extract a name
 	fname := filepath.Base(path)
-	r, _ := regexp.Compile("^(.*)\\.so[\\.[0-9\\.]*]?")
+	r, _ := regexp.Compile("^(.*)\\.so\\.[0-9\\.]+")
 	matches := r.FindStringSubmatch(fname)
 	if matches == nil {
 		r, _ = regexp.Compile("^(.*?)\\.[0-9\\.]+\\.so")
+		matches = r.FindStringSubmatch(fname)
+	}
+	if matches == nil {
+		r, _ = regexp.Compile("^(.*)\\.so$")
 		matches = r.FindStringSubmatch(fname)
 	}
 	if matches == nil {
@@ -144,7 +148,7 @@ func getUnixLibraryNameAndVersion(path string) (name string, version string, err
 		return name, matches[1], nil
 	}
 
-	r, _ = regexp.Compile("([0-9\\.]+)\\.so")
+	r, _ = regexp.Compile("\\.([0-9\\.]+)\\.so")
 	matches = r.FindStringSubmatch(path)
 	if matches != nil {
 		return name, matches[1], nil
