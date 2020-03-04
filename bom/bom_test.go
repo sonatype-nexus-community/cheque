@@ -121,13 +121,12 @@ func TestUnixCreateBom(t *testing.T) {
 }
 
 func TestOsxCreateBom(t *testing.T) {
-	SetupTestUnixFileSystem(OSX)
+	SetupTestOSXFileSystem(OSX)
 	LDDCommand = FakeLDDCommand{}
 	deps, err := CreateBom([]string{"/usrdefined/path"},
 		[]string{"bob", "ken", "pkgtest"},
 		[]string{"/lib/libpng.dylib", "/lib/libsnuh.1.2.3.dylib", "/lib/libbuh.4.5.6.dylib"})
 
-	fmt.Print(deps)
 	if err != nil {
 		t.Error(err)
 	}
@@ -143,11 +142,11 @@ func TestOsxCreateBom(t *testing.T) {
 	assertResultContains(t, deps, "pkg:cpp/libken@2.3.4")
 	assertResultContains(t, deps, "pkg:cpp/ken@2.3.4")
 	assertResultContains(t, deps, "pkg:cpp/pkgtest@3.4.5")
-	assertResultContains(t, deps, "pkg:cpp/pkgtest@3.4.5")
+	assertResultContains(t, deps, "pkg:cpp/libpkgtest@3.4.5")
 
-	// Should not get more than 12 results
-	if len(deps.Projects) != 12 {
-		t.Error(fmt.Sprintf("Expecting twelve (10) package in BOM, found %v", len(deps.Projects)))
+	// Should not get more than 10 results
+	if len(deps.Projects) != 10 {
+		t.Error(fmt.Sprintf("Expecting ten (10) package in BOM, found %v", len(deps.Projects)))
 	}
 }
 

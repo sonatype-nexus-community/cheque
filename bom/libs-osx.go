@@ -17,7 +17,6 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -41,15 +40,16 @@ func getOsxLibraryVersion(name string) (version string, err error) {
 }
 
 func getOsxLibraryNameAndVersion(path string) (name string, version string, err error) {
+	fname := filepath.Base(path)
 	r, _ := regexp.Compile("^(.*?)\\.([0-9\\.]+)dylib")
-	matches := r.FindStringSubmatch(path)
+	matches := r.FindStringSubmatch(fname)
 	if matches == nil {
 		return "", "", fmt.Errorf("getOsxLibraryNameAndVersion: cannot get name from %s", path)
 	}
 	name = matches[1]
 
 	r, _ = regexp.Compile("\\.([0-9\\.]+)\\.dylib")
-	matches = r.FindStringSubmatch(path)
+	matches = r.FindStringSubmatch(fname)
 	if matches != nil {
 		return name, matches[1], nil
 	}
@@ -57,38 +57,31 @@ func getOsxLibraryNameAndVersion(path string) (name string, version string, err 
 	return name, "", fmt.Errorf("getOsxLibraryNameAndVersion: cannot get version from %s", path)
 }
 
-/** Run otool and get version strings from it
- *
- * 	/usr/lib/libpam.2.dylib (compatibility version 3.0.0, current version 3.0.0)
- */
-func getOtoolVersion(name string, file string) (version string, err error) {
-	outbytes, err := exec.Command("otool", "-L", file).Output()
-	if err != nil {
-		return "", err
-	}
-	out := string(outbytes)
+// /** Run otool and get version strings from it
+//  *
+//  * 	/usr/lib/libpam.2.dylib (compatibility version 3.0.0, current version 3.0.0)
+//  */
+// func getOtoolVersion(name string, file string) (version string, err error) {
+// 	outbytes, err := exec.Command("otool", "-L", file).Output()
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	out := string(outbytes)
 
-	lines := strings.Split(out, "\n")
+// 	lines := strings.Split(out, "\n")
 
-	for _, line := range lines {
-		fmt.Fprintf(os.Stderr, "* %s .. %s\n", name, line)
-	}
+// 	for _, line := range lines {
+// 		fmt.Fprintf(os.Stderr, "* %s .. %s\n", name, line)
+// 	}
 
-	return "", nil
-}
+// 	return "", nil
+// }
 
 func findOsxLibFile(libPaths []string, name string) (match string, err error) {
-	// TODO: Probably buggy, copied Unix version for now
-	// if strings.HasSuffix(name, ".dylib") {
-	// 	if _, err := AppFs.Stat(name); os.IsNotExist(err) {
-	// 		return "", err
-	// 	}
-	// 	return name, nil
-	// }
 	if strings.HasSuffix(name, ".dylib") {
 		return findLibFile(libPaths, "", name, "")
 	}
-	return findLibFile(libPaths, "lib", name, ".dylib")
+	return findLibFile(libPaths, "lib", name+"*", ".dylib")
 }
 
 func getOsxSymlinkVersion(file string) (version string, err error) {

@@ -15,6 +15,7 @@ package bom
 
 import (
 	"os"
+	"strings"
 
 	"github.com/spf13/afero"
 )
@@ -22,7 +23,7 @@ import (
 func findLibFile(libpaths []string, prefix string, lib string, suffix string) (match string, err error) {
 	for _, libpath := range libpaths {
 		globPattern := libpath + "/" + prefix + lib + suffix
-		if suffix != "" {
+		if suffix != "" && !strings.HasSuffix(lib, "*") {
 			globPattern = globPattern + "*"
 		}
 		matches, err := afero.Glob(AppFs, globPattern)

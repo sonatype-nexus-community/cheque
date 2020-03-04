@@ -100,9 +100,8 @@ func (c pkgConfigCollector) GetPath() (string, error) {
 }
 
 func (c *pkgConfigCollector) parsePkgConfig() {
-	fpath := c.path
-	dpath := filepath.Dir(fpath)
-	base := filepath.Base(fpath)
+	dpath := filepath.Dir(c.path)
+	base := filepath.Base(c.path)
 	extension := filepath.Ext(base)
 	base = base[0 : len(base)-len(extension)]
 	path := dpath + "/pkgconfig/" + base + ".pc"

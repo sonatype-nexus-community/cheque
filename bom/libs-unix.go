@@ -14,15 +14,13 @@
 package bom
 
 import (
-	"os"
 	"regexp"
 	"strings"
 
-	"github.com/sonatype-nexus-community/cheque/logger"
 	"github.com/sonatype-nexus-community/nancy/types"
 
 	// "fmt"
-	"bufio"
+
 	"errors"
 	"path/filepath"
 
@@ -45,47 +43,7 @@ func getUnixLibraryVersion(path string) (version string, err error) {
 }
 
 func getLinuxDistro() (name string) {
-
 	return "Unknown"
-}
-
-func getPkgConfigVersion(fpath string) (project types.Projects, err error) {
-	project = types.Projects{}
-
-	path := filepath.Dir(fpath)
-	base := filepath.Base(fpath)
-	extension := filepath.Ext(base)
-	base = base[0 : len(base)-len(extension)]
-	path = path + "/pkgconfig/" + base + ".pc"
-
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		return project, errors.New("PkgConfig: Cannot find package config")
-	}
-	// fmt.Fprintf(os.Stderr, "getPkgConfigVersion 1: %s\n", path)
-
-	file, err := os.Open(path)
-	if err != nil {
-		logger.Fatal(err.Error())
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := scanner.Text()
-		if strings.HasPrefix(line, "Name:") {
-			project.Name = strings.TrimSpace(line[5:])
-		} else if strings.HasPrefix(line, "Version:") {
-			project.Version = strings.TrimSpace(line[8:])
-		}
-	}
-
-	// fmt.Fprintf(os.Stderr, "getPkgConfigVersion 2: %s %s\n", project.Name, project.Version)
-
-	if err := scanner.Err(); err != nil {
-		logger.Fatal(err.Error())
-	}
-
-	return project, nil
 }
 
 func getDebianPackage(file string) (project types.Projects, err error) {
