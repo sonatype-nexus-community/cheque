@@ -83,7 +83,7 @@ func (c debCollector) GetPurlObject() (purl packageurl.PackageURL, err error) {
 	if err != nil {
 		return purl, err
 	}
-	purl, err = packageurl.FromString(fmt.Sprintf("pkg:rpm/%s/%s@%s", c.dist, name, version))
+	purl, err = packageurl.FromString(fmt.Sprintf("pkg:deb/%s/%s@%s", c.dist, name, version))
 	if err != nil {
 		return purl, err
 	}

@@ -25,12 +25,14 @@ import (
 	"fmt"
 )
 
-var RPMExtCmd = RpmExternalCommand{}
-var DEBExtCmd = DebExternalCommand{}
+var RPMExtCmd ExternalCommand
+var DEBExtCmd ExternalCommand
 var LDDCommand ExternalCommand
 
 func init() {
 	LDDCommand = LddExternalCommand{}
+	RPMExtCmd = RpmExternalCommand{}
+	DEBExtCmd = DebExternalCommand{}
 }
 
 // CreateBom does stuff

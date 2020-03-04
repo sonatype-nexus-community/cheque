@@ -15,11 +15,28 @@ package bom
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/package-url/packageurl-go"
 	"github.com/sonatype-nexus-community/cheque/types"
 )
+
+const DPKGRESPONSE = `Package: debtest                                                                                                                                         
+Status: install ok installed                                                                                                                           
+Priority: required                                                                                                                                     
+Section: libs                                                                                                                                          
+Installed-Size: 11877                                                                                                                                  
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>                                                                                  
+Architecture: amd64                                                                                                                                    
+Multi-Arch: same                                                                                                                                       
+Source: glibc                                                                                                                                          
+Version: 1.2.3                                                                                                                                 
+Replaces: libc6-amd64                                                                                                                                  
+Depends: libgcc1                                                                                                                                       
+Suggests: glibc-doc, debconf | debconf-2.0, locales                                                                                                    
+Breaks: hurd (<< 1:0.5.git20140203-1), libtirpc1 (<< 0.2.3), locales (<< 2.27), locales-all (<< 2.27), nscd (<< 2.27)                                  
+Conflicts: openrc (<< 0.27-2~)`
 
 type FakeLDDCommand struct {
 }
@@ -33,9 +50,44 @@ func (f FakeLDDCommand) IsValid() bool {
 	return true
 }
 
+type FakeRPMCommand struct {
+}
+
+func (r FakeRPMCommand) ExecCommand(args ...string) ([]byte, error) {
+	if strings.Contains(args[2], "rpmtest") {
+		if args[1] == "--whatprovides" {
+			return []byte("rpmtest-1.2.3-260.175.amzn1.x86_64"), nil
+		}
+		return []byte("Name        : rpmtest\nVersion     : 1.2.3"), nil
+	}
+	return []byte(fmt.Sprintf("file %s is not owned by any package", args[2])), fmt.Errorf("file %s is not owned by any package", args[2])
+}
+
+func (r FakeRPMCommand) IsValid() bool {
+	return true
+}
+
+type FakeDEBCommand struct {
+}
+
+func (d FakeDEBCommand) ExecCommand(args ...string) ([]byte, error) {
+	if strings.Contains(args[1], "debtest") {
+		if args[0] == "-S" {
+			return []byte("debtest:amd64: /lib64/ld-linux-x86-64.so.2"), nil
+		}
+		return []byte(DPKGRESPONSE), nil
+	}
+	return []byte(fmt.Sprintf("file %s is not owned by any package", args[2])), fmt.Errorf("file %s is not owned by any package", args[2])
+}
+
+func (d FakeDEBCommand) IsValid() bool {
+	return true
+}
+
 func TestUnixCreateBom(t *testing.T) {
 	SetupTestUnixFileSystem(UBUNTU)
 	LDDCommand = FakeLDDCommand{}
+	RPMExtCmd = FakeRPMCommand{}
 	deps, err := CreateBom([]string{"/usrdefined/path"},
 		[]string{"bob", "ken", "pkgtest", "rpmtest", "debtest"},
 		[]string{"/lib/libpng.so", "/lib/libtiff.a", "/lib/libsnuh.so.1.2.3", "/lib/libbuh.4.5.6.so"})
@@ -59,7 +111,7 @@ func TestUnixCreateBom(t *testing.T) {
 	assertResultContains(t, deps, "pkg:cpp/pkgtest@3.4.5")
 
 	// OS based results
-	assertResultContains(t, deps, "pkg:rpm/fedora/rpmtest@1.2.3")
+	assertResultContains(t, deps, "pkg:rpm/rpmtest@1.2.3")
 	assertResultContains(t, deps, "pkg:deb/ubuntu/debtest@1.2.3")
 
 	// Should not get more than 12 results
