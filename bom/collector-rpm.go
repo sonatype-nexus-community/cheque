@@ -63,18 +63,6 @@ func (c rpmCollector) GetVersion() (string, error) {
 	return "", errors.New("rpmCollector: Cannot get version for " + c.path)
 }
 
-func (c rpmCollector) GetPurl() (string, error) {
-	name, err := c.GetName()
-	if err != nil {
-		return c.path, err
-	}
-	version, err := c.GetVersion()
-	if err != nil {
-		return name, err
-	}
-	return "pkg:rpm/" + name + "@" + version, nil
-}
-
 func (c rpmCollector) GetPurlObject() (purl packageurl.PackageURL, err error) {
 	name, err := c.GetName()
 	if err != nil {

@@ -42,10 +42,6 @@ func getUnixLibraryVersion(path string) (version string, err error) {
 	return version, err
 }
 
-func getLinuxDistro() (name string) {
-	return "Unknown"
-}
-
 func getDebianPackage(file string) (project types.Projects, err error) {
 	project = types.Projects{}
 
@@ -113,34 +109,6 @@ func getUnixLibraryNameAndVersion(path string) (name string, version string, err
 	}
 
 	return name, "", errors.New("getUnixLibraryNameAndVersion: cannot get version from " + fname)
-}
-
-/** In some cases the library is a symbolic link to a file with an embedded version
- * number. Try and extract a version from there.
- */
-func getUnixSymlinkVersion(file string) (version string, err error) {
-	path, err := filepath.EvalSymlinks(file)
-
-	// fmt.Fprintf(os.Stderr, "GetUnixSymlinkVersion 2 %s\n", path)
-
-	if err != nil {
-		return "", err
-	}
-
-	// Extract a version
-	r, _ := regexp.Compile("\\.so\\.([0-9\\.]+)")
-	matches := r.FindStringSubmatch(path)
-	if matches != nil {
-		return matches[1], nil
-	}
-
-	r, _ = regexp.Compile("([0-9\\.]+)\\.so")
-	matches = r.FindStringSubmatch(path)
-	if matches != nil {
-		return matches[1], nil
-	}
-
-	return "", nil
 }
 
 func getUnixLibraryPathRegexPattern() (result string) {

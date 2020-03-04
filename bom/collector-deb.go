@@ -62,18 +62,6 @@ func (c debCollector) GetVersion() (string, error) {
 	return "", errors.New("debCollector: Cannot get version for " + c.path)
 }
 
-func (c debCollector) GetPurl() (string, error) {
-	name, err := c.GetName()
-	if err != nil {
-		return c.path, err
-	}
-	version, err := c.GetVersion()
-	if err != nil {
-		return name, err
-	}
-	return "pkg:deb/" + c.dist + "/" + name + "@" + version, nil
-}
-
 func (c debCollector) GetPurlObject() (purl packageurl.PackageURL, err error) {
 	name, err := c.GetName()
 	if err != nil {

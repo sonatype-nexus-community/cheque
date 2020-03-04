@@ -18,7 +18,6 @@ import "github.com/package-url/packageurl-go"
 type Collector interface {
 	GetName() (string, error)
 	GetVersion() (string, error)
-	GetPurl() (string, error)
 	GetPurlObject() (packageurl.PackageURL, error)
 	GetPath() (string, error)
 	IsValid() bool

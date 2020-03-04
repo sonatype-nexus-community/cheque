@@ -68,18 +68,6 @@ func (c *pathCollector) getSymlink() (string, error) {
 	return c.symlink, nil
 }
 
-func (c pathCollector) GetPurl() (string, error) {
-	name, err := c.GetName()
-	if err != nil {
-		return c.path, err
-	}
-	version, err := c.GetVersion()
-	if err != nil {
-		return name, err
-	}
-	return "pkg:cpp/" + name + "@" + version, nil
-}
-
 func (c pathCollector) GetPurlObject() (purl packageurl.PackageURL, err error) {
 	name, err := c.GetName()
 	if err != nil {

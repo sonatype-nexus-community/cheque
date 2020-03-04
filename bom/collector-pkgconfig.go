@@ -70,18 +70,6 @@ func (c pkgConfigCollector) GetVersion() (string, error) {
 	return c.version, nil
 }
 
-func (c pkgConfigCollector) GetPurl() (string, error) {
-	name, err := c.GetName()
-	if err != nil {
-		return c.path, err
-	}
-	version, err := c.GetVersion()
-	if err != nil {
-		return name, err
-	}
-	return "pkg:cpp/" + name + "@" + version, nil
-}
-
 func (c pkgConfigCollector) GetPurlObject() (purl packageurl.PackageURL, err error) {
 	name, err := c.GetName()
 	if err != nil {

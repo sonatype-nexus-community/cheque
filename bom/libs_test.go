@@ -78,7 +78,7 @@ func TestUnixGetLibraryNameWithVersionLast(t *testing.T) {
 
 func TestUnixGetLibraryVersion(t *testing.T) {
 	Goose = UBUNTU
-	version, err := GetLibraryVersion("libpng-2.0.5.so")
+	version, err := GetLibraryVersion("libpng.2.0.5.so")
 	if err != nil {
 		t.Error(err)
 	}

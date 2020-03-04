@@ -84,24 +84,6 @@ func findOsxLibFile(libPaths []string, name string) (match string, err error) {
 	return findLibFile(libPaths, "lib", name+"*", ".dylib")
 }
 
-func getOsxSymlinkVersion(file string) (version string, err error) {
-	path, err := filepath.EvalSymlinks(file)
-	if err != nil {
-		return "", err
-	}
-
-	r, err := regexp.Compile("\\.([0-9\\.]+)\\.dylib")
-	if err != nil {
-		return "", err
-	}
-	matches := r.FindStringSubmatch(path)
-	if matches == nil {
-		return "", nil
-	}
-
-	return matches[1], nil
-}
-
 func getOsxLibraryPathRegexPattern() (result string) {
 	return "[a-zA-Z0-9_/\\.]+\\.dylib"
 }
