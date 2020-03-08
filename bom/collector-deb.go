@@ -71,7 +71,8 @@ func (c debCollector) GetPurlObject() (purl packageurl.PackageURL, err error) {
 	if err != nil {
 		return purl, err
 	}
-	purl, err = packageurl.FromString(fmt.Sprintf("pkg:deb/%s/%s@%s", c.dist, name, version))
+	purl, err = packageurl.FromString(fmt.Sprintf("pkg:deb/%s/%s@%s", "ubuntu", name, version))
+	fmt.Print(purl)
 	if err != nil {
 		return purl, err
 	}
@@ -83,9 +84,6 @@ func (c debCollector) GetPath() (string, error) {
 }
 
 func (c *debCollector) findPackage() {
-	// Default distribution
-	c.dist = "ubuntu"
-
 	out, err := c.externalCommand.ExecCommand("-S", c.path)
 	if err == nil {
 		buf := string(out)
@@ -94,17 +92,15 @@ func (c *debCollector) findPackage() {
 
 		out, err = c.externalCommand.ExecCommand("-s", libname)
 		if err == nil {
-			r, _ := regexp.Compile("Name *: ([^\\n]+)")
+			r, _ := regexp.Compile("Package: ([^\\n]+)")
 			matches := r.FindStringSubmatch(string(out))
 			if matches != nil {
 				c.name = strings.TrimSpace(matches[1])
 			} else {
-				logger.Error(err.Error())
-				logger.Error(string(out))
 				return
 			}
 
-			r, _ = regexp.Compile("Version *: ([^\\n]+)")
+			r, _ = regexp.Compile("Version: ([^\\n]+)")
 			matches = r.FindStringSubmatch(string(out))
 			if matches != nil {
 				c.version = strings.TrimSpace(matches[1])

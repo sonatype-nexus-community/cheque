@@ -50,20 +50,14 @@ func CreateBom(libPaths []string, libs []string, files []string) (deps types.Pro
 	}
 
 	for path := range lookup {
-		project, err := getDllCoordinate(path)
+		project, err := getLibraryCoordinate(path)
 		if err != nil {
 			logger.Error(err.Error())
 			continue
 		}
 
 		deps.Projects = append(deps.Projects, project)
-
-		if !strings.HasPrefix(project.Name, "lib") {
-			project.Name = "lib" + project.Name
-		} else {
-			project.Name = project.Name[3:]
-		}
-		deps.Projects = append(deps.Projects, project)
+		deps = checkIfRpmOrDebAppendLibIfNot(project, deps)
 	}
 
 	for _, lib := range files {
@@ -73,7 +67,7 @@ func CreateBom(libPaths []string, libs []string, files []string) (deps types.Pro
 		nameMatch := rn.FindStringSubmatch(fname)
 
 		if nameMatch != nil {
-			project, err := getDllCoordinate(lib)
+			project, err := getLibraryCoordinate(lib)
 			if err != nil {
 				logger.Error(err.Error())
 				continue
@@ -82,14 +76,7 @@ func CreateBom(libPaths []string, libs []string, files []string) (deps types.Pro
 			// We need both the "lib<name>" and "<name>" versions, since which is used
 			// depends on the repo.
 			deps.Projects = append(deps.Projects, project)
-			name := project.Name
-			if !strings.HasPrefix(name, "lib") {
-				project.Name = "lib" + name
-				deps.Projects = append(deps.Projects, project)
-			} else {
-				project.Name = name[3:]
-				deps.Projects = append(deps.Projects, project)
-			}
+			deps = checkIfRpmOrDebAppendLibIfNot(project, deps)
 		} else {
 			purl, err := getArchiveCoordinate(lib)
 			if err != nil {
@@ -100,14 +87,7 @@ func CreateBom(libPaths []string, libs []string, files []string) (deps types.Pro
 			// We need both the "lib<name>" and "<name>" versions, since which is used
 			// depends on the repo.
 			deps.Projects = append(deps.Projects, purl)
-			name := purl.Name
-			if !strings.HasPrefix(name, "lib") {
-				purl.Name = "lib" + name
-				deps.Projects = append(deps.Projects, purl)
-			} else {
-				purl.Name = name[3:]
-				deps.Projects = append(deps.Projects, purl)
-			}
+			deps = checkIfRpmOrDebAppendLibIfNot(purl, deps)
 		}
 	}
 	return deps, nil
@@ -143,7 +123,19 @@ func recursiveGetLibraryPaths(lookup map[string]bool, libPaths []string, lib str
 	return lookup, nil
 }
 
-func getDllCoordinate(path string) (purl packageurl.PackageURL, err error) {
+func checkIfRpmOrDebAppendLibIfNot(project packageurl.PackageURL, deps types.ProjectList) types.ProjectList {
+	if project.Type != "rpm" && project.Type != "deb" {
+		if !strings.HasPrefix(project.Name, "lib") {
+			project.Name = "lib" + project.Name
+		} else {
+			project.Name = project.Name[3:]
+		}
+		deps.Projects = append(deps.Projects, project)
+	}
+	return deps
+}
+
+func getLibraryCoordinate(path string) (purl packageurl.PackageURL, err error) {
 	var collector Collector
 
 	collector = pkgConfigCollector{path: path}

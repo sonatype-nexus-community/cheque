@@ -22,21 +22,7 @@ import (
 	"github.com/sonatype-nexus-community/cheque/types"
 )
 
-const DPKGRESPONSE = `Package: debtest                                                                                                                                         
-Status: install ok installed                                                                                                                           
-Priority: required                                                                                                                                     
-Section: libs                                                                                                                                          
-Installed-Size: 11877                                                                                                                                  
-Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>                                                                                  
-Architecture: amd64                                                                                                                                    
-Multi-Arch: same                                                                                                                                       
-Source: glibc                                                                                                                                          
-Version: 1.2.3                                                                                                                                 
-Replaces: libc6-amd64                                                                                                                                  
-Depends: libgcc1                                                                                                                                       
-Suggests: glibc-doc, debconf | debconf-2.0, locales                                                                                                    
-Breaks: hurd (<< 1:0.5.git20140203-1), libtirpc1 (<< 0.2.3), locales (<< 2.27), locales-all (<< 2.27), nscd (<< 2.27)                                  
-Conflicts: openrc (<< 0.27-2~)`
+const DPKGRESPONSE = "Package: debtest\nStatus: install ok installed\nVersion: 1.2.3"
 
 type FakeLDDCommand struct {
 }
@@ -77,7 +63,7 @@ func (d FakeDEBCommand) ExecCommand(args ...string) ([]byte, error) {
 		}
 		return []byte(DPKGRESPONSE), nil
 	}
-	return []byte(fmt.Sprintf("file %s is not owned by any package", args[2])), fmt.Errorf("file %s is not owned by any package", args[2])
+	return []byte(fmt.Sprintf("file %s is not owned by any package", args[1])), fmt.Errorf("file %s is not owned by any package", args[1])
 }
 
 func (d FakeDEBCommand) IsValid() bool {
@@ -88,14 +74,16 @@ func TestUnixCreateBom(t *testing.T) {
 	SetupTestUnixFileSystem(UBUNTU)
 	LDDCommand = FakeLDDCommand{}
 	RPMExtCmd = FakeRPMCommand{}
+	DEBExtCmd = FakeDEBCommand{}
 	deps, err := CreateBom([]string{"/usrdefined/path"},
 		[]string{"bob", "ken", "pkgtest", "rpmtest", "debtest"},
 		[]string{"/lib/libpng.so", "/lib/libtiff.a", "/lib/libsnuh.so.1.2.3", "/lib/libbuh.4.5.6.so"})
 
-	fmt.Print(deps)
 	if err != nil {
 		t.Error(err)
 	}
+
+	fmt.Print(deps)
 	// Path based results
 	assertResultContains(t, deps, "pkg:cpp/libbob@1.2.3")
 	assertResultContains(t, deps, "pkg:cpp/bob@1.2.3")
