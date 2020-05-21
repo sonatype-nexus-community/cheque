@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="https://github.com/sonatype-nexus-community/cheque/blob/master/docs/images/cheque.png" width="350"/>
+    <img src="https://github.com/sonatype-nexus-community/cheque/blob/master/docs/images/Cheque.png" width="350"/>
 </p>
 <p align="center">
     <a href="https://travis-ci.org/sonatype-nexus-community/cheque"><img src="https://travis-ci.org/sonatype-nexus-community/cheque.svg?branch=master" alt="Build Status"></img></a>
