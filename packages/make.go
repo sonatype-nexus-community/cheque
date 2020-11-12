@@ -15,15 +15,16 @@ package packages
 
 import (
 	"fmt"
-	"github.com/sonatype-nexus-community/nancy/customerrors"
-	"github.com/sonatype-nexus-community/nancy/types"
 	"os"
+
+	"github.com/package-url/packageurl-go"
+	"github.com/sonatype-nexus-community/nancy/customerrors"
 )
 
 // Dep is an implementation of Packages interface
 type Make struct {
 	MakefilePath string
-	ProjectList types.ProjectList
+	Purls        []packageurl.PackageURL
 }
 
 // CheckExistenceOfManifest will see if a Gopkg exists at the given path

@@ -14,32 +14,44 @@
 package logger
 
 import (
-  "github.com/sonatype-nexus-community/cheque/config"
-  "fmt"
-  "os"
+	"fmt"
+	"os"
+
+	"github.com/sirupsen/logrus"
+	"github.com/sonatype-nexus-community/cheque/config"
 )
 
+var logLady *logrus.Logger
+
+func GetLogger() *logrus.Logger {
+	if logLady != nil {
+		return logLady
+	}
+	logLady := logrus.New()
+	return logLady
+}
+
 func Info(msg string) {
-  if config.GetVerbose() {
-    fmt.Fprintf(os.Stdout, "Cheque INFO: %s\n", msg)
-  }
+	if config.GetVerbose() {
+		fmt.Fprintf(os.Stdout, "Cheque INFO: %s\n", msg)
+	}
 }
 
 func Debug(msg string) {
-  if config.GetVerbose() {
-    fmt.Fprintf(os.Stdout, "Cheque DEBUG: %s\n", msg)
-  }
+	if config.GetVerbose() {
+		fmt.Fprintf(os.Stdout, "Cheque DEBUG: %s\n", msg)
+	}
 }
 
 func Warning(msg string) {
-  fmt.Fprintf(os.Stdout, "Cheque WARNING: %s\n", msg)
+	fmt.Fprintf(os.Stdout, "Cheque WARNING: %s\n", msg)
 }
 
 func Error(msg string) {
-  fmt.Fprintf(os.Stdout, "Cheque ERROR: %s\n", msg)
+	fmt.Fprintf(os.Stdout, "Cheque ERROR: %s\n", msg)
 }
 
 func Fatal(msg string) {
-  fmt.Fprintf(os.Stdout, "Cheque FATAL: %s\n", msg)
-  os.Exit(99)
+	fmt.Fprintf(os.Stdout, "Cheque FATAL: %s\n", msg)
+	os.Exit(99)
 }
