@@ -31,6 +31,12 @@ import (
 func ProcessPaths(libPaths []string, libs []string, files []string) (count int) {
 	myBom := packages.Make{}
 	myBom.Purls, _ = bom.CreateBom(libPaths, libs, files)
+
+  // logger.GetLogger().Error("BOM")
+  // for _, purl := range myBom.Purls {
+  //   logger.GetLogger().Error(fmt.Sprintf("  * %s", purl))
+	// }
+
 	return AuditBom(myBom.Purls)
 }
 
@@ -98,13 +104,13 @@ func AuditBom(deps []packageurl.PackageURL) (count int) {
 	t := table.NewWriter()
 	t.SetStyle(table.StyleBold)
 	t.SetTitle("Summary")
-	t.AppendRow([]interface{}{"Audited Dependencies", len(coordinates)})
+	t.AppendRow([]interface{}{"Audited Dependencies", len(results)})
 	t.AppendSeparator()
 	// t.AppendRow([]interface{}{"Vulnerable Dependencies", au.Bold(au.Red(strconv.Itoa(numVulnerable)))})
 	sb.WriteString(t.Render())
 	sb.WriteString("\n")
 
-	for _, v := range coordinates {
+	for _, v := range results {
 		if v.IsVulnerable() {
 			count++
 			LogVulnerablePackage(&sb, false, 0, 0, v)
