@@ -28,9 +28,9 @@ func TestDoLink(t *testing.T) {
 		"/usr/differentoutput/output",
 	}
 
-  // FIXME: By default we are returned the number of vulnerable packages. We
-  // might want to add a way to get the total number of packages as well.
-  var expected = 0;
+	// FIXME: By default we are returned the number of vulnerable packages. We
+	// might want to add a way to get the total number of packages as well.
+	var expected = 0
 	countFromSesameStreet := DoLink(args)
 
 	if countFromSesameStreet != expected {
