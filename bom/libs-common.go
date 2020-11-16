@@ -26,6 +26,11 @@ func findLibFile(libpaths []string, prefix string, lib string, suffix string) (m
 			globPattern = globPattern + "*"
 		}
 		matches, globErr := afero.Glob(AppFs, globPattern)
+		if globErr == nil && len(matches) == 0 {
+			// Try for a version number infix
+			globPattern = libpath + "/" + prefix + lib + ".*" + suffix
+			matches, globErr = afero.Glob(AppFs, globPattern)
+		}
 		if globErr == nil {
 			if len(matches) > 0 {
 				for _, v := range matches {

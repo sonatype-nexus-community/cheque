@@ -125,9 +125,20 @@ func TestUnixCreateBom(t *testing.T) {
 func TestOsxCreateBom(t *testing.T) {
 	SetupTestOSXFileSystem(OSX)
 	LDDCommand = FakeLDDCommand{}
-	deps, err := CreateBom([]string{"/usrdefined/path"},
-		[]string{"bob", "ken", "pkgtest"},
-		[]string{"/lib/libpng.dylib", "/lib/libsnuh.1.2.3.dylib", "/lib/libbuh.4.5.6.dylib"})
+	deps, err := CreateBom(
+		[]string{
+			"/usrdefined/path",
+		},
+		[]string{
+			"bob",
+			"ken",
+			"pkgtest",
+		},
+		[]string{
+			"/lib/libpng.dylib",
+			"/lib/libsnuh.1.2.3.dylib",
+			"/lib/libbuh.4.5.6.dylib",
+		})
 
 	if err != nil {
 		t.Error(err)
