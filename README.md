@@ -1,11 +1,10 @@
 <p align="center">
     <img src="https://github.com/sonatype-nexus-community/cheque/blob/master/docs/images/Cheque-beaver.png" width="350"/>
 </p>
+
 <p align="center">
-    <a href="https://travis-ci.org/sonatype-nexus-community/cheque"><img src="https://travis-ci.org/sonatype-nexus-community/cheque.svg?branch=master" alt="Build Status"></img></a>
-</p>
-<p align="center">
-    <a href="https://depshield.github.io"><img src="https://depshield.sonatype.org/badges/sonatype-nexus-community/cheque/depshield.svg" alt="DepShield Badge"></img></a>
+    <a href="https://circleci.com/gh/sonatype-nexus-community/cheque"><img src="https://circleci.com/gh/sonatype-nexus-community/cheque.svg?style=svg" alt="Circle CI Build Status"></img></a>
+    <a href="https://gitter.im/sonatype-nexus-community/cheque?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge"><img src="https://badges.gitter.im/sonatype-nexus-community/cheque.svg" alt="Gitter"></img></a>
 </p>
 
 # cheque
