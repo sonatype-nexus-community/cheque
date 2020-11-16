@@ -14,21 +14,31 @@
 package linker
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/sonatype-nexus-community/cheque/audit"
 	"github.com/sonatype-nexus-community/cheque/bom"
-	"strings"
 	"github.com/sonatype-nexus-community/cheque/logger"
 )
 
+var TYPESTOCHECK = map[string]string{
+	".dylib": "OSX DLL",
+	".so":    "Linux DLL",
+	".so.":   "Linux DLL",
+	".a":     "Static Lib",
+	".a.":    "Static Lib",
+}
+
 func DoLink(args []string) (count int) {
-	libPaths := []string {}
+	libPaths := []string{}
 	libs := make(map[string]bool)
 	files := make(map[string]bool)
 
   for i := 0; i < len(args); i++ {
     arg := args[i]
-    if (strings.HasPrefix(arg, "-l")) {
-      if (len(arg) > 2) {
+    if strings.HasPrefix(arg, "-l") {
+      if len(arg) > 2 {
         logger.Info("lib: " + arg)
         libs[arg[2:]] = true
       } else {
@@ -37,12 +47,12 @@ func DoLink(args []string) (count int) {
         logger.Info("lib: " + arg)
 				libs[arg] = true
       }
-      continue;
+      continue
     }
 
     // Additional library path
-    if (strings.HasPrefix(arg, "-L")) {
-      if (len(arg) > 2) {
+    if strings.HasPrefix(arg, "-L") {
+      if len(arg) > 2 {
         // logger.Info("LibPath: " + arg)
 				libPaths = append(libPaths, arg[2:])
       } else {
@@ -51,30 +61,30 @@ func DoLink(args []string) (count int) {
         // logger.Info("LibPath: " + arg)
 				libPaths = append(libPaths, arg)
       }
-      continue;
+      continue
     }
 
-		if (strings.HasPrefix(arg, "-o")) {
-			if (len(arg) > 2) {
+		if strings.HasPrefix(arg, "-o") {
+			if len(arg) > 2 {
 				logger.Info("output: " + arg)
 			} else {
 				i++
 				arg := args[i]
 				logger.Info("output: " + arg)
 			}
-			continue;
+			continue
 		}
 
 		// Ignore some arguments and their options
-		if (strings.HasPrefix(arg, "-install_name")) {
+		if strings.HasPrefix(arg, "-install_name") {
 			if (len(arg) > 14) {
 				i++
 			}
-			continue;
+			continue
 		}
 
 
-    if (strings.HasPrefix(arg, "-")) {
+    if strings.HasPrefix(arg, "-") {
       // Ignore any other arguments
       continue;
     }
@@ -82,50 +92,50 @@ func DoLink(args []string) (count int) {
     // -----------------------------------------
     // If we get here, it is a file of some sort
     // -----------------------------------------
-    if (strings.HasSuffix(arg, ".dylib")) {
-      logger.Info("OSX DLL: " + arg)
-			files[arg] = true
-      continue;
-    }
-    if (strings.HasSuffix(arg, ".so")) {
-      logger.Info("Linux DLL: " + arg)
-			files[arg] = true
-      continue;
-    }
-    if (strings.Contains(arg, ".so.")) {
-      logger.Info("Linux DLL: " + arg)
-			files[arg] = true
-      continue;
-    }
-    if (strings.HasSuffix(arg, ".a")) {
-      logger.Info("Static lib: " + arg)
-			files[arg] = true
-      continue;
-    }
-    if (strings.Contains(arg, ".a.")) {
-      logger.Info("Static lib: " + arg)
-			files[arg] = true
-      continue;
-    }
-  }
+		for k, v := range TYPESTOCHECK {
+			files[arg] = checkSuffix(arg, k, v)
+			if files[arg] {
+				break
+			}
+		}
+	}
 
 	if len(libs) > 0 || len(files) > 0 {
-		libPathsSlice := []string{}
-		for _, key := range libPaths {
-				libPathsSlice = append(libPathsSlice, key)
-		}
-		libPathsSlice = append(libPathsSlice, bom.GetLibPaths()...)
-		libsSlice := []string{}
-		for key, _ := range libs {
-				libsSlice = append(libsSlice, key)
-		}
-		filesSlice := []string{}
-		for key, _ := range files {
-				filesSlice = append(filesSlice, key)
-		}
-
-	  return audit.ProcessPaths(libPathsSlice, libsSlice, filesSlice)
+		return audit.ProcessPaths(
+			iterateAndAppendToLibPathsSlice(libPaths),
+			iterateAndAppendToSlice(libs),
+			iterateAndAppendToSlice(files))
 	}
 
 	return 0
+}
+
+func iterateAndAppendToLibPathsSlice(libPaths []string) (libPathsSlice []string) {
+	for _, v := range libPaths {
+		libPathsSlice = append(libPathsSlice, v)
+	}
+	libPathsSlice = append(libPathsSlice, bom.GetLibPaths()...)
+	return
+}
+
+func iterateAndAppendToSlice(iterator map[string]bool) (slice []string) {
+	for k := range iterator {
+		slice = append(slice, k)
+	}
+	return
+}
+
+func checkSuffix(arg string, extension string, loggerInfo string) bool {
+	if strings.HasSuffix(extension, ".") {
+		if strings.Contains(arg, extension) {
+			logger.Info(fmt.Sprintf("%s: %s", loggerInfo, arg))
+			return true
+		}
+		return false
+	}
+	if strings.HasSuffix(arg, extension) {
+		logger.Info(fmt.Sprintf("%s: %s", loggerInfo, arg))
+		return true
+	}
+	return false
 }
