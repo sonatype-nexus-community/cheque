@@ -31,28 +31,22 @@ import (
 func ProcessPaths(libPaths []string, libs []string, files []string) (count int) {
 	myBom := packages.Make{}
 	myBom.Purls, _ = bom.CreateBom(libPaths, libs, files)
-
-  // logger.GetLogger().Error("BOM")
-  // for _, purl := range myBom.Purls {
-  //   logger.GetLogger().Error(fmt.Sprintf("  * %s", purl))
-	// }
-
 	return AuditBom(myBom.Purls)
 }
 
 func AuditBom(deps []packageurl.PackageURL) (count int) {
-	var canonicalPurls, _ = RootPurls(deps)
-	var purls, _ = DefinedPurls(deps)
-	var packageCount = CountDistinctLibraries(append(canonicalPurls, purls...))
+	var canonicalPurls, _ = rootPurls(deps)
+	var purls, _ = definedPurls(deps)
+	var packageCount = countDistinctLibraries(append(canonicalPurls, purls...))
 
 	if packageCount == 0 {
 		return 0
 	}
 
 	// For speed purposes, check all possible types simultaneously
-	var conanPurls, _ = ConanPurls(canonicalPurls)
-	var debPurls, _ = DebPurls(canonicalPurls)
-	var rpmPurls, _ = RpmPurls(canonicalPurls)
+	var conanPurls, _ = conanPurls(canonicalPurls)
+	var debPurls, _ = debPurls(canonicalPurls)
+	var rpmPurls, _ = rpmPurls(canonicalPurls)
 	purls = append(purls, conanPurls...)
 	purls = append(purls, debPurls...)
 	purls = append(purls, rpmPurls...)
@@ -75,7 +69,7 @@ func AuditBom(deps []packageurl.PackageURL) (count int) {
 
 	for i := 0; i < len(coordinates); i++ {
 		coordinate := coordinates[i]
-		name := GetCanonicalNameAndVersion(coordinate.Coordinates)
+		name := getCanonicalNameAndVersion(coordinate.Coordinates)
 
 		// If the lookup is true, and there are vulnerabilities, then this name is done
 		if val, ok := lookup[name]; ok {
@@ -122,7 +116,7 @@ func AuditBom(deps []packageurl.PackageURL) (count int) {
 	return count
 }
 
-func CountDistinctLibraries(purls []string) (result int) {
+func countDistinctLibraries(purls []string) (result int) {
 	lookup := make(map[string]bool)
 
 	for _, purl := range purls {
@@ -135,7 +129,7 @@ func CountDistinctLibraries(purls []string) (result int) {
 	return len(lookup)
 }
 
-func GetCanonicalNameAndVersion(path string) (result string) {
+func getCanonicalNameAndVersion(path string) (result string) {
 	tokens := strings.Split(path, ":")
 	tokens = strings.Split(tokens[1], "/")
 
@@ -145,7 +139,7 @@ func GetCanonicalNameAndVersion(path string) (result string) {
 
 // The root Purls are a generic purl which is not used for querying. It will
 // subsequently be used to build *real* PURLs for OSS Index queries.
-func RootPurls(deps []packageurl.PackageURL) (purls []string, err error) {
+func rootPurls(deps []packageurl.PackageURL) (purls []string, err error) {
 	for _, dep := range deps {
 		if !strings.HasPrefix(dep.Name, "pkg:") {
 			purls = append(purls, "pkg:cpp/"+dep.Name+"@"+dep.Version)
@@ -157,7 +151,7 @@ func RootPurls(deps []packageurl.PackageURL) (purls []string, err error) {
 	return purls, nil
 }
 
-func DefinedPurls(deps []packageurl.PackageURL) (purls []string, err error) {
+func definedPurls(deps []packageurl.PackageURL) (purls []string, err error) {
 	for _, dep := range deps {
 		if strings.HasPrefix(dep.Name, "pkg:") {
 			purls = append(purls, dep.Name+"@"+dep.Version)
@@ -166,7 +160,7 @@ func DefinedPurls(deps []packageurl.PackageURL) (purls []string, err error) {
 	return purls, nil
 }
 
-func ConanPurls(purls []string) (results []string, err error) {
+func conanPurls(purls []string) (results []string, err error) {
 	for _, purl := range purls {
 		tokens := strings.Split(purl, ":")
 		tokens = strings.Split(tokens[1], "/")
@@ -179,7 +173,7 @@ func ConanPurls(purls []string) (results []string, err error) {
 	return results, nil
 }
 
-func DebPurls(misses []string) (results []string, err error) {
+func debPurls(misses []string) (results []string, err error) {
 	for _, purl := range misses {
 		tokens := strings.Split(purl, ":")
 		tokens = strings.Split(tokens[1], "/")
@@ -189,7 +183,7 @@ func DebPurls(misses []string) (results []string, err error) {
 	return results, nil
 }
 
-func RpmPurls(misses []string) (results []string, err error) {
+func rpmPurls(misses []string) (results []string, err error) {
 	for _, purl := range misses {
 		tokens := strings.Split(purl, ":")
 		tokens = strings.Split(tokens[1], "/")
