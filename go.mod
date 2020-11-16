@@ -3,6 +3,7 @@ module github.com/sonatype-nexus-community/cheque
 go 1.12
 
 require (
+	github.com/jarcoal/httpmock v1.0.5
 	github.com/jedib0t/go-pretty/v6 v6.0.5
 	github.com/logrusorgru/aurora v2.0.3+incompatible
 	github.com/package-url/packageurl-go v0.1.0
