@@ -7,3 +7,5 @@ cbins
 linux
 osx
 example.list
+cp.out
+dist/

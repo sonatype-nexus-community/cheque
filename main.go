@@ -23,19 +23,19 @@ import (
 )
 
 func main() {
-	args := []string {}
+	args := []string{}
 
 	// Remove cheque custom arguments
 	for _, arg := range os.Args[1:] {
-		switch(arg) {
+		switch arg {
 		case "-Werror=cheque":
 			default: args = append(args, arg)
     }
 	}
 
-	count := linker.DoLink(args);
+	count := linker.DoLink(args)
 	if count > 0 {
-		if (config.ExitWithError()) {
+		if config.ExitWithError() {
 			fmt.Fprintf(os.Stderr, "Error: Vulnerable dependencies found: %v\n", count)
 			os.Exit(count)
 		} else {
@@ -43,7 +43,7 @@ func main() {
 		}
 	}
 
-	switch(config.GetCommand()) {
+	switch config.GetCommand() {
 	case "cheque":
 		break;
 	default:
