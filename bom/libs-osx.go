@@ -86,10 +86,7 @@ func getOtoolVersion(name string, file string) (version string, err error) {
 
 func findOsxLibFile(libPaths []string, name string) (match string, err error) {
 	if strings.HasSuffix(name, ".dylib") {
-		if _, err := AppFs.Stat(name); os.IsNotExist(err) {
-			return "", err
-		}
-		return name, nil
+		return findLibFile(libPaths, "", name, "")
 	}
 	return findLibFile(libPaths, "lib", name, ".dylib")
 }
