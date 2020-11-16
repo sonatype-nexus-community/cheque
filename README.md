@@ -106,3 +106,30 @@ lrwxrwxrwx 1 ec2-user ec2-user 27 Oct 17 14:39 ld -> /path/to/cheque
 [2/3] conan/bincrafters/libpng@1.2.49  [Vulnerable]    9 known vulnerabilities affecting installed version
 ...
 ```
+
+## Development
+
+`cheque` is written using Golang 1.14, so it is best you start there.
+
+Tests can be run like `go test ./... -v`
+
+## Contributing
+
+We care a lot about making the world a safer place, and that's why we created `cheque`. If you as well want to
+speed up the pace of software development by working on this project, jump on in! Before you start work, create
+a new issue, or comment on an existing issue, to let others know you are!
+
+## The Fine Print
+
+It is worth noting that this is **NOT SUPPORTED** by Sonatype, and is a contribution of ours
+to the open source community (read: you!)
+
+Remember:
+
+* Use this contribution at the risk tolerance that you have
+* Do NOT file Sonatype support tickets related to `cheque` support in regard to this project
+* DO file issues here on GitHub, so that the community can pitch in
+
+Phew, that was easier than I thought. Last but not least of all:
+
+Have fun creating and using `cheque` and the [Sonatype OSS Index](https://ossindex.sonatype.org/), we are glad to have you here!
