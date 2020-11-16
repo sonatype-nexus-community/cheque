@@ -16,96 +16,98 @@ package bom
 /** Check dpkg (if it exists).
  */
 import (
-  "github.com/sonatype-nexus-community/cheque/logger"
-  // "path/filepath"
-  "errors"
-  // "os"
-  // "bufio"
-  "strings"
-  "regexp"
-  "os/exec"
+	"github.com/package-url/packageurl-go"
+	"github.com/sonatype-nexus-community/cheque/logger"
+
+	"errors"
+	"os/exec"
+	"regexp"
+	"strings"
 )
 
 /** Identify the coordinate using file path information
  */
 type rpm_collector struct {
-    path string
-    pkgconfig string
-    name string
-    version string
-    dist string
+	path      string
+	pkgconfig string
+	name      string
+	version   string
+	dist      string
 }
 
 func (c rpm_collector) GetName() (string, error) {
-  if (c.dist == "") {
-    c.findPackage()
-  }
-  if (c.name != "") {
-    return c.name, nil
-  }
-  return "", errors.New("rpm_collector: Cannot get name for " + c.path)
+	if c.dist == "" {
+		c.findPackage()
+	}
+	if c.name != "" {
+		return c.name, nil
+	}
+	return "", errors.New("rpm_collector: Cannot get name for " + c.path)
 }
 
 func (c rpm_collector) GetVersion() (string, error) {
-  if (c.dist == "") {
-    c.findPackage()
-  }
-  if (c.version != "") {
-    return c.version, nil
-  }
-  return "", errors.New("rpm_collector: Cannot get version for " + c.path)
+	if c.dist == "" {
+		c.findPackage()
+	}
+	if c.version != "" {
+		return c.version, nil
+	}
+	return "", errors.New("rpm_collector: Cannot get version for " + c.path)
 }
 
-func (c rpm_collector) GetPurl() (string, error) {
-  name, err := c.GetName()
-  if (err != nil) {
-    return c.path, err
-  }
-  version, err := c.GetVersion()
-  if (err != nil) {
-    return name, err
-  }
-  return "pkg:rpm/" + name + "@" + version, nil
+func (c rpm_collector) GetPurl() (purl packageurl.PackageURL, err error) {
+	name, err := c.GetName()
+	if err != nil {
+		return
+	}
+	version, err := c.GetVersion()
+	if err != nil {
+		return
+	}
+	purl = packageurl.PackageURL{Type: "rpm", Name: name, Version: version}
+
+	return
 }
 
 func (c rpm_collector) GetPath() (string, error) {
-  return c.path, nil
+	return c.path, nil
 }
 
 func (c *rpm_collector) findPackage() {
-  // Default distribution
-  c.dist = "fedora"
+	// Default distribution
+	c.dist = "fedora"
 
 	rpmCmd := exec.Command("rpm", "-q", "--whatprovides", c.path)
-	out,err := rpmCmd.Output()
-	if (err == nil) {
+	out, err := rpmCmd.Output()
+	if err == nil {
 		// fmt.Fprintf(os.Stderr, "GetUnixLibraryVersion 3.1 %s\n", out)
 		libname := strings.TrimSpace(string(out))
 
 		rpmCmd = exec.Command("rpm", "-q", "-i", libname)
-		out,err := rpmCmd.Output()
-		if (err == nil) {
-      r, _ := regexp.Compile("Name *: ([^\\n]+)")
-      matches := r.FindStringSubmatch(string(out))
-      if matches != nil {
-        c.name = strings.TrimSpace(matches[1])
-      } else {
-        logger.Error(err.Error())
-        logger.Error(string(out))
-        return
-      }
+		out, err := rpmCmd.Output()
+		if err == nil {
+			r, _ := regexp.Compile("Name *: ([^\\n]+)")
+			matches := r.FindStringSubmatch(string(out))
+			if matches != nil {
+				c.name = strings.TrimSpace(matches[1])
+			} else {
+				logger.Error(err.Error())
+				logger.Error(string(out))
+				return
+			}
 
 			r, _ = regexp.Compile("Version *: ([^\\n]+)")
 			matches = r.FindStringSubmatch(string(out))
 			if matches != nil {
-        c.version = strings.TrimSpace(matches[1])
+				c.version = strings.TrimSpace(matches[1])
 			}
 		} else {
-      logger.Error(err.Error())
-      logger.Error(string(out))
-    }
+			logger.Error(err.Error())
+			logger.Error(string(out))
+		}
 	}
 }
+
 // func getDebianPackage(file string) (project types.Projects, err error) {
 // 	project = types.Projects{}
 //

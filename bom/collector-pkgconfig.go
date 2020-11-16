@@ -16,88 +16,93 @@ package bom
 /** Find and parse package config files.
  */
 import (
-  "github.com/sonatype-nexus-community/cheque/logger"
-  "path/filepath"
-  "errors"
-  "os"
-  "bufio"
-  "strings"
+	"bufio"
+	"errors"
+	"os"
+	"path/filepath"
+	"strings"
+
+	"github.com/package-url/packageurl-go"
+	"github.com/sonatype-nexus-community/cheque/logger"
 )
 
 /** Identify the coordinate using file path information
  */
 type pkgconfig_collector struct {
-    path string
-    pkgconfig string
-    name string
-    version string
+	path      string
+	pkgconfig string
+	name      string
+	version   string
 }
 
 func (c pkgconfig_collector) GetName() (string, error) {
-  if (c.pkgconfig == "") {
-    c.parsePkgConfig()
-  }
+	if c.pkgconfig == "" {
+		c.parsePkgConfig()
+	}
 
-  if (c.pkgconfig == "") {
-    return "", errors.New("pkgconfig_collector: No pkgconfig file for " + c.path)
-  }
+	if c.pkgconfig == "" {
+		return "", errors.New("pkgconfig_collector: No pkgconfig file for " + c.path)
+	}
 
-  if (c.name == "") {
-    return "", errors.New("pkgconfig_collector: No pkgconfig name found for " + c.pkgconfig)
-  }
+	if c.name == "" {
+		return "", errors.New("pkgconfig_collector: No pkgconfig name found for " + c.pkgconfig)
+	}
 
-  return c.name, nil
+	return c.name, nil
 }
 
 func (c pkgconfig_collector) GetVersion() (string, error) {
-  if (c.pkgconfig == "") {
-    c.parsePkgConfig()
-  }
+	if c.pkgconfig == "" {
+		c.parsePkgConfig()
+	}
 
-  if (c.version == "") {
-    return "", errors.New("pkgconfig_collector: No pkgconfig version found")
-  }
+	if c.version == "" {
+		return "", errors.New("pkgconfig_collector: No pkgconfig version found")
+	}
 
-  return c.version, nil
+	return c.version, nil
 }
 
-func (c pkgconfig_collector) GetPurl() (string, error) {
-  name, err := c.GetName()
-  if (err != nil) {
-    return c.path, err
-  }
-  version, err := c.GetVersion()
-  if (err != nil) {
-    return name, err
-  }
-  return "pkg:cpp/" + name + "@" + version, nil
+func (c pkgconfig_collector) GetPurl() (purl packageurl.PackageURL, err error) {
+	name, err := c.GetName()
+	if err != nil {
+		return
+	}
+	version, err := c.GetVersion()
+	if err != nil {
+		return
+	}
+
+	purl = packageurl.PackageURL{Type: "cpp", Name: name, Version: version}
+
+	return
 }
 
 func (c pkgconfig_collector) GetPath() (string, error) {
-  return c.path, nil
+	return c.path, nil
 }
 
 func (c *pkgconfig_collector) parsePkgConfig() {
-  fpath := c.path
+	fpath := c.path
 	dpath := filepath.Dir(fpath)
 	base := filepath.Base(fpath)
 	extension := filepath.Ext(base)
-	base = base[0:len(base)-len(extension)]
-	path := dpath + "/pkgconfig/" + base + ".pc";
+	base = base[0 : len(base)-len(extension)]
+	path := dpath + "/pkgconfig/" + base + ".pc"
 
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-    path = dpath + "/" + base + ".pc";
-    if _, err := os.Stat(path); os.IsNotExist(err) {
-      c.pkgconfig = "unknown"
-  		return
-  	}
+		path = dpath + "/" + base + ".pc"
+		if _, err := os.Stat(path); os.IsNotExist(err) {
+			c.pkgconfig = "unknown"
+			return
+		}
 	}
 
-  c.pkgconfig = path
+	c.pkgconfig = path
 
 	file, err := os.Open(path)
 	if err != nil {
-	    logger.Fatal(err.Error())
+		logger.Fatal(err.Error())
 	}
 	defer file.Close()
 
@@ -112,6 +117,6 @@ func (c *pkgconfig_collector) parsePkgConfig() {
 	}
 
 	if err := scanner.Err(); err != nil {
-	    logger.Fatal(err.Error())
+		logger.Fatal(err.Error())
 	}
 }

@@ -37,10 +37,10 @@ func main() {
 	count := linker.DoLink(args);
 	if count > 0 {
 		if (config.ExitWithError()) {
-			fmt.Fprintf(os.Stderr, "Error: Vulnerabilities found: %v\n", count)
+			fmt.Fprintf(os.Stderr, "Error: Vulnerable dependencies found: %v\n", count)
 			os.Exit(count)
 		} else {
-			fmt.Fprintf(os.Stderr, "Warning: Vulnerabilities found: %v\n", count)
+			fmt.Fprintf(os.Stderr, "Warning: Vulnerable dependencies found: %v\n", count)
 		}
 	}
 
