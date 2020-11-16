@@ -14,15 +14,17 @@
 package bom
 
 import (
-	"github.com/sonatype-nexus-community/nancy/types"
-	"github.com/sonatype-nexus-community/cheque/logger"
-	"regexp"
 	"os"
+	"regexp"
 	"strings"
+
+	"github.com/sonatype-nexus-community/cheque/logger"
+	"github.com/sonatype-nexus-community/nancy/types"
+
 	// "fmt"
-	"path/filepath"
-	"errors"
 	"bufio"
+	"errors"
+	"path/filepath"
 
 	"os/exec"
 	// "bytes"
@@ -44,7 +46,7 @@ func getUnixLibraryVersion(name string) (version string, err error) {
 
 func getLinuxDistro() (name string) {
 
-	return "Unknown";
+	return "Unknown"
 }
 
 func getPkgConfigVersion(fpath string) (project types.Projects, err error) {
@@ -53,8 +55,8 @@ func getPkgConfigVersion(fpath string) (project types.Projects, err error) {
 	path := filepath.Dir(fpath)
 	base := filepath.Base(fpath)
 	extension := filepath.Ext(base)
-	base = base[0:len(base)-len(extension)]
-	path = path + "/pkgconfig/" + base + ".pc";
+	base = base[0 : len(base)-len(extension)]
+	path = path + "/pkgconfig/" + base + ".pc"
 
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		return project, errors.New("PkgConfig: Cannot find package config")
@@ -63,7 +65,7 @@ func getPkgConfigVersion(fpath string) (project types.Projects, err error) {
 
 	file, err := os.Open(path)
 	if err != nil {
-	    logger.Fatal(err.Error())
+		logger.Fatal(err.Error())
 	}
 	defer file.Close()
 
@@ -80,7 +82,7 @@ func getPkgConfigVersion(fpath string) (project types.Projects, err error) {
 	// fmt.Fprintf(os.Stderr, "getPkgConfigVersion 2: %s %s\n", project.Name, project.Version)
 
 	if err := scanner.Err(); err != nil {
-	    logger.Fatal(err.Error())
+		logger.Fatal(err.Error())
 	}
 
 	return project, nil
@@ -90,23 +92,23 @@ func getDebianPackage(file string) (project types.Projects, err error) {
 	project = types.Projects{}
 
 	dpkgCmd := exec.Command("dpkg", "-S", file)
-	out,err := dpkgCmd.Output()
-	if (err == nil) {
+	out, err := dpkgCmd.Output()
+	if err == nil {
 		// fmt.Fprintf(os.Stderr, "GetUnixLibraryVersion 3.1 %s\n", out)
 		buf := string(out)
 		tokens := strings.Split(buf, ":")
 		libname := tokens[0]
 
 		dpkgCmd := exec.Command("dpkg", "-s", libname)
-		out,err := dpkgCmd.Output()
-		if (err == nil) {
+		out, err := dpkgCmd.Output()
+		if err == nil {
 			r, _ := regexp.Compile("Version: ([^\\n]+)")
 			matches := r.FindStringSubmatch(string(out))
 			if matches != nil {
 				project.Name = "pkg:dpkg/ubuntu/" + libname
 				project.Version = doParseAptVersionIntoPurl(libname, matches[1])
 				// fmt.Fprintf(os.Stderr, "GetUnixLibraryVersion 3.2: %s %s\n", project.Name, project.Version)
-				return project,nil
+				return project, nil
 			}
 		}
 	}
@@ -116,9 +118,9 @@ func getDebianPackage(file string) (project types.Projects, err error) {
 func findUnixLibFile(libPaths []string, name string) (match string, err error) {
 	if strings.Contains(name, ".so.") || strings.HasSuffix(name, ".so") || strings.HasSuffix(name, ".a") {
 		// fmt.Fprintf(os.Stderr, "BUH 1 %s\n", name)
-    // if _, err := os.Stat(name); os.IsNotExist(err) {
-    //   return "", err
-    // }
+		// if _, err := os.Stat(name); os.IsNotExist(err) {
+		//   return "", err
+		// }
 		// return name,nil
 		return findLibFile(libPaths, "", name, "")
 	} else {
@@ -135,7 +137,7 @@ func getUnixLibraryNameAndVersion(path string) (name string, version string, err
 	r, _ := regexp.Compile("^(.*)\\.so\\.([0-9\\.]+)")
 	matches := r.FindStringSubmatch(path)
 	if matches == nil {
-		r, _ = regexp.Compile("^(.*?)\\.([0-9\\.]+)so")
+		r, _ = regexp.Compile("^(.*?)\\.([0-9\\.]+)\\.so")
 		matches = r.FindStringSubmatch(path)
 	}
 	if matches == nil {
@@ -150,7 +152,7 @@ func getUnixLibraryNameAndVersion(path string) (name string, version string, err
 		return name, matches[1], nil
 	}
 
-	r, _ = regexp.Compile("([0-9\\.]+)\\.so")
+	r, _ = regexp.Compile("\\.([0-9\\.]+)\\.so")
 	matches = r.FindStringSubmatch(path)
 	if matches != nil {
 		return name, matches[1], nil
@@ -163,7 +165,7 @@ func getUnixLibraryNameAndVersion(path string) (name string, version string, err
  * number. Try and extract a version from there.
  */
 func getUnixSymlinkVersion(file string) (version string, err error) {
-	path,err := filepath.EvalSymlinks(file)
+	path, err := filepath.EvalSymlinks(file)
 
 	// fmt.Fprintf(os.Stderr, "GetUnixSymlinkVersion 2 %s\n", path)
 
@@ -188,9 +190,8 @@ func getUnixSymlinkVersion(file string) (version string, err error) {
 }
 
 func getUnixLibraryPathRegexPattern() (result string) {
-	return "[a-zA-Z0-9_/\\.\\-]+\\.so\\.[a-zA-Z0-9_/\\.]+";
+	return "[a-zA-Z0-9_/\\.\\-]+\\.so\\.[a-zA-Z0-9_/\\.]+"
 }
-
 
 func getUnixLibraryFileRegexPattern() (result string) {
 	return "([a-zA-Z0-9_\\-]+)\\.so\\.[0-9\\.]+"
@@ -201,20 +202,20 @@ func getUnixArchiveFileRegexPattern() (result string) {
 }
 
 /** FIXME: Use gcc to get search Paths
-		> gcc -print-search-dirs
-		install: /usr/lib/gcc/x86_64-amazon-linux/4.8.5/
-		programs: =/usr/libexec/gcc/x86_64-amazon-linux/4.8.5/:/usr/libexec/gcc/x86_64-amazon-linux/4.8.5/:/usr/libexec/gcc/x86_64-amazon-linux/:/usr/lib/gcc/x86_64-amazon-linux/4.8.5/:/usr/lib/gcc/x86_64-amazon-linux/:/usr/lib/gcc/x86_64-amazon-linux/4.8.5/../../../../x86_64-amazon-linux/bin/x86_64-amazon-linux/4.8.5/:/usr/lib/gcc/x86_64-amazon-linux/4.8.5/../../../../x86_64-amazon-linux/bin/
-		libraries: =/usr/lib/gcc/x86_64-amazon-linux/4.8.5/:/usr/lib/gcc/x86_64-amazon-linux/4.8.5/../../../../x86_64-amazon-linux/lib/x86_64-amazon-linux/4.8.5/:/usr/lib/gcc/x86_64-amazon-linux/4.8.5/../../../../x86_64-amazon-linux/lib/../lib64/:/usr/lib/gcc/x86_64-amazon-linux/4.8.5/../../../x86_64-amazon-linux/4.8.5/:/usr/lib/gcc/x86_64-amazon-linux/4.8.5/../../../../lib64/:/lib/x86_64-amazon-linux/4.8.5/:/lib/../lib64/:/usr/lib/x86_64-amazon-linux/4.8.5/:/usr/lib/../lib64/:/usr/lib/gcc/x86_64-amazon-linux/4.8.5/../../../../x86_64-amazon-linux/lib/:/usr/lib/gcc/x86_64-amazon-linux/4.8.5/../../../:/lib/:/usr/lib/
- */
+> gcc -print-search-dirs
+install: /usr/lib/gcc/x86_64-amazon-linux/4.8.5/
+programs: =/usr/libexec/gcc/x86_64-amazon-linux/4.8.5/:/usr/libexec/gcc/x86_64-amazon-linux/4.8.5/:/usr/libexec/gcc/x86_64-amazon-linux/:/usr/lib/gcc/x86_64-amazon-linux/4.8.5/:/usr/lib/gcc/x86_64-amazon-linux/:/usr/lib/gcc/x86_64-amazon-linux/4.8.5/../../../../x86_64-amazon-linux/bin/x86_64-amazon-linux/4.8.5/:/usr/lib/gcc/x86_64-amazon-linux/4.8.5/../../../../x86_64-amazon-linux/bin/
+libraries: =/usr/lib/gcc/x86_64-amazon-linux/4.8.5/:/usr/lib/gcc/x86_64-amazon-linux/4.8.5/../../../../x86_64-amazon-linux/lib/x86_64-amazon-linux/4.8.5/:/usr/lib/gcc/x86_64-amazon-linux/4.8.5/../../../../x86_64-amazon-linux/lib/../lib64/:/usr/lib/gcc/x86_64-amazon-linux/4.8.5/../../../x86_64-amazon-linux/4.8.5/:/usr/lib/gcc/x86_64-amazon-linux/4.8.5/../../../../lib64/:/lib/x86_64-amazon-linux/4.8.5/:/lib/../lib64/:/usr/lib/x86_64-amazon-linux/4.8.5/:/usr/lib/../lib64/:/usr/lib/gcc/x86_64-amazon-linux/4.8.5/../../../../x86_64-amazon-linux/lib/:/usr/lib/gcc/x86_64-amazon-linux/4.8.5/../../../:/lib/:/usr/lib/
+*/
 func getLinuxLibPaths() (paths []string) {
 	dpkgCmd := exec.Command("gcc", "-print-search-dirs")
-	out,err := dpkgCmd.Output()
-	if (err == nil) {
+	out, err := dpkgCmd.Output()
+	if err == nil {
 		buf := string(out)
 		lines := strings.Split(buf, "\n")
 		for _, line := range lines {
 			kv := strings.Split(line, "=")
-			if (strings.HasPrefix(kv[0], "libraries:")) {
+			if strings.HasPrefix(kv[0], "libraries:") {
 				gccPaths := strings.Split(kv[1], ":")
 				paths = append(paths, gccPaths...)
 			}
