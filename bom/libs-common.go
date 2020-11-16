@@ -14,40 +14,31 @@
 package bom
 
 import (
-  "os"
-  // "fmt"
+	"os"
 
-	// Required to search file system
-	"path/filepath"
+	"github.com/spf13/afero"
 )
 
 func findLibFile(libpaths []string, prefix string, lib string, suffix string) (match string, err error) {
-
-  for _, libpath := range libpaths {
-    // If we are provided a suffix, then this is a wildcard search, otherwise we
-    // have an absolute name.
-    globPattern := libpath + "/" + prefix + lib + suffix;
-    if suffix != "" {
-      globPattern = globPattern + "*";
-    }
-    // fmt.Fprintf(os.Stderr, "FindLibFile 1 %s\n", globPattern)
-   	matches, err := filepath.Glob(globPattern)
-
-  	if err == nil {
-      // fmt.Fprintf(os.Stderr, "FindLibFile 2 %s\n", globPattern)
-    	if len(matches) > 0 {
-        for _,match := range matches {
-          // fmt.Fprintf(os.Stderr, "FindLibFile 3 %s\n", match)
-
-          if _, err := os.Stat(match); os.IsNotExist(err) {
-            // Do nothing if file does not exist
-          } else {
-            //  fmt.Fprintf(os.Stderr, "FindLibFile 4 %s\n", match)
-      	     return match, nil
-          }
-        }
-    	}
-    }
-  }
-	return "", nil
+	for _, libpath := range libpaths {
+		globPattern := libpath + "/" + prefix + lib + suffix
+		if suffix != "" {
+			globPattern = globPattern + "*"
+		}
+		matches, globErr := afero.Glob(AppFs, globPattern)
+		if globErr == nil {
+			if len(matches) > 0 {
+				for _, v := range matches {
+					_, err = AppFs.Stat(v)
+					if os.IsNotExist((err)) {
+						continue
+					}
+					err = nil
+					match = v
+					return
+				}
+			}
+		}
+	}
+	return
 }

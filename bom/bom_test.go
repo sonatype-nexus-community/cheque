@@ -75,9 +75,23 @@ func TestUnixCreateBom(t *testing.T) {
 	LDDCommand = FakeLDDCommand{}
 	RPMExtCmd = FakeRPMCommand{}
 	DEBExtCmd = FakeDEBCommand{}
-	deps, err := CreateBom([]string{"/usrdefined/path"},
-		[]string{"bob", "ken", "pkgtest", "rpmtest", "debtest"},
-		[]string{"/lib/libpng.so", "/lib/libtiff.a", "/lib/libsnuh.so.1.2.3", "/lib/libbuh.4.5.6.so"})
+	deps, err := CreateBom(
+		[]string{
+			"/usrdefined/path",
+		},
+		[]string{
+			"bob",
+			"ken",
+			"pkgtest",
+			"rpmtest",
+			"debtest",
+		},
+		[]string{
+			"/lib/libpng.so",
+			"/lib/libtiff.a",
+			"/lib/libsnuh.so.1.2.3",
+			"/lib/libbuh.4.5.6.so",
+		})
 
 	if err != nil {
 		t.Error(err)

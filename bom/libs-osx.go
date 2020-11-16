@@ -16,14 +16,14 @@ package bom
 import (
 	// "github.com/sonatype-nexus-community/cheque/logger"
 
-	"fmt"
-	"os"
-	"strings"
-  "regexp"
-  "path/filepath"
-	"errors"
-	"io"
 	"bufio"
+	"errors"
+	"fmt"
+	"io"
+	"os"
+	"path/filepath"
+	"regexp"
+	"strings"
 
 	// Required to run external commands
 	"os/exec"
@@ -86,17 +86,16 @@ func getOtoolVersion(name string, file string) (version string, err error) {
 
 func findOsxLibFile(libPaths []string, name string) (match string, err error) {
 	if strings.HasSuffix(name, ".dylib") {
-    if _, err := os.Stat(name); os.IsNotExist(err) {
-      return "", err
-    }
-		return name,nil
-	} else {
-		return findLibFile(libPaths, "lib", name, ".dylib")
+		if _, err := AppFs.Stat(name); os.IsNotExist(err) {
+			return "", err
+		}
+		return name, nil
 	}
+	return findLibFile(libPaths, "lib", name, ".dylib")
 }
 
 func getOsxSymlinkVersion(file string) (version string, err error) {
-	path,err := filepath.EvalSymlinks(file)
+	path, err := filepath.EvalSymlinks(file)
 
 	if err != nil {
 		return "", err
@@ -118,7 +117,6 @@ func getOsxSymlinkVersion(file string) (version string, err error) {
 func getOsxLibraryPathRegexPattern() (result string) {
 	return "[a-zA-Z0-9_/\\.]+\\.dylib"
 }
-
 
 func getOsxLibraryFileRegexPattern() (result string) {
 	return "([a-zA-Z0-9_]+)\\.[0-9\\.]+\\.dylib"
@@ -146,7 +144,7 @@ func getOsxLibPaths() (paths []string) {
 				if strings.HasPrefix(msg, "\t") {
 					paths = append(paths, strings.TrimSpace(msg))
 				} else {
-					matching = false;
+					matching = false
 				}
 			}
 			if strings.HasPrefix(msg, "Library search paths") {
