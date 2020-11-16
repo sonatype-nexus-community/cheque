@@ -30,7 +30,8 @@ import (
 
 func ProcessPaths(libPaths []string, libs []string, files []string) (count int) {
 	myBom := packages.Make{}
-	myBom.Purls, _ = bom.CreateBom(libPaths, libs, files)
+	var projectList, _ = bom.CreateBom(libPaths, libs, files)
+	myBom.Purls = projectList.Projects
 	return AuditBom(myBom.Purls)
 }
 

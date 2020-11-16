@@ -1,4 +1,4 @@
-// Copyright 2019 Sonatype Inc.
+// Copyright 2020 Sonatype Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,13 +13,21 @@
 // limitations under the License.
 package bom
 
-import "github.com/package-url/packageurl-go"
+import (
+	"os/exec"
+)
 
-type Collector interface {
-	GetName() (string, error)
-	GetVersion() (string, error)
-	GetPurlObject() (packageurl.PackageURL, error)
-	GetPath() (string, error)
-	IsValid() bool
-	SetExternalCommand(e ExternalCommand)
+type LddExternalCommand struct {
+}
+
+func (l LddExternalCommand) IsValid() bool {
+	_, err := exec.LookPath("ldd")
+	if err != nil {
+		return false
+	}
+	return true
+}
+
+func (l LddExternalCommand) ExecCommand(args ...string) ([]byte, error) {
+	return exec.Command("ldd", args...).CombinedOutput()
 }

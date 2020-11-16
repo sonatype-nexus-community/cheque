@@ -15,7 +15,7 @@ package linker
 
 import (
 	"github.com/sonatype-nexus-community/cheque/audit"
-	"github.com/sonatype-nexus-community/cheque/oslibs"
+	"github.com/sonatype-nexus-community/cheque/bom"
 	"strings"
 	"github.com/sonatype-nexus-community/cheque/logger"
 )
@@ -114,7 +114,7 @@ func DoLink(args []string) (count int) {
 		for _, key := range libPaths {
 				libPathsSlice = append(libPathsSlice, key)
 		}
-		libPathsSlice = append(libPathsSlice, oslibs.GetLibPaths()...)
+		libPathsSlice = append(libPathsSlice, bom.GetLibPaths()...)
 		libsSlice := []string{}
 		for key, _ := range libs {
 				libsSlice = append(libsSlice, key)

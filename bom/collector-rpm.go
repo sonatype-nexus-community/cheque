@@ -13,78 +13,85 @@
 // limitations under the License.
 package bom
 
-/** Check dpkg (if it exists).
- */
 import (
+	"fmt"
+
 	"github.com/package-url/packageurl-go"
 	"github.com/sonatype-nexus-community/cheque/logger"
 
 	"errors"
-	"os/exec"
 	"regexp"
 	"strings"
 )
 
 /** Identify the coordinate using file path information
  */
-type rpm_collector struct {
-	path      string
-	pkgconfig string
-	name      string
-	version   string
-	dist      string
+type rpmCollector struct {
+	path            string
+	pkgconfig       string
+	name            string
+	version         string
+	dist            string
+	externalCommand ExternalCommand
 }
 
-func (c rpm_collector) GetName() (string, error) {
+func (c rpmCollector) SetExternalCommand(e ExternalCommand) {
+	c.externalCommand = e
+}
+
+func (c rpmCollector) IsValid() bool {
+	return c.externalCommand.IsValid()
+}
+
+func (c rpmCollector) GetName() (string, error) {
 	if c.dist == "" {
 		c.findPackage()
 	}
 	if c.name != "" {
 		return c.name, nil
 	}
-	return "", errors.New("rpm_collector: Cannot get name for " + c.path)
+	return "", errors.New("rpmCollector: Cannot get name for " + c.path)
 }
 
-func (c rpm_collector) GetVersion() (string, error) {
+func (c rpmCollector) GetVersion() (string, error) {
 	if c.dist == "" {
 		c.findPackage()
 	}
 	if c.version != "" {
 		return c.version, nil
 	}
-	return "", errors.New("rpm_collector: Cannot get version for " + c.path)
+	return "", errors.New("rpmCollector: Cannot get version for " + c.path)
 }
 
-func (c rpm_collector) GetPurl() (purl packageurl.PackageURL, err error) {
+func (c rpmCollector) GetPurlObject() (purl packageurl.PackageURL, err error) {
 	name, err := c.GetName()
 	if err != nil {
-		return
+		return purl, err
 	}
 	version, err := c.GetVersion()
 	if err != nil {
-		return
+		return purl, err
 	}
-	purl = packageurl.PackageURL{Type: "rpm", Name: name, Version: version}
-
+	purl, err = packageurl.FromString(fmt.Sprintf("pkg:rpm/%s@%s", name, version))
+	if err != nil {
+		return purl, err
+	}
 	return
 }
 
-func (c rpm_collector) GetPath() (string, error) {
+func (c rpmCollector) GetPath() (string, error) {
 	return c.path, nil
 }
 
-func (c *rpm_collector) findPackage() {
+func (c *rpmCollector) findPackage() {
 	// Default distribution
 	c.dist = "fedora"
 
-	rpmCmd := exec.Command("rpm", "-q", "--whatprovides", c.path)
-	out, err := rpmCmd.Output()
+	out, err := c.externalCommand.ExecCommand("-q", "--whatprovides", c.path)
 	if err == nil {
-		// fmt.Fprintf(os.Stderr, "GetUnixLibraryVersion 3.1 %s\n", out)
 		libname := strings.TrimSpace(string(out))
 
-		rpmCmd = exec.Command("rpm", "-q", "-i", libname)
-		out, err := rpmCmd.Output()
+		out, err = c.externalCommand.ExecCommand("-q", "-i", libname)
 		if err == nil {
 			r, _ := regexp.Compile("Name *: ([^\\n]+)")
 			matches := r.FindStringSubmatch(string(out))
@@ -107,30 +114,3 @@ func (c *rpm_collector) findPackage() {
 		}
 	}
 }
-
-// func getDebianPackage(file string) (project types.Projects, err error) {
-// 	project = types.Projects{}
-//
-// 	dpkgCmd := exec.Command("dpkg", "-S", file)
-// 	out,err := dpkgCmd.Output()
-// 	if (err == nil) {
-// 		// fmt.Fprintf(os.Stderr, "GetUnixLibraryVersion 3.1 %s\n", out)
-// 		buf := string(out)
-// 		tokens := strings.Split(buf, ":")
-// 		libname := tokens[0]
-//
-// 		dpkgCmd := exec.Command("dpkg", "-s", libname)
-// 		out,err := dpkgCmd.Output()
-// 		if (err == nil) {
-// 			r, _ := regexp.Compile("Version: ([^\\n]+)")
-// 			matches := r.FindStringSubmatch(string(out))
-// 			if matches != nil {
-// 				project.Name = "pkg:dpkg/ubuntu/" + libname
-// 				project.Version = doParseAptVersionIntoPurl(libname, matches[1])
-// 				// fmt.Fprintf(os.Stderr, "GetUnixLibraryVersion 3.2: %s %s\n", project.Name, project.Version)
-// 				return project,nil
-// 			}
-// 		}
-// 	}
-// 	return project, errors.New("Dpkg: Cannot find package")
-// }

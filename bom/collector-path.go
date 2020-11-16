@@ -14,64 +14,78 @@
 package bom
 
 import (
-	"github.com/package-url/packageurl-go"
-	"github.com/sonatype-nexus-community/cheque/oslibs"
+	"fmt"
 
-	// "github.com/sonatype-nexus-community/cheque/logger"
+	"github.com/package-url/packageurl-go"
+
 	"path/filepath"
 )
 
 /** Identify the coordinate using file path information
  */
-type path_collector struct {
+type pathCollector struct {
 	path    string
 	symlink string
 }
 
-func (c path_collector) GetName() (string, error) {
+func (c pathCollector) SetExternalCommand(e ExternalCommand) {
+	// NO-OP, no external command
+}
+
+func (c pathCollector) IsValid() bool {
+	return true
+}
+
+func (c pathCollector) GetName() (string, error) {
 	symlink, err := c.getSymlink()
 	if err != nil {
 		return symlink, err
 	}
 
-	return oslibs.GetLibraryName(symlink)
+	return GetLibraryName(symlink)
 }
 
-func (c path_collector) GetVersion() (string, error) {
+func (c pathCollector) GetVersion() (string, error) {
 	symlink, err := c.getSymlink()
 	if err != nil {
 		return symlink, err
 	}
 
-	return oslibs.GetLibraryVersion(symlink)
+	return GetLibraryVersion(symlink)
 }
 
-func (c *path_collector) getSymlink() (string, error) {
+func (c *pathCollector) getSymlink() (string, error) {
 	if c.symlink == "" {
 		symlink, err := filepath.EvalSymlinks(c.path)
 		if err != nil {
-			return "", err
+			// Ignore the error in this case. If we cannot follow the symlink, try and
+			// figure things out from the given path. This is particularly important
+			// for testing, since afero does not support symlinks yet.
+			return c.path, nil
 		}
 		c.symlink = symlink
 	}
 	return c.symlink, nil
 }
 
-func (c path_collector) GetPurl() (purl packageurl.PackageURL, err error) {
+func (c pathCollector) GetPurlObject() (purl packageurl.PackageURL, err error) {
 	name, err := c.GetName()
 	if err != nil {
-		return
+		return purl, err
 	}
 	version, err := c.GetVersion()
 	if err != nil {
-		return
+		return purl, err
 	}
-	purl = packageurl.PackageURL{Type: "cpp", Name: name, Version: version}
 
+	purl, err = packageurl.FromString(fmt.Sprintf("pkg:cpp/%s@%s", name, version))
+	if err != nil {
+		return purl, err
+	}
 	return
 }
 
-func (c path_collector) GetPath() (string, error) {
+func (c pathCollector) GetPath() (string, error) {
 	if c.symlink != "" {
 		return c.symlink, nil
 	}

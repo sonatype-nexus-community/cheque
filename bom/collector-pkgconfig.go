@@ -13,11 +13,10 @@
 // limitations under the License.
 package bom
 
-/** Find and parse package config files.
- */
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -28,14 +27,22 @@ import (
 
 /** Identify the coordinate using file path information
  */
-type pkgconfig_collector struct {
+type pkgConfigCollector struct {
 	path      string
 	pkgconfig string
 	name      string
 	version   string
 }
 
-func (c pkgconfig_collector) GetName() (string, error) {
+func (c pkgConfigCollector) SetExternalCommand(e ExternalCommand) {
+	// NO OP, no external command
+}
+
+func (c pkgConfigCollector) IsValid() bool {
+	return true
+}
+
+func (c pkgConfigCollector) GetName() (string, error) {
 	if c.pkgconfig == "" {
 		c.parsePkgConfig()
 	}
@@ -51,7 +58,7 @@ func (c pkgconfig_collector) GetName() (string, error) {
 	return c.name, nil
 }
 
-func (c pkgconfig_collector) GetVersion() (string, error) {
+func (c pkgConfigCollector) GetVersion() (string, error) {
 	if c.pkgconfig == "" {
 		c.parsePkgConfig()
 	}
@@ -63,36 +70,33 @@ func (c pkgconfig_collector) GetVersion() (string, error) {
 	return c.version, nil
 }
 
-func (c pkgconfig_collector) GetPurl() (purl packageurl.PackageURL, err error) {
+func (c pkgConfigCollector) GetPurlObject() (purl packageurl.PackageURL, err error) {
 	name, err := c.GetName()
 	if err != nil {
-		return
+		return purl, err
 	}
 	version, err := c.GetVersion()
 	if err != nil {
-		return
+		return purl, err
 	}
-
-	purl = packageurl.PackageURL{Type: "cpp", Name: name, Version: version}
-
-	return
+	purl, err = packageurl.FromString(fmt.Sprintf("pkg:cpp/%s@%s", name, version))
+	return purl, err
 }
 
-func (c pkgconfig_collector) GetPath() (string, error) {
+func (c pkgConfigCollector) GetPath() (string, error) {
 	return c.path, nil
 }
 
-func (c *pkgconfig_collector) parsePkgConfig() {
-	fpath := c.path
-	dpath := filepath.Dir(fpath)
-	base := filepath.Base(fpath)
+func (c *pkgConfigCollector) parsePkgConfig() {
+	dpath := filepath.Dir(c.path)
+	base := filepath.Base(c.path)
 	extension := filepath.Ext(base)
 	base = base[0 : len(base)-len(extension)]
 	path := dpath + "/pkgconfig/" + base + ".pc"
 
-	if _, err := os.Stat(path); os.IsNotExist(err) {
+	if _, err := AppFs.Stat(path); os.IsNotExist(err) {
 		path = dpath + "/" + base + ".pc"
-		if _, err := os.Stat(path); os.IsNotExist(err) {
+		if _, err := AppFs.Stat(path); os.IsNotExist(err) {
 			c.pkgconfig = "unknown"
 			return
 		}
@@ -100,7 +104,7 @@ func (c *pkgconfig_collector) parsePkgConfig() {
 
 	c.pkgconfig = path
 
-	file, err := os.Open(path)
+	file, err := AppFs.Open(path)
 	if err != nil {
 		logger.Fatal(err.Error())
 	}

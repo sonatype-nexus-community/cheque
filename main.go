@@ -16,7 +16,6 @@ package main
 import (
 	"github.com/sonatype-nexus-community/cheque/config"
 	"github.com/sonatype-nexus-community/cheque/linker"
-	"github.com/sonatype-nexus-community/cheque/oslibs"
 	"github.com/sonatype-nexus-community/cheque/logger"
 	"os"
 	"os/exec"
@@ -48,21 +47,22 @@ func main() {
 	case "cheque":
 		break;
 	default:
-		cmd := oslibs.GetCommandPath(config.GetCommand())
-		if cmd == "" {
-			logger.Fatal("Cannot find official command: " + config.GetCommand())
+		var cmdPath = fmt.Sprint("/usr/bin/", config.GetCommand());
+
+		_, err := os.Stat(cmdPath)
+		if err != nil {
+			logger.Fatal("Cannot find official command: " + cmdPath)
 		} else {
-			// Run external command
-			// fmt.Fprintf(os.Stderr, "Running %s\n", config.GetCommand())
-			externalCmd := exec.Command(cmd, args...)
+			externalCmd := exec.Command(cmdPath, args...)
+
 			externalCmd.Stdout = os.Stdout
 			externalCmd.Stderr = os.Stderr
-			err := externalCmd.Run()
 
-			if err != nil {
-				// FIXME: Return actual error code from command
-				fmt.Fprintf(os.Stderr, "Error running %s: %v\n", config.GetCommand(), err)
-				os.Exit(1)
+			if err := externalCmd.Run(); err != nil {
+				if exitError, ok := err.(*exec.ExitError); ok {
+					logger.Fatal(fmt.Sprintf("There was an issue running the command %s, and the issue is %s", config.GetCommand(), os.Stderr))
+					os.Exit(exitError.ExitCode())
+				}
 			}
 		}
 		break;

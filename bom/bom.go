@@ -14,25 +14,29 @@
 package bom
 
 import (
-	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
 
 	"github.com/package-url/packageurl-go"
 	"github.com/sonatype-nexus-community/cheque/logger"
-	"github.com/sonatype-nexus-community/cheque/oslibs"
+	"github.com/sonatype-nexus-community/cheque/types"
 
 	"fmt"
 )
 
-/**
- * - Create Bom through a variety of mechanisms.
- * - Export Bom to file
- * - Import Bom from file
- */
+var RPMExtCmd ExternalCommand
+var DEBExtCmd ExternalCommand
+var LDDCommand ExternalCommand
 
-func CreateBom(libPaths []string, libs []string, files []string) (deps []packageurl.PackageURL, err error) {
+func init() {
+	LDDCommand = LddExternalCommand{}
+	RPMExtCmd = RpmExternalCommand{}
+	DEBExtCmd = DebExternalCommand{}
+}
+
+// CreateBom does stuff
+func CreateBom(libPaths []string, libs []string, files []string) (deps types.ProjectList, err error) {
 	// Library names
 	lookup := make(map[string]bool)
 
@@ -45,28 +49,25 @@ func CreateBom(libPaths []string, libs []string, files []string) (deps []package
 		}
 	}
 
-	for path, _ := range lookup {
-		purl, err := getDllCoordinate(path)
+	for path := range lookup {
+		project, err := getLibraryCoordinate(path)
 		if err != nil {
 			logger.Error(err.Error())
 			continue
 		}
 
-		// Minor repair to names to make them consistent
-		if !strings.HasPrefix(purl.Name, "lib") {
-			purl.Name = "lib" + purl.Name
-		}
-		deps = append(deps, purl)
+		deps.Projects = append(deps.Projects, project)
+		deps = checkIfRpmOrDebAppendLibIfNot(project, deps)
 	}
 
-	// Paths to libraries
 	for _, lib := range files {
-		rn, _ := regexp.Compile(oslibs.GetLibraryFileRegexPattern())
-		nameMatch := rn.FindStringSubmatch(lib)
+		pattern := GetLibraryFileRegexPattern()
+		rn, _ := regexp.Compile(pattern)
+		fname := filepath.Base(lib)
+		nameMatch := rn.FindStringSubmatch(fname)
 
 		if nameMatch != nil {
-			// This is a dynamic library (DLL)
-			purl, err := getDllCoordinate(lib)
+			project, err := getLibraryCoordinate(lib)
 			if err != nil {
 				logger.Error(err.Error())
 				continue
@@ -74,14 +75,8 @@ func CreateBom(libPaths []string, libs []string, files []string) (deps []package
 
 			// We need both the "lib<name>" and "<name>" versions, since which is used
 			// depends on the repo.
-			deps = append(deps, purl)
-			if !strings.HasPrefix(purl.Name, "lib") {
-				purl.Name = "lib" + purl.Name
-				deps = append(deps, purl)
-			} else {
-				purl.Name = purl.Name[3:]
-				deps = append(deps, purl)
-			}
+			deps.Projects = append(deps.Projects, project)
+			deps = checkIfRpmOrDebAppendLibIfNot(project, deps)
 		} else {
 			purl, err := getArchiveCoordinate(lib)
 			if err != nil {
@@ -91,21 +86,15 @@ func CreateBom(libPaths []string, libs []string, files []string) (deps []package
 
 			// We need both the "lib<name>" and "<name>" versions, since which is used
 			// depends on the repo.
-			deps = append(deps, purl)
-			if !strings.HasPrefix(purl.Name, "lib") {
-				purl.Name = "lib" + purl.Name
-				deps = append(deps, purl)
-			} else {
-				purl.Name = purl.Name[3:]
-				deps = append(deps, purl)
-			}
+			deps.Projects = append(deps.Projects, purl)
+			deps = checkIfRpmOrDebAppendLibIfNot(purl, deps)
 		}
 	}
 	return deps, nil
 }
 
 func recursiveGetLibraryPaths(lookup map[string]bool, libPaths []string, lib string) (results map[string]bool, err error) {
-	path, err := oslibs.GetLibraryPath(libPaths, lib)
+	path, err := GetLibraryPath(libPaths, lib)
 	if err != nil {
 		logger.Debug(fmt.Sprintf("%v", err))
 		return lookup, nil
@@ -113,8 +102,7 @@ func recursiveGetLibraryPaths(lookup map[string]bool, libPaths []string, lib str
 
 	lookup[path] = true
 
-	lddCmd := exec.Command("ldd", path)
-	out, err := lddCmd.Output()
+	out, err := LDDCommand.ExecCommand(path)
 	if err == nil {
 		buf := string(out)
 		lines := strings.Split(buf, "\n")
@@ -135,57 +123,65 @@ func recursiveGetLibraryPaths(lookup map[string]bool, libPaths []string, lib str
 	return lookup, nil
 }
 
-func getDllCoordinate(path string) (purl packageurl.PackageURL, err error) {
+func checkIfRpmOrDebAppendLibIfNot(project packageurl.PackageURL, deps types.ProjectList) types.ProjectList {
+	if project.Type != "rpm" && project.Type != "deb" {
+		if !strings.HasPrefix(project.Name, "lib") {
+			project.Name = "lib" + project.Name
+		} else {
+			project.Name = project.Name[3:]
+		}
+		deps.Projects = append(deps.Projects, project)
+	}
+	return deps
+}
+
+func getLibraryCoordinate(path string) (purl packageurl.PackageURL, err error) {
 	var collector Collector
-	// Check each collector in turn to see which gives us a good result.
 
-	// pkgconfig_collector
-	pc := pkgconfig_collector{path: path}
-	purl, err = pc.GetPurl()
+	collector = pkgConfigCollector{path: path}
+	purl, err = collector.GetPurlObject()
 	if err == nil {
-		return
+		return purl, nil
 	}
 
-	// rpm_collector
-	collector = rpm_collector{path: path}
-	purl, err = collector.GetPurl()
-	if err == nil {
-		return
+	collector = rpmCollector{path: path, externalCommand: RPMExtCmd}
+	if collector.IsValid() {
+		purl, err = collector.GetPurlObject()
+		if err == nil {
+			return purl, nil
+		}
 	}
 
-	// deb_collector
-
-	// path_collector
-	collector = path_collector{path: path}
-	purl, err = collector.GetPurl()
-	if err == nil {
-		return
+	collector = debCollector{path: path, externalCommand: DEBExtCmd}
+	if collector.IsValid() {
+		purl, err = collector.GetPurlObject()
+		if err == nil {
+			return purl, nil
+		}
 	}
 
-	// name_collector
+	collector = pathCollector{path: path}
+	purl, err = collector.GetPurlObject()
+	if err == nil {
+		return purl, nil
+	}
 
 	return
 }
 
 func getArchiveCoordinate(path string) (purl packageurl.PackageURL, err error) {
-	// Check each collector in turn to see which gives us a good result.
+	var collector Collector
 
-	// pkgconfig_collector
-	pc := pkgconfig_collector{path: path}
-	purl, err = pc.GetPurl()
+	collector = pkgConfigCollector{path: path}
+	purl, err = collector.GetPurlObject()
 	if err == nil {
-		return
+		return purl, nil
 	}
 
-	// rpm_collector
-
-	// deb_collector
-
-	// path_collector
-	collector := path_collector{path: path}
-	purl, err = collector.GetPurl()
+	collector = pathCollector{path: path}
+	purl, err = collector.GetPurlObject()
 	if err == nil {
-		return
+		return purl, nil
 	}
 
 	return

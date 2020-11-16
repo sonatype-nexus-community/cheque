@@ -13,13 +13,26 @@
 // limitations under the License.
 package bom
 
-import "github.com/package-url/packageurl-go"
+import (
+	"fmt"
+	"os"
+	"flag"
 
-type Collector interface {
-	GetName() (string, error)
-	GetVersion() (string, error)
-	GetPurlObject() (packageurl.PackageURL, error)
-	GetPath() (string, error)
-	IsValid() bool
-	SetExternalCommand(e ExternalCommand)
+	// Required to get OS
+	"runtime"
+)
+
+
+func getWindowsLibraryId(name string) (version string, err error) {
+	_, _ = fmt.Fprintf(os.Stderr, "Unsupported OS: %s\n", runtime.GOOS)
+	flag.PrintDefaults()
+	os.Exit(2)
+	return "", nil
+}
+
+func getWindowsArchiveId(name string) (version string, err error) {
+	_, _ = fmt.Fprintf(os.Stderr, "Unsupported OS: %s\n", runtime.GOOS)
+	flag.PrintDefaults()
+	os.Exit(2)
+	return "", nil
 }
