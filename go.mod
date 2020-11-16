@@ -9,4 +9,5 @@ require (
 	github.com/shopspring/decimal v1.2.0
 	github.com/sirupsen/logrus v1.6.0
 	github.com/sonatype-nexus-community/go-sona-types v0.0.8
+	github.com/sonatype-nexus-community/nancy v1.0.1
 )

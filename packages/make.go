@@ -18,7 +18,7 @@ import (
 	"os"
 
 	"github.com/package-url/packageurl-go"
-	"github.com/sonatype-nexus-community/nancy/customerrors"
+	"github.com/sonatype-nexus-community/cheque/logger"
 )
 
 // Dep is an implementation of Packages interface
@@ -30,7 +30,8 @@ type Make struct {
 // CheckExistenceOfManifest will see if a Gopkg exists at the given path
 func (d Make) CheckExistenceOfManifest() bool {
 	if _, err := os.Stat(d.MakefilePath); os.IsNotExist(err) {
-		customerrors.Check(err, fmt.Sprint("No file found at path: "+d.MakefilePath))
+
+		logger.GetLogger().Error(fmt.Sprint("No file found at path: "+d.MakefilePath))
 	}
 	return true
 }
