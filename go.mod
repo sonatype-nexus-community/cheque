@@ -12,4 +12,5 @@ require (
 	github.com/sonatype-nexus-community/go-sona-types v0.0.8
 	github.com/sonatype-nexus-community/nancy v1.0.1
 	github.com/spf13/afero v1.3.4
+	gopkg.in/yaml.v2 v2.3.0
 )

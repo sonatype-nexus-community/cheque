@@ -25,6 +25,9 @@ import (
 func main() {
 	args := []string{}
 
+	//Will check for config and create if necessary
+	chequeConfig := config.CreateOrReadConfigFile(logger.GetLogger())
+
 	// Remove cheque custom arguments
 	for _, arg := range os.Args[1:] {
 		switch arg {
