@@ -1,0 +1,60 @@
+before:
+  hooks:
+    - go mod download
+    - go mod tidy
+builds:
+  -
+    ldflags:
+      - -s -w -X "github.com/sonatype-nexus-community/cheque/buildversion.BuildVersion={{.Version}}"
+      - -s -w -X "github.com/sonatype-nexus-community/cheque/buildversion.BuildTime={{time "2006-01-02T15:04:05Z07:00"}}"
+      - -s -w -X "github.com/sonatype-nexus-community/cheque/buildversion.BuildCommit={{.FullCommit}}"
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - 386
+
+archives:
+  -
+    id: default
+    name_template: "{{ .ProjectName }}-{{ .Os }}.{{ .Arch }}-v{{ .Version }}"
+    format: binary
+
+checksum:
+  name_template: "{{ .ProjectName }}checksums.txt"
+  algorithm: sha256
+
+snapshot:
+  name_template: "{{ .Tag }}-next-{{.FullCommit}}"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+    - '^docs:'
+    - '^test:'
+
+release:
+  ids:
+    - default
+  github:
+    owner: sonatype-nexus-community
+    name: cheque
+
+dockers:
+  -
+    goos: linux
+    goarch: amd64
+    dockerfile: Dockerfile
+    build_flag_templates:
+    - "--label=author='Ken Duck'"
+    - "--label=version={{ .Version }}"
+    - "--label=maintainer='sonatype-nexus-community'"
+    image_templates:
+    - "sonatypecommunity/cheque:latest"
+    - "sonatypecommunity/cheque:{{ .Tag }}"
+    - "sonatypecommunity/cheque:v{{ .Major }}"
+    - "sonatypecommunity/cheque:v{{ .Major }}.{{ .Minor }}"
