@@ -73,6 +73,7 @@ func (c pathCollector) GetPurlObject() (purl packageurl.PackageURL, err error) {
 	if err != nil {
 		return purl, err
 	}
+	name = filepath.Base(name)
 	version, err := c.GetVersion()
 	if err != nil {
 		return purl, err
