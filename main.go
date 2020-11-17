@@ -26,7 +26,8 @@ func main() {
 	args := []string{}
 
 	//Will check for config and create if necessary
-	//config := config.New(logger.GetLogger())
+	//options := config.Options{}
+	//config := config.New(logger.GetLogger(), options)
 	//config.CreateOrReadConfigFile()
 
 	// Remove cheque custom arguments

@@ -17,6 +17,7 @@ package config
 import (
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -25,30 +26,83 @@ import (
 )
 
 func TestCreateEmptyObject(t *testing.T) {
-	conf := setup()
-
+	conf := setup(t)
 	conf.CreateOrReadConfigFile()
-
-	exists, err := os.Stat(conf.getIQConfig())
-
+	iqExists, err := os.Stat(conf.getIQConfig())
 	if err != nil {
 		t.Error(err)
 	}
-
-	if !strings.Contains(exists.Name(), types.IQServerConfigFileName) {
-		t.Errorf("File not created properly, expected %s but got %s", types.IQServerConfigFileName, exists.Name())
+	if !strings.Contains(iqExists.Name(), types.IQServerConfigFileName) {
+		t.Errorf("File not created properly, expected %s but got %s", types.IQServerConfigFileName, iqExists.Name())
 	}
+
+	ossiExists, err := os.Stat(conf.getOssiConfig())
+	if err != nil {
+		t.Error(err)
+	}
+	if !strings.Contains(ossiExists.Name(), types.OssIndexConfigFileName) {
+		t.Errorf("File not created properly, expected %s but got %s", types.OssIndexConfigFileName, ossiExists.Name())
+	}
+	teardown(conf)
 }
 
-func setup() *Config {
+func TestReadsOssiConfigProperly(t *testing.T) {
+	conf := setup(t)
+	writeDataToConfig(filepath.Join(conf.options.Directory, types.OssIndexDirName), types.OssIndexConfigFileName,
+		"username: \"something\"\npassword: \"something1\"")
+	conf.CreateOrReadConfigFile()
+
+	if conf.OSSIndexConfig.Username != "something" {
+		t.Errorf("username wasn't in config, expected %s but got %s", "something", conf.OSSIndexConfig.Username)
+	}
+
+	if conf.OSSIndexConfig.Password != "something1" {
+		t.Errorf("password wasn't in config, expected %s but got %s", "something1", conf.OSSIndexConfig.Username)
+	}
+
+	teardown(conf)
+}
+
+func TestReadsIQConfigProperly(t *testing.T) {
+	conf := setup(t)
+	writeDataToConfig(filepath.Join(conf.options.Directory, types.IQServerDirName), types.IQServerConfigFileName,
+		"Username: \"something\"\nToken: \"somethingtoken\"\nServer: \"somethingserver\"")
+	conf.CreateOrReadConfigFile()
+
+	if conf.IQConfig.Username != "something" {
+		t.Errorf("Username wasn't in config, expected %s but got %s", "something", conf.IQConfig.Username)
+	}
+
+	if conf.IQConfig.Token != "somethingtoken" {
+		t.Errorf("Token wasn't in config, expected %s but got %s", "somethingtoken", conf.IQConfig.Token)
+	}
+
+	if conf.IQConfig.Server != "somethingserver" {
+		t.Errorf("Server wasn't in config, expected %s but got %s", "somethingserver", conf.IQConfig.Server)
+	}
+
+	teardown(conf)
+}
+
+func writeDataToConfig(directory string, filename string, data string) {
+	b:= []byte(data)
+	os.MkdirAll(directory, 755)
+	ioutil.WriteFile(filepath.Join(directory, filename), b,0644)
+}
+
+func teardown(config *Config) {
+	os.RemoveAll(config.options.Directory)
+}
+
+func setup(t *testing.T) *Config {
 	logLady, _ := test.NewNullLogger()
-
 	options := Options{}
-
-	tempDir, err := ioutil.TempDir("fakefortest")
+	tempDir, err := ioutil.TempDir("", "testconfig")
+	if err != nil {
+		t.Error(err)
+	}
 	options.Directory = tempDir
-
-	conf := New(logLady)
+	conf := New(logLady, options)
 
 	return conf
 }

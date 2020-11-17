@@ -109,7 +109,7 @@ func (c Config) writeDefaultOssiConfig() {
 			logrus.Fields{
 				"configFile": c.getOssiConfig(),
 				"err":        err,
-			}).Error("Could not create OSSIndeConfig.")
+			}).Error("Could not create OSSIndexConfig.")
 	}
 }
 
