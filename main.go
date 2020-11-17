@@ -15,11 +15,14 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
+
 	"github.com/sonatype-nexus-community/cheque/context"
 	"github.com/sonatype-nexus-community/cheque/linker"
 	"github.com/sonatype-nexus-community/cheque/logger"
-	"os"
-	"os/exec"
 )
 
 func main() {
@@ -53,10 +56,9 @@ func main() {
 	case "cheque":
 		break
 	default:
-		var cmdPath = fmt.Sprint("/usr/bin/", context.GetCommand())
+		cmdPath := getWrappedCommand()
 
-		_, err := os.Stat(cmdPath)
-		if err != nil {
+		if cmdPath == "" {
 			logger.Fatal("Cannot find official command: " + cmdPath)
 		} else {
 			externalCmd := exec.Command(cmdPath, args...)
@@ -75,4 +77,28 @@ func main() {
 	}
 
 	os.Exit(0)
+}
+
+// TODO: This is unix system specific. When we get around to supporting windows we will want to
+// make this more platform agnostic.
+func getWrappedCommand() (cmdPath string) {
+	// Set this variable to the path of the cheque wrapper link
+	var chequePath = ""
+
+	var paths = strings.Split(os.Getenv("PATH"), ":")
+	for _, path := range paths {
+		cmdPath, _ = filepath.Abs(fmt.Sprint(path, "/", context.GetCommand()))
+		// If we don't know chequePath yet, then the first one found in path should be cheque
+		if chequePath == "" {
+			chequePath = cmdPath
+			cmdPath = "" // Don't report this one as the wrapped binary
+			continue
+		}
+		_, err := os.Stat(cmdPath)
+		if err == nil && chequePath != cmdPath {
+			break // Found the real binary
+		}
+		cmdPath = "" // Don't report this one as the wrapped binary
+	}
+	return
 }
