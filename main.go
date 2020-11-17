@@ -17,7 +17,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"strings"
+	"path/filepath"
 
 	"github.com/sonatype-nexus-community/cheque/context"
 	"github.com/sonatype-nexus-community/cheque/linker"
@@ -78,15 +78,13 @@ func main() {
 	os.Exit(0)
 }
 
-// TODO: This is unix system specific. When we get around to supporting windows we will want to
-// make this more platform agnostic.
 func getWrappedCommand() (cmdPath string) {
 	// Set this variable to the path of the cheque wrapper link
 	var chequePath = ""
 
-	var paths = strings.Split(os.Getenv("PATH"), ":")
+	var paths = filepath.SplitList(os.Getenv("PATH"))
 	for _, path := range paths {
-		cmdPath = fmt.Sprint(path, "/", context.GetCommand())
+		cmdPath = filepath.Join(path, context.GetCommand())
 		// If we don't know chequePath yet, then the first one found in path should be cheque
 		if chequePath == "" {
 			chequePath = cmdPath
