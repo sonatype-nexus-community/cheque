@@ -15,7 +15,6 @@ package config
 
 import (
 	"github.com/sirupsen/logrus"
-	"github.com/sonatype-nexus-community/cheque/logger"
 	"github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
@@ -45,10 +44,6 @@ func New(logger *logrus.Logger) *Config {
 }
 
 func (c *Config) CreateOrReadConfigFile() {
-
-	c.createDirectory(types.IQServerDirName)
-	c.createDirectory(types.OssIndexDirName)
-
 	if !fileExists(c.getIQConfig()) {
 		c.writeDefaultIQConfig()
 	}
@@ -64,7 +59,7 @@ func (c Config) createDirectory(directory string) {
 	fileDirectory := filepath.Join(home, directory)
 	err := os.MkdirAll(fileDirectory, os.ModePerm)
 	if err != nil {
-		logger.Error("Couldn't create config directory: " + fileDirectory)
+		c.logger.WithField("err", err).Error("Couldn't create config directory: " + fileDirectory)
 	}
 }
 
@@ -72,7 +67,6 @@ func (c Config) createDirectory(directory string) {
 func (c Config) getIQConfig() string {
 	home, _ := os.UserHomeDir()
 	return filepath.Join(home,types.IQServerDirName, types.IQServerConfigFileName)
-
 }
 
 func (c Config) getOssiConfig() string {
@@ -83,14 +77,14 @@ func (c Config) getOssiConfig() string {
 func (c *Config) readConfig() {
 	iqBytes, err := ioutil.ReadFile(c.getIQConfig())
 	if err != nil {
-		c.logger.Error(err)
+		c.logger.WithField("err", err).Error(err)
 	}
 	iqConfig := IQConfig{}
 	_ = yaml.Unmarshal(iqBytes, &iqConfig)
 
 	ossiBytes, err := ioutil.ReadFile(c.getOssiConfig())
 	if err != nil {
-		c.logger.Error(err)
+		c.logger.WithField("err", err).Error(err)
 	}
 	ossiConfig := OSSIConfig{}
 	_ = yaml.Unmarshal(ossiBytes, &ossiConfig)
@@ -99,20 +93,28 @@ func (c *Config) readConfig() {
 	c.IQConfig = iqConfig
 }
 
-
 func (c Config) writeDefaultOssiConfig() {
+	c.createDirectory(types.OssIndexDirName)
 	ossiConfig, _ := yaml.Marshal(OSSIConfig{})
 	err := ioutil.WriteFile(c.getOssiConfig(), ossiConfig, 0644)
 	if err != nil {
-		c.logger.WithField("configFile", c.getOssiConfig()).Error("Could not create OSSIndeConfig.")
+		c.logger.WithFields(
+			logrus.Fields{
+				"configFile": c.getOssiConfig(),
+				"err": err,
+			}).Error("Could not create OSSIndeConfig.")
 	}
 }
 
 func (c Config) writeDefaultIQConfig() {
+	c.createDirectory(types.IQServerDirName)
 	iqConfig, _ := yaml.Marshal(IQConfig{})
 	err := ioutil.WriteFile(c.getIQConfig(), iqConfig, 0644)
 	if err != nil {
-		c.logger.WithField("configFile", c.getIQConfig()).Error("Could not create IQConfig.")
+		c.logger.WithFields(logrus.Fields{
+			"configFile": c.getIQConfig(),
+			"err": err,
+		}).Error("Could not create IQConfig.")
 	}
 }
 
