@@ -82,8 +82,7 @@ func getWrappedCommand() (cmdPath string) {
 	// Set this variable to the path of the cheque wrapper link
 	var chequePath = ""
 
-	var paths = filepath.SplitList(os.Getenv("PATH"))
-	for _, path := range paths {
+	for _, path := range filepath.SplitList(os.Getenv("PATH")) {
 		cmdPath = filepath.Join(path, context.GetCommand())
 		// If we don't know chequePath yet, then the first one found in path should be cheque
 		if chequePath == "" {
