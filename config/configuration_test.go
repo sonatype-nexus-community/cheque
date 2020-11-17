@@ -91,7 +91,7 @@ func writeDataToConfig(directory string, filename string, data string) {
 }
 
 func teardown(config *Config) {
-	os.RemoveAll(config.options.Directory)
+	_ = os.RemoveAll(config.options.Directory)
 }
 
 func setup(t *testing.T) *Config {
