@@ -17,7 +17,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 
 	"github.com/sonatype-nexus-community/cheque/context"
@@ -87,7 +86,7 @@ func getWrappedCommand() (cmdPath string) {
 
 	var paths = strings.Split(os.Getenv("PATH"), ":")
 	for _, path := range paths {
-		cmdPath, _ = filepath.Abs(fmt.Sprint(path, "/", context.GetCommand()))
+		cmdPath = fmt.Sprint(path, "/", context.GetCommand())
 		// If we don't know chequePath yet, then the first one found in path should be cheque
 		if chequePath == "" {
 			chequePath = cmdPath
