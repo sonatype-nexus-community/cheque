@@ -23,8 +23,8 @@ import (
 )
 
 type ChequeConfig struct {
-	ossiConfig OSSIConfig
-	iqConfig IQConfig
+	OSSIndexConfig OSSIConfig
+	IQConfig IQConfig
 }
 
 type OSSIConfig struct {
@@ -43,15 +43,10 @@ func CreateOrReadConfigFile(logger *logrus.Logger) ChequeConfig {
 	createDirectory(logger, types.IQServerDirName)
 	createDirectory(logger, types.OssIndexDirName)
 
-	if fileExists(getIQConfig()) {
-		//read in config
-	} else {
+	if !fileExists(getIQConfig()) {
 		writeDefaultIQConfig(logger)
 	}
-
-	if fileExists(getOssiConfig()) {
-		//read in config
-	} else {
+	if !fileExists(getOssiConfig()) {
 		writeDefaultOssiConfig(logger)
 	}
 
@@ -80,14 +75,6 @@ func getOssiConfig() string {
 	return filePath
 }
 
-func writeDefaultOssiConfig(logger *logrus.Logger) {
-	ossiConfig, _ := yaml.Marshal(OSSIConfig{})
-	err := ioutil.WriteFile(getOssiConfig(), ossiConfig, 0644)
-	if err != nil {
-		logger.Error(err)
-	}
-}
-
 func readConfig(logger *logrus.Logger) ChequeConfig{
 	iqBytes, err := ioutil.ReadFile(getIQConfig())
 	if err != nil {
@@ -104,8 +91,17 @@ func readConfig(logger *logrus.Logger) ChequeConfig{
 	yaml.Unmarshal(ossiBytes, &ossiConfig)
 
 	return ChequeConfig{
-		ossiConfig: ossiConfig,
-		iqConfig: iqConfig,
+		OSSIndexConfig: ossiConfig,
+		IQConfig: iqConfig,
+	}
+}
+
+
+func writeDefaultOssiConfig(logger *logrus.Logger) {
+	ossiConfig, _ := yaml.Marshal(OSSIConfig{})
+	err := ioutil.WriteFile(getOssiConfig(), ossiConfig, 0644)
+	if err != nil {
+		logger.WithField("configFile", getOssiConfig()).Error("Could not create OSSIndeConfig.")
 	}
 }
 
@@ -113,7 +109,7 @@ func writeDefaultIQConfig(logger *logrus.Logger) {
 	iqConfig, _ := yaml.Marshal(IQConfig{})
 	err := ioutil.WriteFile(getIQConfig(), iqConfig, 0644)
 	if err != nil {
-		logger.Error(err)
+		logger.WithField("configFile", getIQConfig()).Error("Could not create IQConfig.")
 	}
 }
 
