@@ -71,14 +71,13 @@ func (c Config) createDirectory(directory string) {
 //Gets the default location for the config file
 func (c Config) getIQConfig() string {
 	home, _ := os.UserHomeDir()
-	filePath := filepath.Join(home,types.IQServerDirName, types.IQServerConfigFileName)
-	return filePath
+	return filepath.Join(home,types.IQServerDirName, types.IQServerConfigFileName)
+
 }
 
 func (c Config) getOssiConfig() string {
 	home, _ := os.UserHomeDir()
-	filePath := filepath.Join(home,types.OssIndexDirName, types.OssIndexConfigFileName)
-	return filePath
+	return filepath.Join(home,types.OssIndexDirName, types.OssIndexConfigFileName)
 }
 
 func (c *Config) readConfig() {
@@ -87,14 +86,14 @@ func (c *Config) readConfig() {
 		c.logger.Error(err)
 	}
 	iqConfig := IQConfig{}
-	yaml.Unmarshal(iqBytes, &iqConfig)
+	_ = yaml.Unmarshal(iqBytes, &iqConfig)
 
 	ossiBytes, err := ioutil.ReadFile(c.getOssiConfig())
 	if err != nil {
 		c.logger.Error(err)
 	}
 	ossiConfig := OSSIConfig{}
-	yaml.Unmarshal(ossiBytes, &ossiConfig)
+	_ = yaml.Unmarshal(ossiBytes, &ossiConfig)
 
 	c.OSSIndexConfig = ossiConfig
 	c.IQConfig = iqConfig
