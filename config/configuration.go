@@ -118,9 +118,10 @@ func (c Config) writeDefaultIQConfig() {
 	iqConfig, _ := yaml.Marshal(IQConfig{})
 	err := ioutil.WriteFile(c.getIQConfig(), iqConfig, 0644)
 	if err != nil {
-		c.logger.WithFields(logrus.Fields{
-			"configFile": c.getIQConfig(),
-			"err":        err,
+		c.logger.WithFields(
+			logrus.Fields{
+				"configFile": c.getIQConfig(),
+				"err":        err,
 		}).Error("Could not create IQConfig.")
 	}
 }
