@@ -14,12 +14,13 @@
 package config
 
 import (
-	"github.com/sirupsen/logrus"
-	"github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
-	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+
+	"github.com/sirupsen/logrus"
+	"github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
+	"gopkg.in/yaml.v3"
 )
 
 type OSSIConfig struct {
@@ -34,13 +35,22 @@ type IQConfig struct {
 }
 
 type Config struct {
-	logger *logrus.Logger
+	logger         *logrus.Logger
+	options        Options
 	OSSIndexConfig OSSIConfig
-	IQConfig IQConfig
+	IQConfig       IQConfig
 }
 
-func New(logger *logrus.Logger) *Config {
-	return &Config{logger: logger}
+type Options struct {
+	Directory string
+}
+
+func New(logger *logrus.Logger, options Options) *Config {
+	if options.Directory == "" {
+		home, _ := os.UserHomeDir()
+		options.Directory = home
+	}
+	return &Config{logger: logger, options: options}
 }
 
 func (c *Config) CreateOrReadConfigFile() {
@@ -55,8 +65,7 @@ func (c *Config) CreateOrReadConfigFile() {
 }
 
 func (c Config) createDirectory(directory string) {
-	home, _ := os.UserHomeDir()
-	fileDirectory := filepath.Join(home, directory)
+	fileDirectory := filepath.Join(c.options.Directory, directory)
 	err := os.MkdirAll(fileDirectory, os.ModePerm)
 	if err != nil {
 		c.logger.WithField("err", err).Error("Couldn't create config directory: " + fileDirectory)
@@ -65,13 +74,11 @@ func (c Config) createDirectory(directory string) {
 
 //Gets the default location for the config file
 func (c Config) getIQConfig() string {
-	home, _ := os.UserHomeDir()
-	return filepath.Join(home,types.IQServerDirName, types.IQServerConfigFileName)
+	return filepath.Join(c.options.Directory, types.IQServerDirName, types.IQServerConfigFileName)
 }
 
 func (c Config) getOssiConfig() string {
-	home, _ := os.UserHomeDir()
-	return filepath.Join(home,types.OssIndexDirName, types.OssIndexConfigFileName)
+	return filepath.Join(c.options.Directory, types.OssIndexDirName, types.OssIndexConfigFileName)
 }
 
 func (c *Config) readConfig() {
@@ -101,7 +108,7 @@ func (c Config) writeDefaultOssiConfig() {
 		c.logger.WithFields(
 			logrus.Fields{
 				"configFile": c.getOssiConfig(),
-				"err": err,
+				"err":        err,
 			}).Error("Could not create OSSIndeConfig.")
 	}
 }
@@ -113,7 +120,7 @@ func (c Config) writeDefaultIQConfig() {
 	if err != nil {
 		c.logger.WithFields(logrus.Fields{
 			"configFile": c.getIQConfig(),
-			"err": err,
+			"err":        err,
 		}).Error("Could not create IQConfig.")
 	}
 }
