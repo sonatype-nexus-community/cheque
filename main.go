@@ -79,19 +79,16 @@ func main() {
 }
 
 func getWrappedCommand() (cmdPath string) {
-	// Set this variable to the path of the cheque wrapper link
-	var chequePath = ""
-
 	for _, path := range filepath.SplitList(os.Getenv("PATH")) {
 		cmdPath = filepath.Join(path, context.GetCommand())
-		// If we don't know chequePath yet, then the first one found in path should be cheque
-		if chequePath == "" {
-			chequePath = cmdPath
-			cmdPath = "" // Don't report this one as the wrapped binary
+
+		// Ignore if this is a symlink to cheque
+		realPath, err := filepath.EvalSymlinks(cmdPath)
+		if err == nil && filepath.Base(realPath) == "cheque" {
 			continue
 		}
-		_, err := os.Stat(cmdPath)
-		if err == nil && chequePath != cmdPath {
+		_, err = os.Stat(cmdPath)
+		if err == nil {
 			break // Found the real binary
 		}
 		cmdPath = "" // Don't report this one as the wrapped binary
