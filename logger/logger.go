@@ -15,10 +15,10 @@ package logger
 
 import (
 	"fmt"
+	"github.com/sonatype-nexus-community/cheque/context"
 	"os"
 
 	"github.com/sirupsen/logrus"
-	"github.com/sonatype-nexus-community/cheque/config"
 )
 
 var logLady *logrus.Logger
@@ -32,13 +32,13 @@ func GetLogger() *logrus.Logger {
 }
 
 func Info(msg string) {
-	if config.GetVerbose() {
+	if context.GetVerbose() {
 		fmt.Fprintf(os.Stdout, "Cheque INFO: %s\n", msg)
 	}
 }
 
 func Debug(msg string) {
-	if config.GetVerbose() {
+	if context.GetVerbose() {
 		fmt.Fprintf(os.Stdout, "Cheque DEBUG: %s\n", msg)
 	}
 }
