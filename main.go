@@ -27,7 +27,7 @@ func main() {
 
 	//Will check for config and create if necessary
 	//config := config.New(logger.GetLogger())
-	//chequeConfig := config.CreateOrReadConfigFile()
+	//config.CreateOrReadConfigFile()
 
 	// Remove cheque custom arguments
 	for _, arg := range os.Args[1:] {

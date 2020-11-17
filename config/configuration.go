@@ -15,17 +15,13 @@ package config
 
 import (
 	"github.com/sirupsen/logrus"
+	"github.com/sonatype-nexus-community/cheque/logger"
 	"github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 )
-
-type ChequeConfig struct {
-	OSSIndexConfig OSSIConfig
-	IQConfig IQConfig
-}
 
 type OSSIConfig struct {
 	Username string `yaml:Username`
@@ -40,28 +36,30 @@ type IQConfig struct {
 
 type Config struct {
 	logger *logrus.Logger
+	OSSIndexConfig OSSIConfig
+	IQConfig IQConfig
 }
 
 func New(logger *logrus.Logger) *Config {
 	return &Config{logger: logger}
 }
 
-func (c Config) CreateOrReadConfigFile() ChequeConfig {
+func (c *Config) CreateOrReadConfigFile() {
 
-	createDirectory(c.logger, types.IQServerDirName)
-	createDirectory(c.logger, types.OssIndexDirName)
+	c.createDirectory(types.IQServerDirName)
+	c.createDirectory(types.OssIndexDirName)
 
-	if !fileExists(getIQConfig()) {
-		writeDefaultIQConfig(c.logger)
+	if !fileExists(c.getIQConfig()) {
+		c.writeDefaultIQConfig()
 	}
-	if !fileExists(getOssiConfig()) {
-		writeDefaultOssiConfig(c.logger)
+	if !fileExists(c.getOssiConfig()) {
+		c.writeDefaultOssiConfig()
 	}
 
-	return readConfig(c.logger)
+	c.readConfig()
 }
 
-func createDirectory(logger *logrus.Logger, directory string) {
+func (c Config) createDirectory(directory string) {
 	home, _ := os.UserHomeDir()
 	fileDirectory := filepath.Join(home, directory)
 	err := os.MkdirAll(fileDirectory, os.ModePerm)
@@ -71,53 +69,51 @@ func createDirectory(logger *logrus.Logger, directory string) {
 }
 
 //Gets the default location for the config file
-func getIQConfig() string {
+func (c Config) getIQConfig() string {
 	home, _ := os.UserHomeDir()
 	filePath := filepath.Join(home,types.IQServerDirName, types.IQServerConfigFileName)
 	return filePath
 }
 
-func getOssiConfig() string {
+func (c Config) getOssiConfig() string {
 	home, _ := os.UserHomeDir()
 	filePath := filepath.Join(home,types.OssIndexDirName, types.OssIndexConfigFileName)
 	return filePath
 }
 
-func readConfig(logger *logrus.Logger) ChequeConfig{
-	iqBytes, err := ioutil.ReadFile(getIQConfig())
+func (c *Config) readConfig() {
+	iqBytes, err := ioutil.ReadFile(c.getIQConfig())
 	if err != nil {
-		logger.Error(err)
+		c.logger.Error(err)
 	}
 	iqConfig := IQConfig{}
 	yaml.Unmarshal(iqBytes, &iqConfig)
 
-	ossiBytes, err := ioutil.ReadFile(getOssiConfig())
+	ossiBytes, err := ioutil.ReadFile(c.getOssiConfig())
 	if err != nil {
-		logger.Error(err)
+		c.logger.Error(err)
 	}
 	ossiConfig := OSSIConfig{}
 	yaml.Unmarshal(ossiBytes, &ossiConfig)
 
-	return ChequeConfig{
-		OSSIndexConfig: ossiConfig,
-		IQConfig: iqConfig,
-	}
+	c.OSSIndexConfig = ossiConfig
+	c.IQConfig = iqConfig
 }
 
 
-func writeDefaultOssiConfig(logger *logrus.Logger) {
+func (c Config) writeDefaultOssiConfig() {
 	ossiConfig, _ := yaml.Marshal(OSSIConfig{})
-	err := ioutil.WriteFile(getOssiConfig(), ossiConfig, 0644)
+	err := ioutil.WriteFile(c.getOssiConfig(), ossiConfig, 0644)
 	if err != nil {
-		logger.WithField("configFile", getOssiConfig()).Error("Could not create OSSIndeConfig.")
+		c.logger.WithField("configFile", c.getOssiConfig()).Error("Could not create OSSIndeConfig.")
 	}
 }
 
-func writeDefaultIQConfig(logger *logrus.Logger) {
+func (c Config) writeDefaultIQConfig() {
 	iqConfig, _ := yaml.Marshal(IQConfig{})
-	err := ioutil.WriteFile(getIQConfig(), iqConfig, 0644)
+	err := ioutil.WriteFile(c.getIQConfig(), iqConfig, 0644)
 	if err != nil {
-		logger.WithField("configFile", getIQConfig()).Error("Could not create IQConfig.")
+		c.logger.WithField("configFile", c.getIQConfig()).Error("Could not create IQConfig.")
 	}
 }
 
