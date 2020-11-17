@@ -16,7 +16,7 @@ package config
 import (
 	"github.com/sirupsen/logrus"
 	"github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -38,19 +38,27 @@ type IQConfig struct {
 	Token    string `yaml:"Token"`
 }
 
-func CreateOrReadConfigFile(logger *logrus.Logger) ChequeConfig {
+type Config struct {
+	logger *logrus.Logger
+}
 
-	createDirectory(logger, types.IQServerDirName)
-	createDirectory(logger, types.OssIndexDirName)
+func New(logger *logrus.Logger) *Config {
+	return &Config{logger: logger}
+}
+
+func (c Config) CreateOrReadConfigFile() ChequeConfig {
+
+	createDirectory(c.logger, types.IQServerDirName)
+	createDirectory(c.logger, types.OssIndexDirName)
 
 	if !fileExists(getIQConfig()) {
-		writeDefaultIQConfig(logger)
+		writeDefaultIQConfig(c.logger)
 	}
 	if !fileExists(getOssiConfig()) {
-		writeDefaultOssiConfig(logger)
+		writeDefaultOssiConfig(c.logger)
 	}
 
-	return readConfig(logger)
+	return readConfig(c.logger)
 }
 
 func createDirectory(logger *logrus.Logger, directory string) {

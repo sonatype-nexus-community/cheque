@@ -15,7 +15,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/sonatype-nexus-community/cheque/config"
+	"github.com/sonatype-nexus-community/cheque/context"
 	"github.com/sonatype-nexus-community/cheque/linker"
 	"github.com/sonatype-nexus-community/cheque/logger"
 	"os"
@@ -26,7 +26,8 @@ func main() {
 	args := []string{}
 
 	//Will check for config and create if necessary
-	//chequeConfig := config.CreateOrReadConfigFile(logger.GetLogger())
+	//config := config.New(logger.GetLogger())
+	//chequeConfig := config.CreateOrReadConfigFile()
 
 	// Remove cheque custom arguments
 	for _, arg := range os.Args[1:] {
@@ -39,7 +40,7 @@ func main() {
 
 	count := linker.DoLink(args)
 	if count > 0 {
-		if config.ExitWithError() {
+		if context.ExitWithError() {
 			fmt.Fprintf(os.Stderr, "Error: Vulnerable dependencies found: %v\n", count)
 			os.Exit(count)
 		} else {
@@ -47,11 +48,11 @@ func main() {
 		}
 	}
 
-	switch config.GetCommand() {
+	switch context.GetCommand() {
 	case "cheque":
 		break
 	default:
-		var cmdPath = fmt.Sprint("/usr/bin/", config.GetCommand())
+		var cmdPath = fmt.Sprint("/usr/bin/", context.GetCommand())
 
 		_, err := os.Stat(cmdPath)
 		if err != nil {
@@ -64,7 +65,7 @@ func main() {
 
 			if err := externalCmd.Run(); err != nil {
 				if exitError, ok := err.(*exec.ExitError); ok {
-					logger.Fatal(fmt.Sprintf("There was an issue running the command %s, and the issue is %v", config.GetCommand(), os.Stderr))
+					logger.Fatal(fmt.Sprintf("There was an issue running the command %s, and the issue is %v", context.GetCommand(), os.Stderr))
 					os.Exit(exitError.ExitCode())
 				}
 			}
