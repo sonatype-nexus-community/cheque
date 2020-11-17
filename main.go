@@ -14,12 +14,12 @@
 package main
 
 import (
+	"fmt"
 	"github.com/sonatype-nexus-community/cheque/config"
 	"github.com/sonatype-nexus-community/cheque/linker"
 	"github.com/sonatype-nexus-community/cheque/logger"
 	"os"
 	"os/exec"
-	"fmt"
 )
 
 func main() {
@@ -32,8 +32,9 @@ func main() {
 	for _, arg := range os.Args[1:] {
 		switch arg {
 		case "-Werror=cheque":
-			default: args = append(args, arg)
-    }
+		default:
+			args = append(args, arg)
+		}
 	}
 
 	count := linker.DoLink(args)
@@ -48,9 +49,9 @@ func main() {
 
 	switch config.GetCommand() {
 	case "cheque":
-		break;
+		break
 	default:
-		var cmdPath = fmt.Sprint("/usr/bin/", config.GetCommand());
+		var cmdPath = fmt.Sprint("/usr/bin/", config.GetCommand())
 
 		_, err := os.Stat(cmdPath)
 		if err != nil {
@@ -63,12 +64,12 @@ func main() {
 
 			if err := externalCmd.Run(); err != nil {
 				if exitError, ok := err.(*exec.ExitError); ok {
-					logger.Fatal(fmt.Sprintf("There was an issue running the command %s, and the issue is %s", config.GetCommand(), os.Stderr))
+					logger.Fatal(fmt.Sprintf("There was an issue running the command %s, and the issue is %v", config.GetCommand(), os.Stderr))
 					os.Exit(exitError.ExitCode())
 				}
 			}
 		}
-		break;
+		break
 	}
 
 	os.Exit(0)
