@@ -35,11 +35,10 @@ type Audit struct {
 }
 
 func New(ossiConfig config.OSSIConfig) *Audit {
-
-	return &Audit{
-		OssiConfig:         ossiConfig,
-		HasProperOSSICreds: len(ossiConfig.Username) > 0 && len(ossiConfig.Token) > 0,
-	}
+    return &Audit{
+        OssiConfig:         ossiConfig,
+        HasProperOSSICreds: len(ossiConfig.Username) > 0 && len(ossiConfig.Token) > 0,
+    }
 }
 
 func (a Audit) ProcessPaths(libPaths []string, libs []string, files []string) (count int) {
@@ -68,25 +67,25 @@ func (a Audit) AuditBom(deps []packageurl.PackageURL) (count int) {
 
 	var ossi *ossindex.Server
 
-	if a.HasProperOSSICreds {
-		ossi = ossindex.New(
-			logger.GetLogger(),
-			types.Options{
-				Version:     "development",
-				Tool:        "cheque",
-				DBCacheName: "cheque-cache",
-				Username:    a.OssiConfig.Username,
-				Token:       a.OssiConfig.Token,
-			})
-	} else {
-		ossi = ossindex.New(
-			logger.GetLogger(),
-			types.Options{
-				Version:     "development",
-				Tool:        "cheque",
-				DBCacheName: "cheque-cache",
-			})
-	}
+    if a.HasProperOSSICreds {
+        ossi = ossindex.New(
+            logger.GetLogger(),
+            types.Options{
+                Version:     "development",
+                Tool:        "cheque",
+                DBCacheName: "cheque-cache",
+                Username:    a.OssiConfig.Username,
+                Token:       a.OssiConfig.Token,
+            })
+    } else {
+        ossi = ossindex.New(
+            logger.GetLogger(),
+            types.Options{
+                Version:     "development",
+                Tool:        "cheque",
+                DBCacheName: "cheque-cache",
+            })
+    }
 
 	coordinates, err := ossi.AuditPackages(purls)
 	if err != nil {
