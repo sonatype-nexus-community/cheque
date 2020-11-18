@@ -30,15 +30,15 @@ import (
 )
 
 type Audit struct {
-	OssiConfig config.OSSIConfig
-	HasProperConfig bool
+	OssiConfig         config.OSSIConfig
+	HasProperOSSICreds bool
 }
 
 func New(ossiConfig config.OSSIConfig) *Audit {
 
 	return &Audit{
-		OssiConfig: ossiConfig,
-		HasProperConfig: len(ossiConfig.Username) > 0 && len(ossiConfig.Token) > 0,
+		OssiConfig:         ossiConfig,
+		HasProperOSSICreds: len(ossiConfig.Username) > 0 && len(ossiConfig.Token) > 0,
 	}
 }
 
@@ -68,7 +68,7 @@ func (a Audit) AuditBom(deps []packageurl.PackageURL) (count int) {
 
 	var ossi *ossindex.Server
 
-	if a.HasProperConfig {
+	if a.HasProperOSSICreds {
 		ossi = ossindex.New(
 			logger.GetLogger(),
 			types.Options{

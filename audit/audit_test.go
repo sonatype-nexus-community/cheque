@@ -113,7 +113,7 @@ func TestPassesOssiCredentials(t *testing.T) {
 	httpmock.RegisterResponder("POST", "https://ossindex.sonatype.org/api/v3/component-report",
 		func(req *http.Request) (*http.Response, error) {
 			auth := req.Header.Get("Authorization")
-			//if len(auth) == 0 {
+			//If we are missing auth, then its a problem, since we sent them.
 			if auth != "Basic dXNlcjp0b2tlbjE=" {
 				return httpmock.NewStringResponse(403, ""), errors.New("no authorization found")
 			}
@@ -128,7 +128,52 @@ func TestPassesOssiCredentials(t *testing.T) {
 		Token: "token1",
 	})
 
-	if !audit.HasProperConfig {
+	//Make sure we have proper creds
+	if !audit.HasProperOSSICreds {
+		t.Error("Audit should have a proper config")
+	}
+
+	i := audit.AuditBom(projectList.Projects)
+
+	if i != 1 {
+		t.Errorf("There is an error, expected 1, got %d", i)
+	}
+}
+
+func TestWorksWithAbsenceOfOssiCredentials(t *testing.T) {
+	httpmock.Activate()
+
+	jsonCoordinates, _ := json.Marshal([]ossiTypes.Coordinate{
+		{
+			Coordinates: "pkg:rpm/fedora/name1@1.0.0",
+			Reference:   "https://ossindex.sonatype.org/component/pkg:rpm/fedora/name1@1.0.0",
+			Vulnerabilities: []ossiTypes.Vulnerability{
+				setupVulnerability("id", "title", "description", "5.8", "vector", "cve-123", "http://website")},
+		},
+		{
+			Coordinates: "pkg:rpm/fedora/name2@1.0.0",
+			Reference: "https://ossindex.sonatype.org/component/pkg:rpm/fedora/name2@1.0.0",
+			Vulnerabilities: []ossiTypes.Vulnerability{},
+		},
+	})
+
+	httpmock.RegisterResponder("POST", "https://ossindex.sonatype.org/api/v3/component-report",
+		func(req *http.Request) (*http.Response, error) {
+			auth := req.Header.Get("Authorization")
+			//If we have auth, we should error.  we did not send any.
+			if auth == "Basic dXNlcjp0b2tlbjE=" {
+				return httpmock.NewStringResponse(403, ""), errors.New("we shouldn't have auth")
+			}
+			return httpmock.NewStringResponse(200, string(jsonCoordinates)), nil
+		})
+
+	defer httpmock.DeactivateAndReset()
+
+	setupProjectList()
+	audit := New(config.OSSIConfig{})
+
+	//We should not have proper creds
+	if audit.HasProperOSSICreds {
 		t.Error("Audit should have a proper config")
 	}
 
