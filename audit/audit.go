@@ -15,6 +15,7 @@ package audit
 
 import (
 	"fmt"
+	"github.com/sonatype-nexus-community/cheque/config"
 	"text/tabwriter"
 
 	"github.com/jedib0t/go-pretty/v6/table"
@@ -28,14 +29,27 @@ import (
 	"strings"
 )
 
-func ProcessPaths(libPaths []string, libs []string, files []string) (count int) {
+type Audit struct {
+	OssiConfig config.OSSIConfig
+	HasProperConfig bool
+}
+
+func New(ossiConfig config.OSSIConfig) *Audit {
+
+	return &Audit{
+		OssiConfig: ossiConfig,
+		HasProperConfig: len(ossiConfig.Username) > 0 && len(ossiConfig.Token) > 0,
+	}
+}
+
+func (a Audit) ProcessPaths(libPaths []string, libs []string, files []string) (count int) {
 	myBom := packages.Make{}
 	var projectList, _ = bom.CreateBom(libPaths, libs, files)
 	myBom.Purls = projectList.Projects
-	return AuditBom(myBom.Purls)
+	return a.AuditBom(myBom.Purls)
 }
 
-func AuditBom(deps []packageurl.PackageURL) (count int) {
+func (a Audit) AuditBom(deps []packageurl.PackageURL) (count int) {
 	var canonicalPurls, _ = rootPurls(deps)
 	var purls, _ = definedPurls(deps)
 	var packageCount = countDistinctLibraries(append(canonicalPurls, purls...))
@@ -52,13 +66,27 @@ func AuditBom(deps []packageurl.PackageURL) (count int) {
 	purls = append(purls, debPurls...)
 	purls = append(purls, rpmPurls...)
 
-	ossi := ossindex.New(
-		logger.GetLogger(),
-		types.Options{
-			Version:     "development",
-			Tool:        "cheque",
-			DBCacheName: "cheque-cache",
-		})
+	var ossi *ossindex.Server
+
+	if a.HasProperConfig {
+		ossi = ossindex.New(
+			logger.GetLogger(),
+			types.Options{
+				Version:     "development",
+				Tool:        "cheque",
+				DBCacheName: "cheque-cache",
+				Username:    a.OssiConfig.Username,
+				Token:       a.OssiConfig.Token,
+			})
+	} else {
+		ossi = ossindex.New(
+			logger.GetLogger(),
+			types.Options{
+				Version:     "development",
+				Tool:        "cheque",
+				DBCacheName: "cheque-cache",
+			})
+	}
 
 	coordinates, err := ossi.AuditPackages(purls)
 	if err != nil {

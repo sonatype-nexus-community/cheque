@@ -15,6 +15,9 @@ package audit
 
 import (
 	"encoding/json"
+	"errors"
+	"github.com/sonatype-nexus-community/cheque/config"
+	"net/http"
 	"testing"
 
 	"github.com/jarcoal/httpmock"
@@ -82,7 +85,54 @@ func TestAuditBom(t *testing.T) {
 	defer httpmock.DeactivateAndReset()
 
 	setupProjectList()
-	i := AuditBom(projectList.Projects)
+	audit := New(config.OSSIConfig{})
+	i := audit.AuditBom(projectList.Projects)
+
+	if i != 1 {
+		t.Errorf("There is an error, expected 1, got %d", i)
+	}
+}
+
+func TestPassesOssiCredentials(t *testing.T) {
+	httpmock.Activate()
+
+	jsonCoordinates, _ := json.Marshal([]ossiTypes.Coordinate{
+		{
+			Coordinates: "pkg:rpm/fedora/name1@1.0.0",
+			Reference:   "https://ossindex.sonatype.org/component/pkg:rpm/fedora/name1@1.0.0",
+			Vulnerabilities: []ossiTypes.Vulnerability{
+				setupVulnerability("id", "title", "description", "5.8", "vector", "cve-123", "http://website")},
+		},
+		{
+			Coordinates: "pkg:rpm/fedora/name2@1.0.0",
+			Reference: "https://ossindex.sonatype.org/component/pkg:rpm/fedora/name2@1.0.0",
+			Vulnerabilities: []ossiTypes.Vulnerability{},
+		},
+	})
+
+	httpmock.RegisterResponder("POST", "https://ossindex.sonatype.org/api/v3/component-report",
+		func(req *http.Request) (*http.Response, error) {
+			auth := req.Header.Get("Authorization")
+			//if len(auth) == 0 {
+			if auth != "Basic dXNlcjp0b2tlbjE=" {
+				return httpmock.NewStringResponse(403, ""), errors.New("no authorization found")
+			}
+			return httpmock.NewStringResponse(200, string(jsonCoordinates)), nil
+		})
+
+	defer httpmock.DeactivateAndReset()
+
+	setupProjectList()
+	audit := New(config.OSSIConfig{
+		Username: "user",
+		Token: "token1",
+	})
+
+	if !audit.HasProperConfig {
+		t.Error("Audit should have a proper config")
+	}
+
+	i := audit.AuditBom(projectList.Projects)
 
 	if i != 1 {
 		t.Errorf("There is an error, expected 1, got %d", i)
@@ -90,7 +140,8 @@ func TestAuditBom(t *testing.T) {
 }
 
 func TestProcessPaths(t *testing.T) {
-	i := ProcessPaths(
+	audit := New(config.OSSIConfig{})
+	i := audit.ProcessPaths(
 		[]string{"/usrdefined/path"},
 		[]string{"bob", "ken"},
 		[]string{"/lib/libpng.so", "/lib/libtiff.a"},

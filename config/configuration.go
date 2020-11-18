@@ -24,8 +24,8 @@ import (
 )
 
 type OSSIConfig struct {
-	Username string `yaml:Username`
-	Password string `yaml:Password`
+	Username string `yaml:"Username"`
+	Token string `yaml:"Token"`
 }
 
 type IQConfig struct {
