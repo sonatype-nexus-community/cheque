@@ -31,13 +31,11 @@ import (
 
 type Audit struct {
 	OssiConfig         config.OSSIConfig
-	HasProperOSSICreds bool
 }
 
 func New(ossiConfig config.OSSIConfig) *Audit {
     return &Audit{
         OssiConfig:         ossiConfig,
-        HasProperOSSICreds: len(ossiConfig.Username) > 0 && len(ossiConfig.Token) > 0,
     }
 }
 
@@ -46,6 +44,10 @@ func (a Audit) ProcessPaths(libPaths []string, libs []string, files []string) (c
 	var projectList, _ = bom.CreateBom(libPaths, libs, files)
 	myBom.Purls = projectList.Projects
 	return a.AuditBom(myBom.Purls)
+}
+
+func (a Audit) HasProperOssiCredentials() bool {
+	return len(a.OssiConfig.Username) > 0 && len(a.OssiConfig.Token) > 0
 }
 
 func (a Audit) AuditBom(deps []packageurl.PackageURL) (count int) {
@@ -67,7 +69,7 @@ func (a Audit) AuditBom(deps []packageurl.PackageURL) (count int) {
 
 	var ossi *ossindex.Server
 
-    if a.HasProperOSSICreds {
+    if a.HasProperOssiCredentials() {
         ossi = ossindex.New(
             logger.GetLogger(),
             types.Options{

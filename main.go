@@ -28,8 +28,8 @@ func main() {
 
 	//Will check for config and create if necessary
 	options := config.Options{}
-	config := config.New(logger.GetLogger(), options)
-	config.CreateOrReadConfigFile()
+	myConfig := config.New(logger.GetLogger(), options)
+	myConfig.CreateOrReadConfigFile()
 
 	// Remove cheque custom arguments
 	for _, arg := range os.Args[1:] {
@@ -40,7 +40,7 @@ func main() {
 		}
 	}
 
-	myLinker := linker.New(config.OSSIndexConfig)
+	myLinker := linker.New(myConfig.OSSIndexConfig)
 	count := myLinker.DoLink(args)
 	if count > 0 {
 		if context.ExitWithError() {

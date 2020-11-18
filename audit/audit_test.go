@@ -129,7 +129,7 @@ func TestPassesOssiCredentials(t *testing.T) {
 	})
 
 	//Make sure we have proper creds
-	if !audit.HasProperOSSICreds {
+	if !audit.HasProperOssiCredentials() {
 		t.Error("Audit should have a proper config")
 	}
 
@@ -173,7 +173,7 @@ func TestWorksWithAbsenceOfOssiCredentials(t *testing.T) {
 	audit := New(config.OSSIConfig{})
 
 	//We should not have proper creds
-	if audit.HasProperOSSICreds {
+	if audit.HasProperOssiCredentials() {
 		t.Error("Audit should have a proper config")
 	}
 
