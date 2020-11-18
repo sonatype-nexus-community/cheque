@@ -37,7 +37,7 @@ type Linker struct {
 
 func New(config config.OSSIConfig) *Linker {
 	return &Linker{
-		ossiConfig: config,
+        ossiConfig: config,
 	}
 }
 
