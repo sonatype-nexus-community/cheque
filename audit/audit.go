@@ -67,27 +67,21 @@ func (a Audit) AuditBom(deps []packageurl.PackageURL) (count int) {
 	purls = append(purls, debPurls...)
 	purls = append(purls, rpmPurls...)
 
-	var ossi *ossindex.Server
+	options := types.Options{
+		Version:     "development",
+		Tool:        "cheque",
+		DBCacheName: "cheque-cache",
+	}
 
-    if a.HasProperOssiCredentials() {
-        ossi = ossindex.New(
-            logger.GetLogger(),
-            types.Options{
-                Version:     "development",
-                Tool:        "cheque",
-                DBCacheName: "cheque-cache",
-                Username:    a.OssiConfig.Username,
-                Token:       a.OssiConfig.Token,
-            })
-    } else {
-        ossi = ossindex.New(
-            logger.GetLogger(),
-            types.Options{
-                Version:     "development",
-                Tool:        "cheque",
-                DBCacheName: "cheque-cache",
-            })
-    }
+	if a.HasProperOssiCredentials() {
+		options.Username = a.OssiConfig.Username
+		options.Token = a.OssiConfig.Token
+	}
+
+	ossi := ossindex.New(
+		logger.GetLogger(),
+		options,
+	)
 
 	coordinates, err := ossi.AuditPackages(purls)
 	if err != nil {
