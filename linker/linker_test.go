@@ -13,7 +13,10 @@
 // limitations under the License.
 package linker
 
-import "testing"
+import (
+	"github.com/sonatype-nexus-community/cheque/config"
+	"testing"
+)
 
 func TestDoLink(t *testing.T) {
 	args := []string{
@@ -31,7 +34,8 @@ func TestDoLink(t *testing.T) {
 	// FIXME: By default we are returned the number of vulnerable packages. We
 	// might want to add a way to get the total number of packages as well.
 	var expected = 0
-	countFromSesameStreet := DoLink(args)
+	myLinker := New(config.OSSIConfig{})
+	countFromSesameStreet := myLinker.DoLink(args)
 
 	if countFromSesameStreet != expected {
 		t.Errorf("Error: Expected %d but got %d", expected, countFromSesameStreet)

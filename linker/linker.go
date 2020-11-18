@@ -15,6 +15,7 @@ package linker
 
 import (
 	"fmt"
+	"github.com/sonatype-nexus-community/cheque/config"
 	"strings"
 
 	"github.com/sonatype-nexus-community/cheque/audit"
@@ -30,7 +31,17 @@ var TYPESTOCHECK = map[string]string{
 	".a.":    "Static Lib",
 }
 
-func DoLink(args []string) (count int) {
+type Linker struct {
+	ossiConfig config.OSSIConfig
+}
+
+func New(config config.OSSIConfig) *Linker {
+	return &Linker{
+        ossiConfig: config,
+	}
+}
+
+func (l Linker) DoLink(args []string) (count int) {
 	libPaths := []string{}
 	libs := make(map[string]bool)
 	files := make(map[string]bool)
@@ -101,6 +112,8 @@ func DoLink(args []string) (count int) {
 	}
 
 	if len(libs) > 0 || len(files) > 0 {
+
+		audit := audit.New(l.ossiConfig)
 		return audit.ProcessPaths(
 			iterateAndAppendToLibPathsSlice(libPaths),
 			iterateAndAppendToSlice(libs),

@@ -15,6 +15,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/sonatype-nexus-community/cheque/config"
 	"github.com/sonatype-nexus-community/cheque/context"
 	"github.com/sonatype-nexus-community/cheque/linker"
 	"github.com/sonatype-nexus-community/cheque/logger"
@@ -26,9 +27,9 @@ func main() {
 	args := []string{}
 
 	//Will check for config and create if necessary
-	//options := config.Options{}
-	//config := config.New(logger.GetLogger(), options)
-	//config.CreateOrReadConfigFile()
+	options := config.Options{}
+	myConfig := config.New(logger.GetLogger(), options)
+	myConfig.CreateOrReadConfigFile()
 
 	// Remove cheque custom arguments
 	for _, arg := range os.Args[1:] {
@@ -39,7 +40,8 @@ func main() {
 		}
 	}
 
-	count := linker.DoLink(args)
+	myLinker := linker.New(myConfig.OSSIndexConfig)
+	count := myLinker.DoLink(args)
 	if count > 0 {
 		if context.ExitWithError() {
 			fmt.Fprintf(os.Stderr, "Error: Vulnerable dependencies found: %v\n", count)

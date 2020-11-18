@@ -49,15 +49,15 @@ func TestCreateEmptyObject(t *testing.T) {
 func TestReadsOssiConfigProperly(t *testing.T) {
 	conf := setup(t)
 	writeDataToConfig(filepath.Join(conf.options.Directory, types.OssIndexDirName), types.OssIndexConfigFileName,
-		"username: \"something\"\npassword: \"something1\"")
+		"Username: \"something\"\nToken: \"something1\"")
 	conf.CreateOrReadConfigFile()
 
 	if conf.OSSIndexConfig.Username != "something" {
 		t.Errorf("username wasn't in config, expected %s but got %s", "something", conf.OSSIndexConfig.Username)
 	}
 
-	if conf.OSSIndexConfig.Password != "something1" {
-		t.Errorf("password wasn't in config, expected %s but got %s", "something1", conf.OSSIndexConfig.Username)
+	if conf.OSSIndexConfig.Token != "something1" {
+		t.Errorf("Token wasn't in config, expected %s but got %s", "something1", conf.OSSIndexConfig.Token)
 	}
 
 	teardown(conf)
