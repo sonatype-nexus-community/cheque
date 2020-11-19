@@ -19,6 +19,7 @@ import (
     "github.com/sirupsen/logrus/hooks/test"
     "io/ioutil"
     "os"
+    "runtime"
     "testing"
 )
 
@@ -36,6 +37,29 @@ func TestConanFileGenerates(t *testing.T) {
     }
 
     expected := "[requires]\nlibname/1.0.0\n"
+
+    contentMatch, contents := validateFileContents(generator.filepath, expected)
+    if !contentMatch {
+        t.Errorf("expected %s but got %s", expected, contents)
+    }
+    teardown(options.Directory)
+}
+
+func TestConanFileGeneratesWindowsNewLines(t *testing.T) {
+    options := setup(t)
+    logLady, _ := test.NewNullLogger()
+    generator := New(logLady, *options)
+    goos = "windows"
+    purls := make([]packageurl.PackageURL, 0)
+    purls = append(purls, *packageurl.NewPackageURL("rpm", "", "name", "1.0.0", nil,""))
+    generator.CheckOrCreateConanFile(purls)
+
+    _, err := os.Stat(generator.filepath)
+    if err != nil {
+        t.Error(err)
+    }
+
+    expected := "[requires]\r\nlibname/1.0.0\r\n"
 
     contentMatch, contents := validateFileContents(generator.filepath, expected)
     if !contentMatch {
@@ -75,6 +99,7 @@ func validateFileContents(file string, contents string) (bool, string) {
 
 func teardown(directory string) {
     _ = os.RemoveAll(directory)
+    goos = runtime.GOOS
 }
 
 func setup(t *testing.T) *Options {

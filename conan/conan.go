@@ -18,11 +18,12 @@ import (
     "github.com/sirupsen/logrus"
     "os"
     "path/filepath"
+    "runtime"
     "strings"
 )
 
 var (
-    newline = "\n"
+    goos = runtime.GOOS
 )
 
 type conanPurlInfo struct {
@@ -96,6 +97,13 @@ func (c ConanGenerator) checkForDuplicates(purls []packageurl.PackageURL) []cona
 }
 
 func (c ConanGenerator) writeConanFile(purls []conanPurlInfo) {
+
+    lineBreak := "\n"
+
+    if goos == "windows" {
+        lineBreak = "\r\n"
+    }
+
     file, err := os.Create(c.filepath)
     if err != nil {
         c.logger.Error(err)
@@ -103,7 +111,7 @@ func (c ConanGenerator) writeConanFile(purls []conanPurlInfo) {
     }
     defer file.Close()
 
-    header := "[requires]" + newline
+    header := "[requires]" + lineBreak
     n, err := file.WriteString(header)
     if err != nil {
         c.logger.Error(err)
@@ -114,7 +122,7 @@ func (c ConanGenerator) writeConanFile(purls []conanPurlInfo) {
         return
     }
     for _, purl := range purls {
-        purlInfo := purl.name + "/" + purl.version + newline
+        purlInfo := purl.name + "/" + purl.version + lineBreak
         n, err := file.WriteString(purlInfo)
         if err != nil {
             c.logger.Error(err)
