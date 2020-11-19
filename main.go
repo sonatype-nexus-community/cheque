@@ -15,6 +15,8 @@ package main
 
 import (
 	"fmt"
+	"github.com/sonatype-nexus-community/cheque/audit"
+	"github.com/sonatype-nexus-community/cheque/conan"
 	"github.com/sonatype-nexus-community/cheque/config"
 	"github.com/sonatype-nexus-community/cheque/context"
 	"github.com/sonatype-nexus-community/cheque/linker"
@@ -41,14 +43,20 @@ func main() {
 	}
 
 	myLinker := linker.New(myConfig.OSSIndexConfig)
-	count := myLinker.DoLink(args)
-	if count > 0 {
+	results := myLinker.DoLink(args)
+	if results.Count > 0 {
 		if context.ExitWithError() {
-			fmt.Fprintf(os.Stderr, "Error: Vulnerable dependencies found: %v\n", count)
-			os.Exit(count)
+			fmt.Fprintf(os.Stderr, "Error: Vulnerable dependencies found: %v\n", results.Count)
+			os.Exit(results.Count)
 		} else {
-			fmt.Fprintf(os.Stderr, "Warning: Vulnerable dependencies found: %v\n", count)
+			fmt.Fprintf(os.Stderr, "Warning: Vulnerable dependencies found: %v\n", results.Count)
 		}
+	}
+
+	if myConfig.ChequeConfig.CreateConanFiles {
+		myAudit := audit.New(myConfig.OSSIndexConfig)
+		purls := myAudit.GetPurls(results.LibPaths, results.Libs, results.Files)
+		conan.CheckOrCreateConanFile(context.GetBinaryName(), purls)
 	}
 
 	switch context.GetCommand() {

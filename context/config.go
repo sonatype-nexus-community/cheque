@@ -26,6 +26,7 @@ var noColorPtr = false
 var version = false
 var path string
 var cmd string
+var binaryName = "a.out"
 var verbose = false
 
 var exitWithError = false
@@ -57,6 +58,7 @@ func init() {
       case "noColor": noColorPtr = true
       case "version": version = true
       case "v": verbose = true
+      case "o": binaryName = args[i+1]
     }
   }
 
@@ -108,4 +110,8 @@ func ExitWithError() (b bool) {
 
 func GetVerbose() (b bool) {
   return verbose
+}
+
+func GetBinaryName() (s string) {
+  return binaryName
 }

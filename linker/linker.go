@@ -35,13 +35,20 @@ type Linker struct {
 	ossiConfig config.OSSIConfig
 }
 
+type Results struct {
+	Count int
+	LibPaths []string
+	Libs []string
+	Files []string
+}
+
 func New(config config.OSSIConfig) *Linker {
 	return &Linker{
         ossiConfig: config,
 	}
 }
 
-func (l Linker) DoLink(args []string) (count int) {
+func (l Linker) DoLink(args []string) (results *Results) {
 	libPaths := []string{}
 	libs := make(map[string]bool)
 	files := make(map[string]bool)
@@ -114,13 +121,22 @@ func (l Linker) DoLink(args []string) (count int) {
 	if len(libs) > 0 || len(files) > 0 {
 
 		audit := audit.New(l.ossiConfig)
-		return audit.ProcessPaths(
-			iterateAndAppendToLibPathsSlice(libPaths),
-			iterateAndAppendToSlice(libs),
-			iterateAndAppendToSlice(files))
+		libPaths := iterateAndAppendToLibPathsSlice(libPaths)
+		libs := iterateAndAppendToSlice(libs)
+		files := iterateAndAppendToSlice(files)
+		count := audit.ProcessPaths(
+			libPaths,
+			libs,
+			files)
+		return &Results {
+			LibPaths: libPaths,
+			Libs: libs,
+			Files: files,
+			Count: count,
+		}
 	}
 
-	return 0
+	return new(Results)
 }
 
 func iterateAndAppendToLibPathsSlice(libPaths []string) (libPathsSlice []string) {

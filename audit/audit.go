@@ -39,11 +39,15 @@ func New(ossiConfig config.OSSIConfig) *Audit {
     }
 }
 
-func (a Audit) ProcessPaths(libPaths []string, libs []string, files []string) (count int) {
+func (a Audit) GetPurls(libPaths []string, libs []string, files []string) []packageurl.PackageURL {
 	myBom := packages.Make{}
 	var projectList, _ = bom.CreateBom(libPaths, libs, files)
 	myBom.Purls = projectList.Projects
-	return a.AuditBom(myBom.Purls)
+	return myBom.Purls
+}
+
+func (a Audit) ProcessPaths(libPaths []string, libs []string, files []string) (count int) {
+	return a.AuditBom(a.GetPurls(libPaths, libs, files))
 }
 
 func (a Audit) HasProperOssiCredentials() bool {
