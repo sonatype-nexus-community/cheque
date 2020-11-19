@@ -86,10 +86,10 @@ func TestAuditBom(t *testing.T) {
 
 	setupProjectList()
 	audit := New(config.OSSIConfig{})
-	i := audit.AuditBom(projectList.Projects)
+	auditResults := audit.AuditBom(projectList.Projects)
 
-	if i != 1 {
-		t.Errorf("There is an error, expected 1, got %d", i)
+	if auditResults.Count != 1 {
+		t.Errorf("There is an error, expected 1, got %d", auditResults.Count)
 	}
 }
 
@@ -133,10 +133,10 @@ func TestPassesOssiCredentials(t *testing.T) {
 		t.Error("Audit should have a proper config")
 	}
 
-	i := audit.AuditBom(projectList.Projects)
+	auditResults := audit.AuditBom(projectList.Projects)
 
-	if i != 1 {
-		t.Errorf("There is an error, expected 1, got %d", i)
+	if auditResults.Count != 1 {
+		t.Errorf("There is an error, expected 1, got %d", auditResults.Count)
 	}
 }
 
@@ -177,22 +177,23 @@ func TestWorksWithAbsenceOfOssiCredentials(t *testing.T) {
 		t.Error("Audit should have a proper config")
 	}
 
-	i := audit.AuditBom(projectList.Projects)
+	auditResults := audit.AuditBom(projectList.Projects)
 
-	if i != 1 {
-		t.Errorf("There is an error, expected 1, got %d", i)
+	if auditResults.Count != 1 {
+		t.Errorf("There is an error, expected 1, got %d", auditResults.Count)
 	}
 }
 
 func TestProcessPaths(t *testing.T) {
 	audit := New(config.OSSIConfig{})
-	i := audit.ProcessPaths(
+
+	auditResults := audit.ProcessPaths(
 		[]string{"/usrdefined/path"},
 		[]string{"bob", "ken"},
 		[]string{"/lib/libpng.so", "/lib/libtiff.a"},
 	)
 
-	if i != 0 {
-		t.Errorf("There is an error, expected 0, got %d", i)
+	if auditResults.Count != 0 {
+		t.Errorf("There is an error, expected 0, got %d", auditResults.Count)
 	}
 }
