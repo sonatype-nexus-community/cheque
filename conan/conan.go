@@ -42,7 +42,8 @@ type ConanGenerator struct {
 
 func New(logger *logrus.Logger, options Options) *ConanGenerator {
     if options.Directory == "" {
-        options.Directory = "."
+        getwd, _ := os.Getwd()
+        options.Directory = getwd
     }
 
     return &ConanGenerator{
