@@ -15,6 +15,7 @@ package linker
 
 import (
 	"fmt"
+	"github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
 	"strings"
 
 	"github.com/sonatype-nexus-community/cheque/config"
@@ -41,6 +42,7 @@ type Results struct {
 	LibPaths []string
 	Libs []string
 	Files []string
+	Coordinates []types.Coordinate
 }
 
 func New(config config.OSSIConfig) *Linker {
@@ -125,7 +127,7 @@ func (l Linker) DoLink(args []string) (results *Results) {
 		libPaths := iterateAndAppendToLibPathsSlice(libPaths)
 		libs := iterateAndAppendToSlice(libs)
 		files := iterateAndAppendToSlice(files)
-		count := audit.ProcessPaths(
+		auditResults := audit.ProcessPaths(
 			libPaths,
 			libs,
 			files)
@@ -133,7 +135,8 @@ func (l Linker) DoLink(args []string) (results *Results) {
 			LibPaths: libPaths,
 			Libs: libs,
 			Files: files,
-			Count: count,
+			Count: auditResults.Count,
+			Coordinates: auditResults.Coordinates,
 		}
 	}
 

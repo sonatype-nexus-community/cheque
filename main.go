@@ -21,6 +21,8 @@ import (
 	"github.com/sonatype-nexus-community/cheque/context"
 	"github.com/sonatype-nexus-community/cheque/linker"
 	"github.com/sonatype-nexus-community/cheque/logger"
+	"github.com/sonatype-nexus-community/go-sona-types/cyclonedx"
+	"github.com/sonatype-nexus-community/go-sona-types/iq"
 	"os"
 	"os/exec"
 )
@@ -53,18 +55,9 @@ func main() {
 		}
 	}
 
-	if myConfig.ChequeConfig.CreateConanFiles {
-		myAudit := audit.New(myConfig.OSSIndexConfig)
-		purls := myAudit.GetPurls(results.LibPaths, results.Libs, results.Files)
-		options := conan.Options{
-			BinaryName: context.GetBinaryName(),
-		}
-		generator := conan.New(logger.GetLogger(), options)
-		err := generator.CheckOrCreateConanFile(purls)
-		if err != nil {
-			logger.GetLogger().WithField("err", err).Warnf("Something went wrong writing conan files")
-		}
-	}
+	generateConanFiles(*myConfig, results)
+	generateCycloneDx(*myConfig, results)
+
 
 	switch context.GetCommand() {
 	case "cheque":
@@ -92,4 +85,42 @@ func main() {
 	}
 
 	os.Exit(0)
+}
+
+func generateCycloneDx(config config.Config, lResults *linker.Results) {
+	if config.ChequeConfig.UseIQ {
+		dx := cyclonedx.New(logger.GetLogger(), cyclonedx.Options{})
+		sbom := dx.FromCoordinates(lResults.Coordinates)
+		iqOptions := iq.Options{
+			User:        config.IQConfig.Username,
+			Token:       config.IQConfig.Token,
+			Application: "cheque",
+			Server:      config.IQConfig.Server,
+		}
+		server, err := iq.New(logger.GetLogger(), iqOptions)
+		if err != nil {
+			logger.GetLogger().Error("error creating connection to IQ")
+			return
+		}
+		result, iqerr := server.AuditWithSbom(sbom)
+		if iqerr != nil {
+			logger.GetLogger().WithField("err", err).Error("error submitting bom")
+		}
+		logger.GetLogger().WithField("result", result).Info("Completed submittion of bom to IQ")
+	}
+}
+
+func generateConanFiles(myConfig config.Config, results *linker.Results) {
+	if myConfig.ChequeConfig.CreateConanFiles {
+		myAudit := audit.New(myConfig.OSSIndexConfig)
+		purls := myAudit.GetPurls(results.LibPaths, results.Libs, results.Files)
+		options := conan.Options{
+			BinaryName: context.GetBinaryName(),
+		}
+		generator := conan.New(logger.GetLogger(), options)
+		err := generator.CheckOrCreateConanFile(purls)
+		if err != nil {
+			logger.GetLogger().WithField("err", err).Warnf("Something went wrong writing conan files")
+		}
+	}
 }
