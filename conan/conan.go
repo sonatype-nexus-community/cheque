@@ -15,7 +15,7 @@ package conan
 
 import (
     "github.com/package-url/packageurl-go"
-    "io/ioutil"
+    "github.com/sirupsen/logrus"
     "os"
     "path/filepath"
     "strings"
@@ -37,15 +37,17 @@ type Options struct {
 
 type ConanGenerator struct {
     filepath string
+    logger *logrus.Logger
 }
 
-func New(options Options) *ConanGenerator {
+func New(logger *logrus.Logger, options Options) *ConanGenerator {
     if options.Directory == "" {
         options.Directory = "."
     }
 
     return &ConanGenerator{
         filepath: filepath.Join(options.Directory, "conanfile." + options.BinaryName + ".cheque"),
+        logger: logger,
     }
 }
 
@@ -91,14 +93,33 @@ func (c ConanGenerator) checkForDuplicates(purls []packageurl.PackageURL) []cona
 }
 
 func (c ConanGenerator) writeConanFile(purls []conanPurlInfo) {
-    var data strings.Builder
-    data.WriteString("[requires]")
-    data.WriteString(newline)
-    for _, purl := range purls[:] {
-        data.WriteString(purl.name)
-        data.WriteString("/")
-        data.WriteString(purl.version)
-        data.WriteString(newline)
+    file, err := os.Create(c.filepath)
+    if err != nil {
+        c.logger.Error(err)
+        return
     }
-    _ = ioutil.WriteFile(c.filepath, []byte(data.String()), 0655)
+    defer file.Close()
+
+    header := "[requires]" + newline
+    n, err := file.WriteString(header)
+    if err != nil {
+        c.logger.Error(err)
+        return
+    }
+    if n != len(header) {
+        c.logger.Error("Unable to write data")
+        return
+    }
+    for _, purl := range purls {
+        purlInfo := purl.name + "/" + purl.version + newline
+        n, err := file.WriteString(purlInfo)
+        if err != nil {
+            c.logger.Error(err)
+            return
+        }
+        if n != len(purlInfo) {
+            c.logger.Error("Unable to write data")
+            return
+        }
+    }
 }

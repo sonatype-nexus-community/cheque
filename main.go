@@ -59,7 +59,7 @@ func main() {
 		options := conan.Options{
 			BinaryName: context.GetBinaryName(),
 		}
-		generator := conan.New(options)
+		generator := conan.New(logger.GetLogger(), options)
 		generator.CheckOrCreateConanFile(purls)
 	}
 

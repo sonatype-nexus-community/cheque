@@ -16,6 +16,7 @@ package conan
 
 import (
     "github.com/package-url/packageurl-go"
+    "github.com/sirupsen/logrus/hooks/test"
     "io/ioutil"
     "os"
     "testing"
@@ -23,7 +24,8 @@ import (
 
 func TestConanFileGenerates(t *testing.T) {
     options := setup(t)
-    generator := New(*options)
+    logLady, _ := test.NewNullLogger()
+    generator := New(logLady, *options)
     purls := make([]packageurl.PackageURL, 0)
     purls = append(purls, *packageurl.NewPackageURL("rpm", "", "name", "1.0.0", nil,""))
     generator.CheckOrCreateConanFile(purls)
@@ -44,7 +46,8 @@ func TestConanFileGenerates(t *testing.T) {
 
 func TestConanFileGeneratesWithoutDuplicates(t *testing.T) {
     options := setup(t)
-    generator := New(*options)
+    logLady, _ := test.NewNullLogger()
+    generator := New(logLady, *options)
     purls := make([]packageurl.PackageURL, 0)
     purls = append(purls, *packageurl.NewPackageURL("rpm", "", "name", "1.0.0", nil,""))
     purls = append(purls, *packageurl.NewPackageURL("rpm", "", "libname", "1.0.0", nil,""))
