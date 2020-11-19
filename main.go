@@ -105,7 +105,7 @@ func generateCycloneDx(config config.Config, lResults *linker.Results) {
 		}
 		result, iqerr := server.AuditWithSbom(sbom)
 		if iqerr != nil {
-			logger.GetLogger().WithField("err", err).Error("error submitting bom")
+			logger.GetLogger().WithField("err", iqerr).Error("error submitting bom")
 		}
 		logger.GetLogger().WithField("result", result).Info("Completed submittion of bom to IQ")
 	}
