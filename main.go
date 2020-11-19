@@ -60,7 +60,10 @@ func main() {
 			BinaryName: context.GetBinaryName(),
 		}
 		generator := conan.New(logger.GetLogger(), options)
-		generator.CheckOrCreateConanFile(purls)
+		err := generator.CheckOrCreateConanFile(purls)
+		if err != nil {
+			logger.GetLogger().WithField("err", err).Warnf("Something went wrong writing conan files")
+		}
 	}
 
 	switch context.GetCommand() {

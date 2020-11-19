@@ -51,12 +51,14 @@ func New(logger *logrus.Logger, options Options) *ConanGenerator {
     }
 }
 
-func (c ConanGenerator) CheckOrCreateConanFile(purls []packageurl.PackageURL) {
-    _, err := os.Stat(c.filepath)
-    if err != nil {
+func (c ConanGenerator) CheckOrCreateConanFile(purls []packageurl.PackageURL) (e error) {
+    var err error
+    if _, err = os.Stat(c.filepath); os.IsNotExist(err) {
         duplessPurls := c.checkForDuplicates(purls)
         c.writeConanFile(duplessPurls)
+        err = nil
     }
+    return err
 }
 
 func (c ConanGenerator) checkForDuplicates(purls []packageurl.PackageURL) []conanPurlInfo {
