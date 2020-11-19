@@ -100,7 +100,7 @@ func generateCycloneDx(config config.Config, lResults *linker.Results) {
 		}
 		server, err := iq.New(logger.GetLogger(), iqOptions)
 		if err != nil {
-			logger.GetLogger().Error("error creating connection to IQ")
+			logger.GetLogger().WithField("err", err).Error("error creating connection to IQ")
 			return
 		}
 		result, iqerr := server.AuditWithSbom(sbom)
