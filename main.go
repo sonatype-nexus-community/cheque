@@ -96,6 +96,7 @@ func generateCycloneDx(config config.Config, lResults *linker.Results) {
 			Token:       config.IQConfig.Token,
 			Application: "cheque",
 			Server:      config.IQConfig.Server,
+			Stage: "build",
 		}
 		server, err := iq.New(logger.GetLogger(), iqOptions)
 		if err != nil {
