@@ -56,7 +56,11 @@ func main() {
 	if myConfig.ChequeConfig.CreateConanFiles {
 		myAudit := audit.New(myConfig.OSSIndexConfig)
 		purls := myAudit.GetPurls(results.LibPaths, results.Libs, results.Files)
-		conan.CheckOrCreateConanFile(context.GetBinaryName(), purls)
+		options := conan.Options{
+			BinaryName: context.GetBinaryName(),
+		}
+		generator := conan.New(options)
+		generator.CheckOrCreateConanFile(purls)
 	}
 
 	switch context.GetCommand() {
