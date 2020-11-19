@@ -15,8 +15,9 @@ package linker
 
 import (
 	"fmt"
-	"github.com/sonatype-nexus-community/cheque/config"
 	"strings"
+
+	"github.com/sonatype-nexus-community/cheque/config"
 
 	"github.com/sonatype-nexus-community/cheque/audit"
 	"github.com/sonatype-nexus-community/cheque/bom"
@@ -37,7 +38,7 @@ type Linker struct {
 
 func New(config config.OSSIConfig) *Linker {
 	return &Linker{
-        ossiConfig: config,
+		ossiConfig: config,
 	}
 }
 
@@ -46,34 +47,34 @@ func (l Linker) DoLink(args []string) (count int) {
 	libs := make(map[string]bool)
 	files := make(map[string]bool)
 
-  for i := 0; i < len(args); i++ {
-    arg := args[i]
-    if strings.HasPrefix(arg, "-l") {
-      if len(arg) > 2 {
-        logger.Info("lib: " + arg)
-        libs[arg[2:]] = true
-      } else {
-        i++
-        arg := args[i]
-        logger.Info("lib: " + arg)
+	for i := 0; i < len(args); i++ {
+		arg := args[i]
+		if strings.HasPrefix(arg, "-l") {
+			if len(arg) > 2 {
+				logger.Info("lib: " + arg)
+				libs[arg[2:]] = true
+			} else {
+				i++
+				arg := args[i]
+				logger.Info("lib: " + arg)
 				libs[arg] = true
-      }
-      continue
-    }
+			}
+			continue
+		}
 
-    // Additional library path
-    if strings.HasPrefix(arg, "-L") {
-      if len(arg) > 2 {
-        // logger.Info("LibPath: " + arg)
+		// Additional library path
+		if strings.HasPrefix(arg, "-L") {
+			if len(arg) > 2 {
+				// logger.Info("LibPath: " + arg)
 				libPaths = append(libPaths, arg[2:])
-      } else {
-        i++
-        arg := args[i]
-        // logger.Info("LibPath: " + arg)
+			} else {
+				i++
+				arg := args[i]
+				// logger.Info("LibPath: " + arg)
 				libPaths = append(libPaths, arg)
-      }
-      continue
-    }
+			}
+			continue
+		}
 
 		if strings.HasPrefix(arg, "-o") {
 			if len(arg) > 2 {
@@ -88,24 +89,24 @@ func (l Linker) DoLink(args []string) (count int) {
 
 		// Ignore some arguments and their options
 		if strings.HasPrefix(arg, "-install_name") {
-			if (len(arg) > 14) {
+			if len(arg) > 14 {
 				i++
 			}
 			continue
 		}
 
+		if strings.HasPrefix(arg, "-") {
+			// Ignore any other arguments
+			continue
+		}
 
-    if strings.HasPrefix(arg, "-") {
-      // Ignore any other arguments
-      continue;
-    }
-
-    // -----------------------------------------
-    // If we get here, it is a file of some sort
-    // -----------------------------------------
+		// -----------------------------------------
+		// If we get here, it is a file of some sort
+		// -----------------------------------------
 		for k, v := range TYPESTOCHECK {
-			files[arg] = checkSuffix(arg, k, v)
-			if files[arg] {
+			isLibFile := checkSuffix(arg, k, v)
+			if isLibFile {
+				files[arg] = checkSuffix(arg, k, v)
 				break
 			}
 		}
