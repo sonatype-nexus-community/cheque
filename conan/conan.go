@@ -14,6 +14,7 @@
 package conan
 
 import (
+    "fmt"
     "github.com/package-url/packageurl-go"
     "github.com/sirupsen/logrus"
     "os"
@@ -111,7 +112,7 @@ func (c ConanGenerator) writeConanFile(purls []conanPurlInfo) {
     }
     defer file.Close()
 
-    header := "[requires]" + lineBreak
+    header := fmt.Sprintf("[requires]%s", lineBreak)
     n, err := file.WriteString(header)
     if err != nil {
         c.logger.Error(err)
@@ -122,7 +123,7 @@ func (c ConanGenerator) writeConanFile(purls []conanPurlInfo) {
         return
     }
     for _, purl := range purls {
-        purlInfo := purl.name + "/" + purl.version + lineBreak
+        purlInfo := fmt.Sprintf("%s/%s%s", purl.name, purl.version, lineBreak)
         n, err := file.WriteString(purlInfo)
         if err != nil {
             c.logger.Error(err)
