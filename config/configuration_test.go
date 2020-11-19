@@ -18,6 +18,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -79,6 +80,19 @@ func TestReadsIQConfigProperly(t *testing.T) {
 
 	if conf.IQConfig.Server != "somethingserver" {
 		t.Errorf("Server wasn't in config, expected %s but got %s", "somethingserver", conf.IQConfig.Server)
+	}
+
+	teardown(conf)
+}
+
+func TestReadsChequeConfigProperly(t *testing.T) {
+	conf := setup(t)
+	writeDataToConfig(filepath.Join(conf.options.Directory, ChequeConfigDirectory), ChequeConfigFile,
+		"Create-Conan-Files: true")
+	conf.CreateOrReadConfigFile()
+
+	if !conf.ChequeConfig.CreateConanFiles {
+		t.Errorf("Create-Conan-Files wasn't in config, expected %s but got %s", "true", strconv.FormatBool(conf.ChequeConfig.CreateConanFiles))
 	}
 
 	teardown(conf)

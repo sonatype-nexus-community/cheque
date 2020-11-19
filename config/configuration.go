@@ -23,6 +23,11 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+var (
+	ChequeConfigDirectory = ".cheque"
+	ChequeConfigFile = "config"
+)
+
 type OSSIConfig struct {
 	Username string `yaml:"Username"`
 	Token string `yaml:"Token"`
@@ -34,11 +39,16 @@ type IQConfig struct {
 	Token    string `yaml:"Token"`
 }
 
+type ChequeConfig struct {
+	CreateConanFiles bool `yaml:"Create-Conan-Files"`
+}
+
 type Config struct {
 	logger         *logrus.Logger
 	options        Options
 	OSSIndexConfig OSSIConfig
 	IQConfig       IQConfig
+	ChequeConfig   ChequeConfig
 }
 
 type Options struct {
@@ -50,15 +60,19 @@ func New(logger *logrus.Logger, options Options) *Config {
 		home, _ := os.UserHomeDir()
 		options.Directory = home
 	}
+
 	return &Config{logger: logger, options: options}
 }
 
 func (c *Config) CreateOrReadConfigFile() {
 	if !fileExists(c.getIQConfig()) {
-		c.writeDefaultIQConfig()
+		c.writeDefaultConfig(types.IQServerDirName, IQConfig{}, c.getIQConfig())
 	}
 	if !fileExists(c.getOssiConfig()) {
-		c.writeDefaultOssiConfig()
+		c.writeDefaultConfig(types.OssIndexDirName, OSSIConfig{}, c.getOssiConfig())
+	}
+	if !fileExists(c.getChequeConfig()) {
+		c.writeDefaultConfig(ChequeConfigDirectory, ChequeConfig{}, c.getChequeConfig())
 	}
 
 	c.readConfig()
@@ -75,6 +89,10 @@ func (c Config) createDirectory(directory string) {
 //Gets the default location for the config file
 func (c Config) getIQConfig() string {
 	return filepath.Join(c.options.Directory, types.IQServerDirName, types.IQServerConfigFileName)
+}
+
+func (c Config) getChequeConfig() string {
+	return filepath.Join(c.options.Directory, ChequeConfigDirectory, ChequeConfigFile)
 }
 
 func (c Config) getOssiConfig() string {
@@ -96,33 +114,28 @@ func (c *Config) readConfig() {
 	ossiConfig := OSSIConfig{}
 	_ = yaml.Unmarshal(ossiBytes, &ossiConfig)
 
+	chequeBytes, err := ioutil.ReadFile(c.getChequeConfig())
+	if err != nil {
+		c.logger.WithField("err", err).Error(err)
+	}
+	chequeConfig := ChequeConfig{}
+	_ = yaml.Unmarshal(chequeBytes, &chequeConfig)
+
 	c.OSSIndexConfig = ossiConfig
 	c.IQConfig = iqConfig
+	c.ChequeConfig = chequeConfig
 }
 
-func (c Config) writeDefaultOssiConfig() {
-	c.createDirectory(types.OssIndexDirName)
-	ossiConfig, _ := yaml.Marshal(OSSIConfig{})
-	err := ioutil.WriteFile(c.getOssiConfig(), ossiConfig, 0644)
+func (c Config) writeDefaultConfig(directoryName string, config interface{}, pathToConfig string) {
+	c.createDirectory(directoryName)
+	myConfig, _ := yaml.Marshal(config)
+	err := ioutil.WriteFile(pathToConfig, myConfig, 0644)
 	if err != nil {
 		c.logger.WithFields(
 			logrus.Fields{
-				"configFile": c.getOssiConfig(),
+				"configFile": pathToConfig,
 				"err":        err,
 			}).Error("Could not create OSSIndexConfig.")
-	}
-}
-
-func (c Config) writeDefaultIQConfig() {
-	c.createDirectory(types.IQServerDirName)
-	iqConfig, _ := yaml.Marshal(IQConfig{})
-	err := ioutil.WriteFile(c.getIQConfig(), iqConfig, 0644)
-	if err != nil {
-		c.logger.WithFields(
-			logrus.Fields{
-				"configFile": c.getIQConfig(),
-				"err":        err,
-		}).Error("Could not create IQConfig.")
 	}
 }
 

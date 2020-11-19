@@ -35,9 +35,9 @@ func TestDoLink(t *testing.T) {
 	// might want to add a way to get the total number of packages as well.
 	var expected = 0
 	myLinker := New(config.OSSIConfig{})
-	countFromSesameStreet := myLinker.DoLink(args)
+	results := myLinker.DoLink(args)
 
-	if countFromSesameStreet != expected {
-		t.Errorf("Error: Expected %d but got %d", expected, countFromSesameStreet)
+	if results.Count != expected {
+		t.Errorf("Error: Expected %d but got %d", expected, results.Count)
 	}
 }
