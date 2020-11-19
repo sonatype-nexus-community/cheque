@@ -17,6 +17,7 @@ import (
     "github.com/package-url/packageurl-go"
     "io/ioutil"
     "os"
+    "path/filepath"
     "strings"
 )
 
@@ -29,15 +30,34 @@ type conanPurlInfo struct {
     version string
 }
 
-func CheckOrCreateConanFile(binary string, purls []packageurl.PackageURL) {
-    _, err := os.Stat("conanfile.txt")
-    if err != nil {
-        duplessPurls := checkForDuplicates(purls)
-        writeConanFile(binary, duplessPurls)
+type Options struct {
+    Directory  string
+    BinaryName string
+}
+
+type ConanGenerator struct {
+    filepath string
+}
+
+func New(options Options) *ConanGenerator {
+    if options.Directory == "" {
+        options.Directory = "."
+    }
+
+    return &ConanGenerator{
+        filepath: filepath.Join(options.Directory, "conanfile." + options.BinaryName + ".cheque"),
     }
 }
 
-func checkForDuplicates(purls []packageurl.PackageURL) []conanPurlInfo {
+func (c ConanGenerator) CheckOrCreateConanFile(purls []packageurl.PackageURL) {
+    _, err := os.Stat(c.filepath)
+    if err != nil {
+        duplessPurls := c.checkForDuplicates(purls)
+        c.writeConanFile(duplessPurls)
+    }
+}
+
+func (c ConanGenerator) checkForDuplicates(purls []packageurl.PackageURL) []conanPurlInfo {
     duplessMap := make(map[conanPurlInfo]bool)
 
     //Add our lib prefix libraries
@@ -70,7 +90,7 @@ func checkForDuplicates(purls []packageurl.PackageURL) []conanPurlInfo {
     return keys
 }
 
-func writeConanFile(binary string, purls []conanPurlInfo) {
+func (c ConanGenerator) writeConanFile(purls []conanPurlInfo) {
     var data strings.Builder
     data.WriteString("[requires]")
     data.WriteString(newline)
@@ -80,5 +100,5 @@ func writeConanFile(binary string, purls []conanPurlInfo) {
         data.WriteString(purl.version)
         data.WriteString(newline)
     }
-    ioutil.WriteFile("conanfile." + binary + ".cheque", []byte(data.String()), 0655)
+    ioutil.WriteFile(c.filepath, []byte(data.String()), 0655)
 }
