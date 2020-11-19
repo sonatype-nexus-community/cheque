@@ -100,5 +100,5 @@ func (c ConanGenerator) writeConanFile(purls []conanPurlInfo) {
         data.WriteString(purl.version)
         data.WriteString(newline)
     }
-    ioutil.WriteFile(c.filepath, []byte(data.String()), 0655)
+    _ = ioutil.WriteFile(c.filepath, []byte(data.String()), 0655)
 }
