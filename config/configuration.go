@@ -59,12 +59,18 @@ type Config struct {
 
 type Options struct {
 	Directory string
+	WorkingDirectory string
 }
 
 func New(logger *logrus.Logger, options Options) *Config {
 	if options.Directory == "" {
 		home, _ := os.UserHomeDir()
 		options.Directory = home
+	}
+
+	if options.WorkingDirectory == "" {
+		getwd, _ := os.Getwd()
+		options.WorkingDirectory = getwd
 	}
 
 	return &Config{logger: logger, options: options}
@@ -111,8 +117,8 @@ func (c Config) getChequeConfig() string {
 }
 
 func (c Config) getWorkingDirectoryChequeConfig() string {
-	getwd, _ := os.Getwd()
-	return filepath.Join(getwd, LocalChequeConfigFile)
+
+	return filepath.Join(c.options.WorkingDirectory, LocalChequeConfigFile)
 }
 
 func (c Config) getOssiConfig() string {
