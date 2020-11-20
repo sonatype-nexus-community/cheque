@@ -15,6 +15,9 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"os/exec"
+
 	"github.com/sonatype-nexus-community/cheque/audit"
 	"github.com/sonatype-nexus-community/cheque/conan"
 	"github.com/sonatype-nexus-community/cheque/config"
@@ -23,8 +26,6 @@ import (
 	"github.com/sonatype-nexus-community/cheque/logger"
 	"github.com/sonatype-nexus-community/go-sona-types/cyclonedx"
 	"github.com/sonatype-nexus-community/go-sona-types/iq"
-	"os"
-	"os/exec"
 )
 
 func main() {
@@ -58,7 +59,6 @@ func main() {
 	generateConanFiles(*myConfig, results)
 	generateCycloneDx(*myConfig, results)
 
-
 	switch context.GetCommand() {
 	case "cheque":
 		break
@@ -89,14 +89,15 @@ func main() {
 
 func generateCycloneDx(config config.Config, lResults *linker.Results) {
 	if config.ChequeConfig.UseIQ {
-		dx := cyclonedx.New(logger.GetLogger(), cyclonedx.Options{})
+		dx := cyclonedx.Default(logger.GetLogger())
 		sbom := dx.FromCoordinates(lResults.Coordinates)
+
 		iqOptions := iq.Options{
 			User:        config.IQConfig.Username,
 			Token:       config.IQConfig.Token,
 			Application: "cheque",
 			Server:      config.IQConfig.Server,
-			Stage: "build",
+			Stage:       "build",
 		}
 		server, err := iq.New(logger.GetLogger(), iqOptions)
 		if err != nil {
