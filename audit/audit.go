@@ -15,8 +15,9 @@ package audit
 
 import (
 	"fmt"
-	"github.com/sonatype-nexus-community/cheque/config"
 	"text/tabwriter"
+
+	"github.com/sonatype-nexus-community/cheque/config"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/package-url/packageurl-go"
@@ -30,13 +31,18 @@ import (
 )
 
 type Audit struct {
-	OssiConfig         config.OSSIConfig
+	OssiConfig config.OSSIConfig
 }
 
 func New(ossiConfig config.OSSIConfig) *Audit {
-    return &Audit{
-        OssiConfig:         ossiConfig,
-    }
+	return &Audit{
+		OssiConfig: ossiConfig,
+	}
+}
+
+type AuditResult struct {
+	Coordinates []types.Coordinate
+	Count       int
 }
 
 func (a Audit) GetPurls(libPaths []string, libs []string, files []string) []packageurl.PackageURL {
@@ -46,7 +52,7 @@ func (a Audit) GetPurls(libPaths []string, libs []string, files []string) []pack
 	return myBom.Purls
 }
 
-func (a Audit) ProcessPaths(libPaths []string, libs []string, files []string) (count int) {
+func (a Audit) ProcessPaths(libPaths []string, libs []string, files []string) (r *AuditResult) {
 	return a.AuditBom(a.GetPurls(libPaths, libs, files))
 }
 
@@ -54,13 +60,15 @@ func (a Audit) HasProperOssiCredentials() bool {
 	return len(a.OssiConfig.Username) > 0 && len(a.OssiConfig.Token) > 0
 }
 
-func (a Audit) AuditBom(deps []packageurl.PackageURL) (count int) {
+func (a Audit) AuditBom(deps []packageurl.PackageURL) (r *AuditResult) {
 	var canonicalPurls, _ = rootPurls(deps)
 	var purls, _ = definedPurls(deps)
 	var packageCount = countDistinctLibraries(append(canonicalPurls, purls...))
-
+	count := 0
 	if packageCount == 0 {
-		return 0
+		return &AuditResult{
+			Count: count,
+		}
 	}
 
 	// For speed purposes, check all possible types simultaneously
@@ -141,7 +149,10 @@ func (a Audit) AuditBom(deps []packageurl.PackageURL) (count int) {
 
 	fmt.Print(sb.String())
 
-	return count
+	return &AuditResult{
+		Coordinates: results,
+		Count:       count,
+	}
 }
 
 func countDistinctLibraries(purls []string) (result int) {

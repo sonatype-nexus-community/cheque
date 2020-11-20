@@ -41,6 +41,7 @@ type IQConfig struct {
 
 type ChequeConfig struct {
 	CreateConanFiles bool `yaml:"Create-Conan-Files"`
+	UseIQ bool `yaml:"Use-IQ"`
 }
 
 type Config struct {

@@ -15,14 +15,17 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"os/exec"
+
 	"github.com/sonatype-nexus-community/cheque/audit"
 	"github.com/sonatype-nexus-community/cheque/conan"
 	"github.com/sonatype-nexus-community/cheque/config"
 	"github.com/sonatype-nexus-community/cheque/context"
 	"github.com/sonatype-nexus-community/cheque/linker"
 	"github.com/sonatype-nexus-community/cheque/logger"
-	"os"
-	"os/exec"
+	"github.com/sonatype-nexus-community/go-sona-types/cyclonedx"
+	"github.com/sonatype-nexus-community/go-sona-types/iq"
 )
 
 func main() {
@@ -53,17 +56,9 @@ func main() {
 		}
 	}
 
-	if myConfig.ChequeConfig.CreateConanFiles {
-		myAudit := audit.New(myConfig.OSSIndexConfig)
-		purls := myAudit.GetPurls(results.LibPaths, results.Libs, results.Files)
-		options := conan.Options{
-			BinaryName: context.GetBinaryName(),
-		}
-		generator := conan.New(logger.GetLogger(), options)
-		err := generator.CheckOrCreateConanFile(purls)
-		if err != nil {
-			logger.GetLogger().WithField("err", err).Warnf("Something went wrong writing conan files")
-		}
+	if len(results.Libs) > 0 || len(results.Files) > 0 {
+		generateConanFiles(*myConfig, results)
+		auditWithIQ(*myConfig, results)
 	}
 
 	switch context.GetCommand() {
@@ -92,4 +87,45 @@ func main() {
 	}
 
 	os.Exit(0)
+}
+
+func auditWithIQ(config config.Config, lResults *linker.Results) {
+	if config.ChequeConfig.UseIQ {
+		dx := cyclonedx.Default(logger.GetLogger())
+		sbom := dx.FromCoordinates(lResults.Coordinates)
+
+		iqOptions := iq.Options{
+			User:        config.IQConfig.Username,
+			Token:       config.IQConfig.Token,
+			Application: "cheque",
+			Server:      config.IQConfig.Server,
+			Stage:       "build",
+			MaxRetries:  60,
+		}
+		server, err := iq.New(logger.GetLogger(), iqOptions)
+		if err != nil {
+			logger.GetLogger().WithField("err", err).Error("error creating connection to IQ")
+			return
+		}
+		result, iqerr := server.AuditWithSbom(sbom)
+		if iqerr != nil {
+			logger.GetLogger().WithField("err", iqerr).Error("error submitting bom")
+		}
+		logger.GetLogger().WithField("result", result).Info("Completed submittion of bom to IQ")
+	}
+}
+
+func generateConanFiles(myConfig config.Config, results *linker.Results) {
+	if myConfig.ChequeConfig.CreateConanFiles {
+		myAudit := audit.New(myConfig.OSSIndexConfig)
+		purls := myAudit.GetPurls(results.LibPaths, results.Libs, results.Files)
+		options := conan.Options{
+			BinaryName: context.GetBinaryName(),
+		}
+		generator := conan.New(logger.GetLogger(), options)
+		err := generator.CheckOrCreateConanFile(purls)
+		if err != nil {
+			logger.GetLogger().WithField("err", err).Warnf("Something went wrong writing conan files")
+		}
+	}
 }
