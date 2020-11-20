@@ -159,6 +159,7 @@ func (c Config) overrideWithLocalConfig(config ChequeConfig) ChequeConfig {
 		localChequeConfigBytes, err := ioutil.ReadFile(c.getWorkingDirectoryChequeConfig())
 		if err != nil {
 			c.logger.WithField("err", err).Error(err)
+			return config
 		}
 		localConfig := ChequeConfig{}
 		_ = yaml.Unmarshal(localChequeConfigBytes, &localConfig)
