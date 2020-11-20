@@ -16,6 +16,7 @@ package bom
 import (
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 
 	"github.com/package-url/packageurl-go"
@@ -25,14 +26,19 @@ import (
 	"fmt"
 )
 
+// Goose I'm Goose, you're Maverick
+var UseRuntime = runtime.GOOS
+
 var RPMExtCmd ExternalCommand
 var DEBExtCmd ExternalCommand
 var LDDCommand ExternalCommand
+var OtoolCommand ExternalCommand
 
 func init() {
 	LDDCommand = LddExternalCommand{}
 	RPMExtCmd = RpmExternalCommand{}
 	DEBExtCmd = DebExternalCommand{}
+	OtoolCommand = OtoolExternalCommand{}
 }
 
 // CreateBom does stuff
@@ -93,6 +99,17 @@ func CreateBom(libPaths []string, libs []string, files []string) (deps types.Pro
 	return deps, nil
 }
 
+func getTransitiveDependencies(path string) (results []byte, err error) {
+	switch UseRuntime {
+	case "windows":
+		panic(fmt.Sprintf("getTransitiveDependencies: Unsupported OS: %s\n", UseRuntime))
+	case "darwin":
+		return OtoolCommand.ExecCommand("-L", path)
+	default:
+		return LDDCommand.ExecCommand(path)
+	}
+}
+
 func recursiveGetLibraryPaths(lookup map[string]bool, libPaths []string, lib string) (results map[string]bool, err error) {
 	path, err := GetLibraryPath(libPaths, lib)
 	if err != nil {
@@ -102,7 +119,7 @@ func recursiveGetLibraryPaths(lookup map[string]bool, libPaths []string, lib str
 
 	lookup[path] = true
 
-	out, err := LDDCommand.ExecCommand(path)
+	out, err := getTransitiveDependencies(path)
 	if err == nil {
 		buf := string(out)
 		lines := strings.Split(buf, "\n")
