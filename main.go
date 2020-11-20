@@ -56,8 +56,10 @@ func main() {
 		}
 	}
 
-	generateConanFiles(*myConfig, results)
-	generateCycloneDx(*myConfig, results)
+	if len(results.Libs) > 0 || len(results.Files) > 0 {
+		generateConanFiles(*myConfig, results)
+		generateCycloneDx(*myConfig, results)
+	}
 
 	switch context.GetCommand() {
 	case "cheque":
