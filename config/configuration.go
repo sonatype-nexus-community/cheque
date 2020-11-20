@@ -26,6 +26,7 @@ import (
 var (
 	ChequeConfigDirectory = ".cheque"
 	ChequeConfigFile = "config"
+	LocalChequeConfigFile = ".cheque-config"
 )
 
 type OSSIConfig struct {
@@ -40,12 +41,12 @@ type IQConfig struct {
 }
 
 type ChequeConfig struct {
-	CreateConanFiles bool     `yaml:"Create-Conan-Files"`
-	UseIQ            bool     `yaml:"Use-IQ"`
-	IQMaxRetries     int      `yaml:"IQ-Max-Retries"`
+	CreateConanFiles *bool     `yaml:"Create-Conan-Files",omitempty`
+	UseIQ            *bool     `yaml:"Use-IQ",omitempty`
+	IQMaxRetries     *int      `yaml:"IQ-Max-Retries",omitempty`
 	IQBuildStage     string   `yaml:"IQ-Build-Stage"`
 	IQAppNamePrefix  string   `yaml:"IQ-App-Prefix"`
-	IQAppAllowList   []string `yaml:"IQ-App-Allow-List"`
+	IQAppAllowList   []string `yaml:"IQ-App-Allow-List",omitempty`
 }
 
 type Config struct {
@@ -77,10 +78,13 @@ func (c *Config) CreateOrReadConfigFile() {
 		c.writeDefaultConfig(types.OssIndexDirName, OSSIConfig{}, c.getOssiConfig())
 	}
 	if !fileExists(c.getChequeConfig()) {
+
+		falseBoolean := false
+		retryDefault := 30
 		c.writeDefaultConfig(ChequeConfigDirectory, ChequeConfig{
-			CreateConanFiles: false,
-			UseIQ:            false,
-			IQMaxRetries:     30,
+			CreateConanFiles: &falseBoolean,
+			UseIQ:            &falseBoolean,
+			IQMaxRetries:     &retryDefault,
 			IQBuildStage: "build",
 			IQAppNamePrefix: "cheque-",
 		}, c.getChequeConfig())
@@ -104,6 +108,11 @@ func (c Config) getIQConfig() string {
 
 func (c Config) getChequeConfig() string {
 	return filepath.Join(c.options.Directory, ChequeConfigDirectory, ChequeConfigFile)
+}
+
+func (c Config) getWorkingDirectoryChequeConfig() string {
+	getwd, _ := os.Getwd()
+	return filepath.Join(getwd, LocalChequeConfigFile)
 }
 
 func (c Config) getOssiConfig() string {
@@ -132,9 +141,49 @@ func (c *Config) readConfig() {
 	chequeConfig := ChequeConfig{}
 	_ = yaml.Unmarshal(chequeBytes, &chequeConfig)
 
+	chequeConfig = c.overrideWithLocalConfig(chequeConfig)
+
 	c.OSSIndexConfig = ossiConfig
 	c.IQConfig = iqConfig
 	c.ChequeConfig = chequeConfig
+}
+
+func (c Config) overrideWithLocalConfig(config ChequeConfig) ChequeConfig {
+	if fileExists(c.getWorkingDirectoryChequeConfig()) {
+		localChequeConfigBytes, err := ioutil.ReadFile(c.getWorkingDirectoryChequeConfig())
+		if err != nil {
+			c.logger.WithField("err", err).Error(err)
+		}
+		localConfig := ChequeConfig{}
+		_ = yaml.Unmarshal(localChequeConfigBytes, &localConfig)
+
+		if localConfig.UseIQ != nil {
+			config.UseIQ = localConfig.UseIQ
+		}
+
+		if localConfig.CreateConanFiles != nil {
+			config.UseIQ = localConfig.UseIQ
+		}
+
+		if localConfig.IQAppNamePrefix != "" {
+			config.IQAppNamePrefix = localConfig.IQAppNamePrefix
+		}
+
+		if localConfig.IQBuildStage != "" {
+			config.IQBuildStage = localConfig.IQBuildStage
+		}
+
+		if localConfig.IQMaxRetries != nil {
+			config.IQMaxRetries = localConfig.IQMaxRetries
+		}
+
+		if len(localConfig.IQAppAllowList) > 0 {
+			config.IQAppAllowList = localConfig.IQAppAllowList
+		}
+
+		return config
+	}
+	return config
 }
 
 func (c Config) writeDefaultConfig(directoryName string, config interface{}, pathToConfig string) {

@@ -90,7 +90,7 @@ func main() {
 }
 
 func auditWithIQ(config config.Config, lResults *linker.Results) {
-	if config.ChequeConfig.UseIQ {
+	if *config.ChequeConfig.UseIQ {
 		dx := cyclonedx.Default(logger.GetLogger())
 		sbom := dx.FromCoordinates(lResults.Coordinates)
 
@@ -127,7 +127,7 @@ func sendBomToIQ(config config.Config, binaryName string, sbom string) {
 		Application: binaryName,
 		Server:      config.IQConfig.Server,
 		Stage:       config.ChequeConfig.IQBuildStage,
-		MaxRetries:  config.ChequeConfig.IQMaxRetries,
+		MaxRetries:  *config.ChequeConfig.IQMaxRetries,
 	}
 	server, err := iq.New(logger.GetLogger(), iqOptions)
 	if err != nil {
@@ -142,7 +142,7 @@ func sendBomToIQ(config config.Config, binaryName string, sbom string) {
 }
 
 func generateConanFiles(myConfig config.Config, results *linker.Results) {
-	if myConfig.ChequeConfig.CreateConanFiles {
+	if *myConfig.ChequeConfig.CreateConanFiles {
 		myAudit := audit.New(myConfig.OSSIndexConfig)
 		purls := myAudit.GetPurls(results.LibPaths, results.Libs, results.Files)
 		options := conan.Options{

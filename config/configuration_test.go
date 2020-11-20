@@ -92,12 +92,12 @@ func TestReadsChequeConfigProperly(t *testing.T) {
 		"Create-Conan-Files: true\nUse-IQ: true\nIQ-Build-Stage: build\nIQ-App-Prefix: cheque\nIQ-APP-Allow-List: [\"cheque\"]\nIQ-Max-Retries: 30")
 	conf.CreateOrReadConfigFile()
 
-	if !conf.ChequeConfig.CreateConanFiles {
-		t.Errorf("Create-Conan-Files wasn't in config, expected %s but got %s", "true", strconv.FormatBool(conf.ChequeConfig.CreateConanFiles))
+	if !*conf.ChequeConfig.CreateConanFiles {
+		t.Errorf("Create-Conan-Files wasn't in config, expected %s but got %s", "true", strconv.FormatBool(*conf.ChequeConfig.CreateConanFiles))
 	}
 
-	if !conf.ChequeConfig.UseIQ {
-		t.Errorf("Use-IQ wasn't in config, expected %s but got %s", "true", strconv.FormatBool(conf.ChequeConfig.UseIQ))
+	if !*conf.ChequeConfig.UseIQ {
+		t.Errorf("Use-IQ wasn't in config, expected %s but got %s", "true", strconv.FormatBool(*conf.ChequeConfig.UseIQ))
 	}
 
 	if conf.ChequeConfig.IQBuildStage != "build" {
@@ -108,7 +108,7 @@ func TestReadsChequeConfigProperly(t *testing.T) {
 		t.Errorf("IQ-App-Prefix wasn't in config, expected  %s but got %s", "cheque", conf.ChequeConfig.IQAppNamePrefix)
 	}
 
-	if conf.ChequeConfig.IQMaxRetries != 30 {
+	if *conf.ChequeConfig.IQMaxRetries != 30 {
 		t.Errorf("IQ-Max-Retries wasn't in config, expected  %s but got %d", "30", conf.ChequeConfig.IQMaxRetries)
 	}
 
