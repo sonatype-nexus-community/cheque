@@ -89,7 +89,7 @@ func TestReadsChequeConfigProperly(t *testing.T) {
 	conf := setup(t)
 
 	writeDataToConfig(filepath.Join(conf.options.Directory, ChequeConfigDirectory), ChequeConfigFile,
-		"Create-Conan-Files: true\nUse-IQ: true\nIQ-Build-Stage: build\nIQ-App-Prefix: cheque\nIQ-APP-Allow-List: [\"cheque\"]\nIQ-Max-Retries: 30")
+		"Create-Conan-Files: true\nUse-IQ: true\nIQ-Build-Stage: build\nIQ-App-Prefix: cheque\nIQ-App-Allow-List:\n  - cheque\nIQ-Max-Retries: 30")
 	conf.CreateOrReadConfigFile()
 
 	if !*conf.ChequeConfig.CreateConanFiles {
@@ -112,7 +112,7 @@ func TestReadsChequeConfigProperly(t *testing.T) {
 		t.Errorf("IQ-Max-Retries wasn't in config, expected  %s but got %d", "30", conf.ChequeConfig.IQMaxRetries)
 	}
 
-	if len(conf.ChequeConfig.IQAppAllowList) == 1 && conf.ChequeConfig.IQAppAllowList[0] == "cheque"  {
+	if len(conf.ChequeConfig.IQAppAllowList) != 1 || conf.ChequeConfig.IQAppAllowList[0] != "cheque"  {
 		t.Errorf("IQ-App-Allow-List wasn't in config, expected  %s but got %s", "[cheque]", conf.ChequeConfig.IQAppAllowList)
 	}
 
@@ -123,10 +123,10 @@ func TestLocalFileOverrides(t *testing.T) {
 	conf := setup(t)
 
 	writeDataToConfig(filepath.Join(conf.options.Directory, ChequeConfigDirectory), ChequeConfigFile,
-		"Create-Conan-Files: true\nUse-IQ: true\nIQ-Build-Stage: build\nIQ-App-Prefix: cheque\nIQ-APP-Allow-List: [\"cheque\"]\nIQ-Max-Retries: 30")
+		"Create-Conan-Files: true\nUse-IQ: true\nIQ-Build-Stage: build\nIQ-App-Prefix: cheque\nIQ-App-Allow-List:\n  - cheque\nIQ-Max-Retries: 30")
 
 	writeDataToConfig(conf.options.WorkingDirectory, LocalChequeConfigFile,
-		"Create-Conan-Files: false\nUse-IQ: false\nIQ-Build-Stage: stage\nIQ-App-Prefix: whatwhat\nIQ-APP-Allow-List: [\"ohnoyoudidnt\"]\nIQ-Max-Retries: 120")
+		"Create-Conan-Files: false\nUse-IQ: false\nIQ-Build-Stage: stage\nIQ-App-Prefix: whatwhat\nIQ-App-Allow-List:\n  - ohnoyoudidnt\nIQ-Max-Retries: 120")
 
 	conf.CreateOrReadConfigFile()
 
@@ -150,7 +150,7 @@ func TestLocalFileOverrides(t *testing.T) {
 		t.Errorf("IQ-Max-Retries wasn't in config, expected  %s but got %d", "120", conf.ChequeConfig.IQMaxRetries)
 	}
 
-	if len(conf.ChequeConfig.IQAppAllowList) == 1 && conf.ChequeConfig.IQAppAllowList[0] == "ohnoyoudidnt"  {
+	if len(conf.ChequeConfig.IQAppAllowList) != 1 || conf.ChequeConfig.IQAppAllowList[0] != "ohnoyoudidnt"  {
 		t.Errorf("IQ-App-Allow-List wasn't in config, expected  %s but got %s", "[ohnoyoudidnt]", conf.ChequeConfig.IQAppAllowList)
 	}
 
