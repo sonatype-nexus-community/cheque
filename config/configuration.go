@@ -40,8 +40,12 @@ type IQConfig struct {
 }
 
 type ChequeConfig struct {
-	CreateConanFiles bool `yaml:"Create-Conan-Files"`
-	UseIQ bool `yaml:"Use-IQ"`
+	CreateConanFiles bool     `yaml:"Create-Conan-Files"`
+	UseIQ            bool     `yaml:"Use-IQ"`
+	IQMaxRetries     int      `yaml:"IQ-Max-Retries"`
+	IQBuildStage     string   `yaml:"IQ-Build-Stage"`
+	IQAppNamePrefix  string   `yaml:"IQ-App-Prefix"`
+	IQAppAllowList   []string `yaml:"IQ-App-Allow-List"`
 }
 
 type Config struct {
@@ -73,7 +77,13 @@ func (c *Config) CreateOrReadConfigFile() {
 		c.writeDefaultConfig(types.OssIndexDirName, OSSIConfig{}, c.getOssiConfig())
 	}
 	if !fileExists(c.getChequeConfig()) {
-		c.writeDefaultConfig(ChequeConfigDirectory, ChequeConfig{}, c.getChequeConfig())
+		c.writeDefaultConfig(ChequeConfigDirectory, ChequeConfig{
+			CreateConanFiles: false,
+			UseIQ:            false,
+			IQMaxRetries:     30,
+			IQBuildStage: "build",
+			IQAppNamePrefix: "cheque-",
+		}, c.getChequeConfig())
 	}
 
 	c.readConfig()

@@ -92,25 +92,51 @@ func generateCycloneDx(config config.Config, lResults *linker.Results) {
 		dx := cyclonedx.Default(logger.GetLogger())
 		sbom := dx.FromCoordinates(lResults.Coordinates)
 
-		iqOptions := iq.Options{
-			User:        config.IQConfig.Username,
-			Token:       config.IQConfig.Token,
-			Application: "cheque",
-			Server:      config.IQConfig.Server,
-			Stage:       "build",
-			MaxRetries:  60,
+		binaryName := context.GetBinaryName()
+		if config.ChequeConfig.IQAppNamePrefix != "" {
+			binaryName = config.ChequeConfig.IQAppNamePrefix + binaryName
 		}
-		server, err := iq.New(logger.GetLogger(), iqOptions)
-		if err != nil {
-			logger.GetLogger().WithField("err", err).Error("error creating connection to IQ")
-			return
+
+		runIQ := len(config.ChequeConfig.IQAppAllowList) == 0
+
+		// Check to see if we're using allow list, if so, then check that
+		// it's in there.
+		if !runIQ {
+			allowListArr := config.ChequeConfig.IQAppAllowList
+			for _, app := range allowListArr[:] {
+				if app == context.GetBinaryName() {
+					runIQ = true
+				}
+			}
 		}
-		result, iqerr := server.AuditWithSbom(sbom)
-		if iqerr != nil {
-			logger.GetLogger().WithField("err", iqerr).Error("error submitting bom")
+
+		if runIQ {
+			sendBomToIQ(config, binaryName, sbom)
+		} else {
+			logger.GetLogger().Info("Skipping sending bom to IQ due to app allow list.")
 		}
-		logger.GetLogger().WithField("result", result).Info("Completed submittion of bom to IQ")
 	}
+}
+
+func sendBomToIQ(config config.Config, binaryName string, sbom string) {
+	iqOptions := iq.Options{
+		User:        config.IQConfig.Username,
+		Token:       config.IQConfig.Token,
+		Application: binaryName,
+		Server:      config.IQConfig.Server,
+		Stage:       config.ChequeConfig.IQBuildStage,
+		MaxRetries:  60,
+	}
+	server, err := iq.New(logger.GetLogger(), iqOptions)
+	if err != nil {
+		logger.GetLogger().WithField("err", err).Error("error creating connection to IQ")
+		return
+	}
+	result, iqerr := server.AuditWithSbom(sbom)
+	if iqerr != nil {
+		logger.GetLogger().WithField("err", iqerr).Error("error submitting bom")
+	}
+	logger.GetLogger().WithField("result", result).Info("Completed submittion of bom to IQ")
 }
 
 func generateConanFiles(myConfig config.Config, results *linker.Results) {
