@@ -15,8 +15,9 @@ package audit
 
 import (
 	"fmt"
-	"github.com/sonatype-nexus-community/cheque/config"
 	"text/tabwriter"
+
+	"github.com/sonatype-nexus-community/cheque/config"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/package-url/packageurl-go"
@@ -30,13 +31,13 @@ import (
 )
 
 type Audit struct {
-	OssiConfig         config.OSSIConfig
+	OssiConfig config.OSSIConfig
 }
 
 func New(ossiConfig config.OSSIConfig) *Audit {
-    return &Audit{
-        OssiConfig:         ossiConfig,
-    }
+	return &Audit{
+		OssiConfig: ossiConfig,
+	}
 }
 
 type AuditResult struct {
@@ -59,7 +60,7 @@ func (a Audit) HasProperOssiCredentials() bool {
 	return len(a.OssiConfig.Username) > 0 && len(a.OssiConfig.Token) > 0
 }
 
-func (a Audit) AuditBom(deps []packageurl.PackageURL) (r *AuditResult){
+func (a Audit) AuditBom(deps []packageurl.PackageURL) (r *AuditResult) {
 	var canonicalPurls, _ = rootPurls(deps)
 	var purls, _ = definedPurls(deps)
 	var packageCount = countDistinctLibraries(append(canonicalPurls, purls...))
@@ -149,7 +150,7 @@ func (a Audit) AuditBom(deps []packageurl.PackageURL) (r *AuditResult){
 	fmt.Print(sb.String())
 
 	return &AuditResult{
-		Coordinates: coordinates,
+		Coordinates: results,
 		Count:       count,
 	}
 }
