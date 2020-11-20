@@ -162,7 +162,7 @@ func (c Config) overrideWithLocalConfig(config ChequeConfig) ChequeConfig {
 		}
 
 		if localConfig.CreateConanFiles != nil {
-			config.UseIQ = localConfig.UseIQ
+			config.CreateConanFiles = localConfig.CreateConanFiles
 		}
 
 		if localConfig.IQAppNamePrefix != "" {
