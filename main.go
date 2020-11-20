@@ -127,7 +127,7 @@ func sendBomToIQ(config config.Config, binaryName string, sbom string) {
 		Application: binaryName,
 		Server:      config.IQConfig.Server,
 		Stage:       config.ChequeConfig.IQBuildStage,
-		MaxRetries:  60,
+		MaxRetries:  config.ChequeConfig.IQMaxRetries,
 	}
 	server, err := iq.New(logger.GetLogger(), iqOptions)
 	if err != nil {
