@@ -58,7 +58,7 @@ func main() {
 
 	if len(results.Libs) > 0 || len(results.Files) > 0 {
 		generateConanFiles(*myConfig, results)
-		generateCycloneDx(*myConfig, results)
+		auditWithIQ(*myConfig, results)
 	}
 
 	switch context.GetCommand() {
@@ -89,7 +89,7 @@ func main() {
 	os.Exit(0)
 }
 
-func generateCycloneDx(config config.Config, lResults *linker.Results) {
+func auditWithIQ(config config.Config, lResults *linker.Results) {
 	if config.ChequeConfig.UseIQ {
 		dx := cyclonedx.Default(logger.GetLogger())
 		sbom := dx.FromCoordinates(lResults.Coordinates)
