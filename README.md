@@ -112,13 +112,13 @@ lrwxrwxrwx 1 ec2-user ec2-user 27 Oct 17 14:39 ld -> /path/to/cheque
 ## Configuration
 
 There are two configuration files. They can be found in either:
-* ~/.cheque/config
-* .cheque-config in the current working directory.
+* `~/.cheque/config`
+* `.cheque-config` in the current working directory.
 
 Both configs offer the same options, however, the current working directory config
 will override the global config.
 
-See .cheque-config.sample for the format 
+See `.cheque-config.example` for the format 
 
 ### IQ Server
 
@@ -128,7 +128,7 @@ in the following directory:
 
 `~/.iqserver/.iq-server-config` 
 
-See the sample file `.iq-server-config.sample`
+See the example file `.iq-server-config.example`
 
 ### Oss Index
 
@@ -138,7 +138,7 @@ in the following directory:
 
 `~/.ossindex/.oss-index-config` 
 
-See the sample file `.oss-index-config.sample`
+See the example file `.oss-index-config.example`
 
 ## Development
 
