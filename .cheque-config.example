@@ -1,0 +1,23 @@
+
+# While true, cheque will try to generate best guess conanfile.txt files for each binary
+#Create-Conan-Files: false
+
+# While true, cheque will send the sbom to IQ server as long as
+# the ~/.iqserver/.iq-server-config configuration is filled in and valid
+#Use-IQ: false
+
+# While Use-IQ is true, cheque will try retry sending to IQ for this number
+# of retries
+#IQ-Max-Retries: 30
+
+# While Use-IQ is true, cheque will use this name as the stage name.
+#IQ-Build-Stage: build
+
+# While Use-IQ is true, cheque will append this prefix to all binary names
+# when submitting to IQ server
+#IQ-App-Prefix: cheque-
+
+# While Use-IQ is true, cheque will only submit sboms for binaries listed here
+# If this list is empty, it will send ALL binary sboms
+#IQ-App-Allow-List:
+#    - binary_name

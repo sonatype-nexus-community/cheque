@@ -108,6 +108,38 @@ lrwxrwxrwx 1 ec2-user ec2-user 27 Oct 17 14:39 ld -> /path/to/cheque
 ...
 ```
 
+
+## Configuration
+
+There are two configuration files. They can be found in either:
+* ~/.cheque/config
+* .cheque-config in the current working directory.
+
+Both configs offer the same options, however, the current working directory config
+will override the global config.
+
+See .cheque-config.sample for the format 
+
+### IQ Server
+
+If cheque is configured to use and submit reports to iq server, 
+it requires the .iq-server-config file to be configured and placed 
+in the following directory:
+
+`~/.iqserver/.iq-server-config` 
+
+See the sample file `.iq-server-config.sample`
+
+### Oss Index
+
+If there is interest to run against Oss Index with credentials,
+it requires the .oss-index-config file to be configured and placed 
+in the following directory:
+
+`~/.ossindex/.oss-index-config` 
+
+See the sample file `.oss-index-config.sample`
+
 ## Development
 
 `cheque` is written using Golang 1.14, so it is best you start there.
