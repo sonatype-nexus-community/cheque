@@ -138,7 +138,7 @@ func sendBomToIQ(config config.Config, binaryName string, sbom string) {
 	if iqerr != nil {
 		logger.GetLogger().WithField("err", iqerr).Error("error submitting bom")
 	}
-	logger.GetLogger().WithField("result", result).Info("Completed submittion of bom to IQ")
+	logger.GetLogger().WithField("result", result).Info("Completed submission of bom to IQ")
 }
 
 func generateConanFiles(myConfig config.Config, results *linker.Results) {
