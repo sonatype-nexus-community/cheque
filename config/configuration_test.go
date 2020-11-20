@@ -87,8 +87,9 @@ func TestReadsIQConfigProperly(t *testing.T) {
 
 func TestReadsChequeConfigProperly(t *testing.T) {
 	conf := setup(t)
+
 	writeDataToConfig(filepath.Join(conf.options.Directory, ChequeConfigDirectory), ChequeConfigFile,
-		"Create-Conan-Files: true\nUse-IQ: true")
+		"Create-Conan-Files: true\nUse-IQ: true\nIQ-Build-Stage: build\nIQ-App-Prefix: cheque\nIQ-APP-Allow-List: [\"cheque\"]\nIQ-Max-Retries: 30")
 	conf.CreateOrReadConfigFile()
 
 	if !conf.ChequeConfig.CreateConanFiles {
@@ -99,6 +100,21 @@ func TestReadsChequeConfigProperly(t *testing.T) {
 		t.Errorf("Use-IQ wasn't in config, expected %s but got %s", "true", strconv.FormatBool(conf.ChequeConfig.UseIQ))
 	}
 
+	if conf.ChequeConfig.IQBuildStage != "build" {
+		t.Errorf("IQ-Build-Stage wasn't in config, expected  %s but got %s", "build", conf.ChequeConfig.IQBuildStage)
+	}
+
+	if conf.ChequeConfig.IQAppNamePrefix != "cheque" {
+		t.Errorf("IQ-App-Prefix wasn't in config, expected  %s but got %s", "cheque", conf.ChequeConfig.IQAppNamePrefix)
+	}
+
+	if conf.ChequeConfig.IQMaxRetries != 30 {
+		t.Errorf("IQ-Max-Retries wasn't in config, expected  %s but got %d", "30", conf.ChequeConfig.IQMaxRetries)
+	}
+
+	if len(conf.ChequeConfig.IQAppAllowList) == 1 && conf.ChequeConfig.IQAppAllowList[0] == "cheque"  {
+		t.Errorf("IQ-App-Allow-List wasn't in config, expected  %s but got %s", "[cheque]", conf.ChequeConfig.IQAppAllowList)
+	}
 
 	teardown(conf)
 }
