@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 
 	"github.com/sonatype-nexus-community/cheque/audit"
 	"github.com/sonatype-nexus-community/cheque/conan"
@@ -65,7 +66,7 @@ func main() {
 	case "cheque":
 		break
 	default:
-		var cmdPath = fmt.Sprint("/usr/bin/", context.GetCommand())
+		var cmdPath = getWrappedCommand()
 
 		_, err := os.Stat(cmdPath)
 		if err != nil {
@@ -87,6 +88,24 @@ func main() {
 	}
 
 	os.Exit(0)
+}
+
+func getWrappedCommand() (cmdPath string) {
+	for _, path := range filepath.SplitList(os.Getenv("PATH")) {
+		cmdPath = filepath.Join(path, context.GetCommand())
+
+		// Ignore if this is a symlink to cheque
+		realPath, err := filepath.EvalSymlinks(cmdPath)
+		if err == nil && filepath.Base(realPath) == "cheque" {
+			continue
+		}
+		_, err = os.Stat(cmdPath)
+		if err == nil {
+			break // Found the real binary
+		}
+		cmdPath = "" // Don't report this one as the wrapped binary
+	}
+	return
 }
 
 func auditWithIQ(config config.Config, lResults *linker.Results) {
