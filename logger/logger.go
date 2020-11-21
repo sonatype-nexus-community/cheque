@@ -15,8 +15,9 @@ package logger
 
 import (
 	"fmt"
-	"github.com/sonatype-nexus-community/cheque/context"
 	"os"
+
+	"github.com/sonatype-nexus-community/cheque/context"
 
 	"github.com/sirupsen/logrus"
 )
@@ -28,6 +29,7 @@ func GetLogger() *logrus.Logger {
 		return logLady
 	}
 	logLady := logrus.New()
+	logLady.SetLevel(logrus.WarnLevel)
 	return logLady
 }
 
