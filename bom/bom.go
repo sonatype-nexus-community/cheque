@@ -116,6 +116,9 @@ func recursiveGetLibraryPaths(lookup map[string]bool, libPaths []string, lib str
 		logger.Debug(fmt.Sprintf("%v", err))
 		return lookup, nil
 	}
+	if lookup[path] { // Does it already exist?
+		return lookup, nil
+	}
 
 	lookup[path] = true
 
@@ -125,7 +128,7 @@ func recursiveGetLibraryPaths(lookup map[string]bool, libPaths []string, lib str
 		lines := strings.Split(buf, "\n")
 		for _, line := range lines {
 			if line != "" {
-				tokens := strings.Split(line, " ")
+				tokens := strings.Split(strings.TrimSpace(line), " ")
 				token := strings.TrimSpace(tokens[0])
 				lookup, err = recursiveGetLibraryPaths(lookup, append(libPaths, filepath.Dir(path)), token)
 				if err != nil {

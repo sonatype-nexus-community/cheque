@@ -50,7 +50,7 @@ func getOsxLibraryNameAndVersion(path string) (name string, version string, err 
 	r, _ := regexp.Compile("^(.*?)\\.([0-9\\.]+)dylib")
 	matches := r.FindStringSubmatch(path)
 	if matches == nil {
-		return "", "", errors.New("getOsxLibraryNameAndVersion: cannot get name from " + path + " (" + fname + ")")
+		return "", "", errors.New("getOsxLibraryNameAndVersion: cannot get name/version from " + path + " (" + fname + ")")
 	}
 	name = matches[1]
 
@@ -86,6 +86,11 @@ func getOtoolVersion(name string, file string) (version string, err error) {
 
 func findOsxLibFile(libPaths []string, name string) (match string, err error) {
 	if strings.HasSuffix(name, ".dylib") {
+		_, err = AppFs.Stat(name)
+		if !os.IsNotExist((err)) {
+			return name, nil
+		}
+
 		return findLibFile(libPaths, "", name, "")
 	}
 	return findLibFile(libPaths, "lib", name, ".dylib")

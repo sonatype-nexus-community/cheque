@@ -141,7 +141,7 @@ func getUnixLibraryNameAndVersion(path string) (name string, version string, err
 		matches = r.FindStringSubmatch(path)
 	}
 	if matches == nil {
-		return "", "", errors.New("getUnixLibraryNameAndVersion: cannot get name from " + path + " (" + fname + ")")
+		return "", "", errors.New("getUnixLibraryNameAndVersion: cannot get name/version from " + path + " (" + fname + ")")
 	}
 	name = matches[1]
 
