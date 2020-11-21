@@ -26,7 +26,6 @@ import (
 	"fmt"
 )
 
-// Goose I'm Goose, you're Maverick
 var UseRuntime = runtime.GOOS
 
 var RPMExtCmd ExternalCommand
