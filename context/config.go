@@ -61,7 +61,10 @@ func init() {
 		case "noColor":
 			noColorPtr = true
 		case "version":
-			version = true
+			switch GetCommand() {
+			case "cheque":
+				version = true
+			}
 		case "v":
 			verbose = true
 		case "o":

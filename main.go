@@ -40,6 +40,10 @@ func main() {
 	// Remove cheque custom arguments
 	for _, arg := range os.Args[1:] {
 		switch arg {
+		case "--version":
+			// Bail early
+			runWrappedCommand(os.Args)
+			break
 		case "-Werror=cheque":
 		default:
 			args = append(args, arg)
@@ -66,28 +70,32 @@ func main() {
 	case "cheque":
 		break
 	default:
-		var cmdPath = getWrappedCommand()
-
-		_, err := os.Stat(cmdPath)
-		if err != nil {
-			logger.Fatal("Cannot find official command: " + cmdPath)
-		} else {
-			externalCmd := exec.Command(cmdPath, args...)
-
-			externalCmd.Stdout = os.Stdout
-			externalCmd.Stderr = os.Stderr
-
-			if err := externalCmd.Run(); err != nil {
-				if exitError, ok := err.(*exec.ExitError); ok {
-					logger.Fatal(fmt.Sprintf("There was an issue running the command %s, and the issue is %v", context.GetCommand(), os.Stderr))
-					os.Exit(exitError.ExitCode())
-				}
-			}
-		}
+		runWrappedCommand(args)
 		break
 	}
 
 	os.Exit(0)
+}
+
+func runWrappedCommand(args []string) {
+	var cmdPath = getWrappedCommand()
+
+	_, err := os.Stat(cmdPath)
+	if err != nil {
+		logger.Fatal("Cannot find official command: " + cmdPath)
+	} else {
+		externalCmd := exec.Command(cmdPath, args...)
+
+		externalCmd.Stdout = os.Stdout
+		externalCmd.Stderr = os.Stderr
+
+		if err := externalCmd.Run(); err != nil {
+			if exitError, ok := err.(*exec.ExitError); ok {
+				logger.Fatal(fmt.Sprintf("There was an issue running the command %s, and the issue is %v", context.GetCommand(), os.Stderr))
+				os.Exit(exitError.ExitCode())
+			}
+		}
+	}
 }
 
 func getWrappedCommand() (cmdPath string) {
