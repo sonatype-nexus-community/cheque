@@ -43,7 +43,7 @@ func main() {
 		case "--version":
 			// Bail early
 			runWrappedCommand(os.Args)
-			break
+			os.Exit(0)
 		case "-Werror=cheque":
 		default:
 			args = append(args, arg)
