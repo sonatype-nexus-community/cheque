@@ -213,8 +213,8 @@ github.com/smartystreets/goconvey v1.6.4/go.mod h1:syvi0/a8iFYH4r/RixwvyeAJjdLS9
 github.com/soheilhy/cmux v0.1.4/go.mod h1:IM3LyeVVIOuxMH7sFAkER9+bJ4dT7Ms6E4xg4kGIyLM=
 github.com/sonatype-nexus-community/go-sona-types v0.0.8 h1:6xb9BIC2w3y4kF/xQA25Zs6Yrl8ZqFkfH77AKPaG4RA=
 github.com/sonatype-nexus-community/go-sona-types v0.0.8/go.mod h1:uou8FGf9R5Nz1c6BfSM3v9K7g0R6faTYoxLh9Ybeht8=
-github.com/sonatype-nexus-community/go-sona-types v0.0.9 h1:3YeHMJhX/bupheORvwtDD0EF7peaN26qCsZhloMPCFI=
-github.com/sonatype-nexus-community/go-sona-types v0.0.9/go.mod h1:uou8FGf9R5Nz1c6BfSM3v9K7g0R6faTYoxLh9Ybeht8=
+github.com/sonatype-nexus-community/go-sona-types v0.0.10-0.20210125205443-b273115053f3 h1:UaN4whlAsVLMq9hIgENZvb2RXzsWBkSUflFYq8uctNE=
+github.com/sonatype-nexus-community/go-sona-types v0.0.10-0.20210125205443-b273115053f3/go.mod h1:uou8FGf9R5Nz1c6BfSM3v9K7g0R6faTYoxLh9Ybeht8=
 github.com/sonatype-nexus-community/nancy v1.0.1 h1:d+mf5iiFgNG3WcapXkOLWBS2YA69Gw7lTn+f1S+FLsI=
 github.com/sonatype-nexus-community/nancy v1.0.1/go.mod h1:3uqqbvpP2pIyaZqCY17HOmLMMV2ATDD//tVrhqI+XZg=
 github.com/spaolacci/murmur3 v0.0.0-20180118202830-f09979ecbc72/go.mod h1:JwIasOWyU6f++ZhiEuf87xNszmSA2myDM2Kzu9HwQUA=
