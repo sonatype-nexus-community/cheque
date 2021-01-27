@@ -146,6 +146,24 @@ See the example file `.oss-index-config.example`
 
 Tests can be run like `go test ./... -v`
 
+### Release Process
+
+Follow the steps below to release a new version of Nancy. You need to be part of the `deploy from circle ci` group for this to work.
+
+1. Checkout/pull the latest `master` branch, and create a new tag with the desired semantic version and a helpful note:
+
+   ```shell
+   $ git tag -a v1.0.x -m "Helpful message in tag"
+   ```
+
+2. Push the tag up:
+
+   ```shell
+   $ git push origin v1.0.x
+   ```
+
+3. There is no step 3.
+
 ## Contributing
 
 We care a lot about making the world a safer place, and that's why we created `cheque`. If you as well want to
