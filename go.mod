@@ -9,7 +9,7 @@ require (
 	github.com/package-url/packageurl-go v0.1.0
 	github.com/shopspring/decimal v1.2.0
 	github.com/sirupsen/logrus v1.6.0
-	github.com/sonatype-nexus-community/go-sona-types v0.0.10-0.20210125205443-b273115053f3
+	github.com/sonatype-nexus-community/go-sona-types v0.0.10
 	github.com/sonatype-nexus-community/nancy v1.0.1
 	github.com/spf13/afero v1.3.4
 	github.com/stretchr/testify v1.6.1
