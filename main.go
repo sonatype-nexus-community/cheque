@@ -15,6 +15,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -166,6 +167,24 @@ func sendBomToIQ(config config.Config, binaryName string, sbom string) {
 		logger.GetLogger().WithField("err", iqerr).Error("error submitting bom")
 	}
 	logger.GetLogger().WithField("result", result).Info("Completed submission of bom to IQ")
+
+	// print summary
+	showPolicyActionMessage(result, os.Stdout)
+}
+
+func showPolicyActionMessage(res iq.StatusURLResult, writer io.Writer) {
+	_, _ = fmt.Fprintln(writer)
+	switch res.PolicyAction {
+	case iq.PolicyActionFailure:
+		_, _ = fmt.Fprintln(writer, "How ya doin? You have some policy violations to clean up!")
+		_, _ = fmt.Fprintln(writer, "Report URL: ", res.AbsoluteReportHTMLURL)
+	case iq.PolicyActionWarning:
+		_, _ = fmt.Fprintln(writer, "Howz it goin? There are policy warnings to investigate!")
+		_, _ = fmt.Fprintln(writer, "Report URL: ", res.AbsoluteReportHTMLURL)
+	default:
+		_, _ = fmt.Fprintln(writer, "Wonderbar! No policy violations reported for this audit!")
+		_, _ = fmt.Fprintln(writer, "Report URL: ", res.AbsoluteReportHTMLURL)
+	}
 }
 
 func generateConanFiles(myConfig config.Config, results *linker.Results) {
