@@ -88,17 +88,23 @@ func (c pkgConfigCollector) GetPath() (string, error) {
 }
 
 func (c *pkgConfigCollector) parsePkgConfig() {
-	dpath := filepath.Dir(c.path)
-	base := filepath.Base(c.path)
-	extension := filepath.Ext(base)
-	base = base[0 : len(base)-len(extension)]
-	path := dpath + "/pkgconfig/" + base + ".pc"
+	var path string
+	if strings.HasSuffix(c.path, ".pc") {
+		// This is a direct pointer to the pkgconfig file
+		path = c.path
+	} else {
+		dpath := filepath.Dir(c.path)
+		base := filepath.Base(c.path)
+		extension := filepath.Ext(base)
+		base = base[0 : len(base)-len(extension)]
+		path := dpath + "/pkgconfig/" + base + ".pc"
 
-	if _, err := AppFs.Stat(path); os.IsNotExist(err) {
-		path = dpath + "/" + base + ".pc"
 		if _, err := AppFs.Stat(path); os.IsNotExist(err) {
-			c.pkgconfig = "unknown"
-			return
+			path = dpath + "/" + base + ".pc"
+			if _, err := AppFs.Stat(path); os.IsNotExist(err) {
+				c.pkgconfig = "unknown"
+				return
+			}
 		}
 	}
 

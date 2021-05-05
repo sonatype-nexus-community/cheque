@@ -16,6 +16,7 @@ package scanner
 import (
 	"os"
 	"path/filepath"
+	"strings"
 
 	// "github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
 	// "strings"
@@ -60,6 +61,12 @@ func (s Scanner) DoScan(path string, args []string) (results *linker.Results) {
 			if !info.IsDir() {
 				if bom.IsArchive(path) {
 					logger.Info("path " + path)
+
+					files[path] = true
+				}
+
+				if strings.HasSuffix(path, ".pc") {
+					logger.Info("pkgconfig " + path)
 
 					files[path] = true
 				}
