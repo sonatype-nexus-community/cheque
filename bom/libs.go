@@ -15,6 +15,7 @@ package bom
 
 import (
 	"fmt"
+	"regexp"
 	"runtime"
 
 	"github.com/spf13/afero"
@@ -26,8 +27,13 @@ var AppFs afero.Fs
 // Goose I'm Goose, you're Maverick
 var Goose = runtime.GOOS
 
+// Identify archives by name
+var ARCHIVE_REGEX *regexp.Regexp
+
 func init() {
 	AppFs = afero.NewOsFs()
+
+	ARCHIVE_REGEX, _ = regexp.Compile("^(.*)\\.((zip)|(tgz)|(gz)|(bz2)|(tar)|(7z))")
 }
 
 // GetLibraryPath depending on your operating system (see Goose), returns the path to your library if it exists
@@ -116,4 +122,8 @@ func GetLibPaths() (paths []string) {
 	default:
 		return getLinuxLibPaths()
 	}
+}
+
+func IsArchive(path string) (b bool) {
+	return ARCHIVE_REGEX.MatchString(path)
 }

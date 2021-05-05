@@ -72,6 +72,7 @@ func CreateBom(libPaths []string, libs []string, files []string) (deps types.Pro
 		nameMatch := rn.FindStringSubmatch(fname)
 
 		if nameMatch != nil {
+			// If we have a nameMatch then this is a dynamic library
 			project, err := getLibraryCoordinate(lib)
 			if err != nil {
 				logger.Error(err.Error())
@@ -83,7 +84,9 @@ func CreateBom(libPaths []string, libs []string, files []string) (deps types.Pro
 			deps.Projects = append(deps.Projects, project)
 			deps = checkIfRpmOrDebAppendLibIfNot(project, deps)
 		} else {
-			purl, err := getArchiveCoordinate(lib)
+			// If we get here then this is a concrete non-dynamic library file. This might be a static library,
+			// but may be any number of other supported files as well.
+			purl, err := getFileCoordinate(lib)
 			if err != nil {
 				logger.Error(err.Error())
 				continue
@@ -188,7 +191,7 @@ func getLibraryCoordinate(path string) (purl packageurl.PackageURL, err error) {
 	return
 }
 
-func getArchiveCoordinate(path string) (purl packageurl.PackageURL, err error) {
+func getFileCoordinate(path string) (purl packageurl.PackageURL, err error) {
 	var collector Collector
 
 	collector = pkgConfigCollector{path: path}
@@ -198,6 +201,12 @@ func getArchiveCoordinate(path string) (purl packageurl.PackageURL, err error) {
 	}
 
 	collector = pathCollector{path: path}
+	purl, err = collector.GetPurlObject()
+	if err == nil {
+		return purl, nil
+	}
+
+	collector = archiveCollector{path: path}
 	purl, err = collector.GetPurlObject()
 	if err == nil {
 		return purl, nil

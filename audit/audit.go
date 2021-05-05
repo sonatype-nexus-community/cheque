@@ -122,6 +122,12 @@ func (a Audit) AuditBom(deps []packageurl.PackageURL) (r *AuditResult) {
 	for _, v := range lookup {
 		// Uncomment this to hide the source of the vulnerability
 		// v.Coordinates = "pkg:cpp/" + k
+
+		// If there are no vulnerabilities, try and use Conan package, cause IQ knows about those
+		if len(v.Vulnerabilities) == 0 {
+			tokens := strings.Split(v.Coordinates, "/")
+			v.Coordinates = "pkg:conan/" + tokens[2]
+		}
 		logger.Info(v.Coordinates)
 		results = append(results, v)
 	}

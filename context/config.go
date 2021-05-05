@@ -25,6 +25,8 @@ import (
 var bom = false
 var noColorPtr = false
 var version = false
+var chequeScan = false
+var chequeScanPath string
 var path string
 var cmd string
 var binaryName = "a.out"
@@ -60,6 +62,10 @@ func init() {
 			exitWithError = true
 		case "noColor":
 			noColorPtr = true
+		case "cheque-scan":
+			i = i + 1
+			chequeScanPath = args[i]
+			chequeScan = true
 		case "version":
 			switch GetCommand() {
 			case "cheque":
@@ -95,6 +101,8 @@ func usage() {
 	fmt.Fprintf(os.Stderr, "    	Specify the name of a DLL required for compiling/linking\n")
 	fmt.Fprintf(os.Stderr, "  -Werror=cheque\n")
 	fmt.Fprintf(os.Stderr, "    	Treat cheque warnings as errors\n")
+	fmt.Fprintf(os.Stderr, "  -cheque-scan <dir>\n")
+	fmt.Fprintf(os.Stderr, "    	Do a directory scan\n")
 
 	// fmt.Fprintf(os.Stderr, "  -export-bom\n")
 	// fmt.Fprintf(os.Stderr, "    	generate a Bill Of Materials only\n")
@@ -124,4 +132,12 @@ func GetVerbose() (b bool) {
 
 func GetBinaryName() (s string) {
 	return binaryName
+}
+
+func GetChequeScanPath() (s string) {
+	return chequeScanPath
+}
+
+func GetChequeScan() (b bool) {
+	return chequeScan
 }

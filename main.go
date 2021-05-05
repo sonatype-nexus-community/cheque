@@ -25,6 +25,7 @@ import (
 	"github.com/sonatype-nexus-community/cheque/context"
 	"github.com/sonatype-nexus-community/cheque/linker"
 	"github.com/sonatype-nexus-community/cheque/logger"
+	"github.com/sonatype-nexus-community/cheque/scanner"
 	"github.com/sonatype-nexus-community/go-sona-types/cyclonedx"
 	"github.com/sonatype-nexus-community/go-sona-types/iq"
 )
@@ -42,7 +43,7 @@ func main() {
 		switch arg {
 		case "--version":
 			// Bail early
-			runWrappedCommand(os.Args)
+			runWrappedCommand(os.Args[1:])
 			os.Exit(0)
 		case "-Werror=cheque":
 		default:
@@ -50,30 +51,51 @@ func main() {
 		}
 	}
 
-	myLinker := linker.New(myConfig.OSSIndexConfig)
-	results := myLinker.DoLink(args)
-	if results.Count > 0 {
-		if context.ExitWithError() {
-			fmt.Fprintf(os.Stderr, "Error: Vulnerable dependencies found: %v\n", results.Count)
-			os.Exit(results.Count)
-		} else {
-			fmt.Fprintf(os.Stderr, "Warning: Vulnerable dependencies found: %v\n", results.Count)
+	var results *linker.Results
+
+	// If we are running in "compiler mode" run the cheque linker
+	if !context.GetChequeScan() {
+		myLinker := linker.New(myConfig.OSSIndexConfig)
+		results = myLinker.DoLink(args)
+		if results.Count > 0 {
+			if context.ExitWithError() {
+				fmt.Fprintf(os.Stderr, "Error: Vulnerable dependencies found: %v\n", results.Count)
+				os.Exit(results.Count)
+			} else {
+				fmt.Fprintf(os.Stderr, "Warning: Vulnerable dependencies found: %v\n", results.Count)
+			}
 		}
 	}
 
-	if len(results.Libs) > 0 || len(results.Files) > 0 {
+	// If we are running in "scan mode" run the cheque scanner
+	if context.GetChequeScan() {
+		myScanner := scanner.New(myConfig.OSSIndexConfig)
+		results = myScanner.DoScan(context.GetChequeScanPath(), args)
+		if results.Count > 0 {
+			if context.ExitWithError() {
+				fmt.Fprintf(os.Stderr, "Error: Vulnerable dependencies found: %v\n", results.Count)
+				os.Exit(results.Count)
+			} else {
+				fmt.Fprintf(os.Stderr, "Warning: Vulnerable dependencies found: %v\n", results.Count)
+			}
+		}
+	}
+
+	if results != nil && (len(results.Libs) > 0 || len(results.Files) > 0) {
 		generateConanFiles(*myConfig, results)
 		auditWithIQ(*myConfig, results)
 	}
 
-	switch context.GetCommand() {
-	case "cheque":
-		break
-	default:
-		runWrappedCommand(args)
-		break
+	// If we are running in "compiler mode" run the real linker
+	if !context.GetChequeScan() {
+		switch context.GetCommand() {
+		case "cheque":
+			break
+		default:
+			runWrappedCommand(args)
+			break
+		}
 	}
-
 	os.Exit(0)
 }
 
@@ -91,7 +113,7 @@ func runWrappedCommand(args []string) {
 
 		if err := externalCmd.Run(); err != nil {
 			if exitError, ok := err.(*exec.ExitError); ok {
-				logger.Fatal(fmt.Sprintf("There was an issue running the command %s, and the issue is %v", context.GetCommand(), os.Stderr))
+				logger.Fatal(fmt.Sprintf("There was an issue running the command %s, and the issue is %v", cmdPath, os.Stderr))
 				os.Exit(exitError.ExitCode())
 			}
 		}
