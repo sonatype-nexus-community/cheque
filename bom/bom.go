@@ -44,6 +44,7 @@ func init() {
 func CreateBom(libPaths []string, libs []string, files []string) (deps types.ProjectList, err error) {
 	// Library names
 	lookup := make(map[string]bool)
+	deps.FileLookup = make(map[string]string)
 
 	// Recursively get all transitive library paths
 	for _, lib := range libs {
@@ -62,7 +63,8 @@ func CreateBom(libPaths []string, libs []string, files []string) (deps types.Pro
 		}
 
 		deps.Projects = append(deps.Projects, project)
-		deps = checkIfRpmOrDebAppendLibIfNot(project, deps)
+		deps.FileLookup[project.ToString()] = path
+		deps = checkIfRpmOrDebAppendLibIfNot(project, path, deps)
 	}
 
 	for _, lib := range files {
@@ -82,7 +84,8 @@ func CreateBom(libPaths []string, libs []string, files []string) (deps types.Pro
 			// We need both the "lib<name>" and "<name>" versions, since which is used
 			// depends on the repo.
 			deps.Projects = append(deps.Projects, project)
-			deps = checkIfRpmOrDebAppendLibIfNot(project, deps)
+			deps.FileLookup[project.ToString()] = lib
+			deps = checkIfRpmOrDebAppendLibIfNot(project, lib, deps)
 		} else {
 			// If we get here then this is a concrete non-dynamic library file. This might be a static library,
 			// but may be any number of other supported files as well.
@@ -95,7 +98,8 @@ func CreateBom(libPaths []string, libs []string, files []string) (deps types.Pro
 			// We need both the "lib<name>" and "<name>" versions, since which is used
 			// depends on the repo.
 			deps.Projects = append(deps.Projects, purl)
-			deps = checkIfRpmOrDebAppendLibIfNot(purl, deps)
+			deps.FileLookup[purl.ToString()] = lib
+			deps = checkIfRpmOrDebAppendLibIfNot(purl, lib, deps)
 		}
 	}
 	return deps, nil
@@ -145,7 +149,7 @@ func recursiveGetLibraryPaths(lookup map[string]bool, libPaths []string, lib str
 	return lookup, nil
 }
 
-func checkIfRpmOrDebAppendLibIfNot(project packageurl.PackageURL, deps types.ProjectList) types.ProjectList {
+func checkIfRpmOrDebAppendLibIfNot(project packageurl.PackageURL, path string, deps types.ProjectList) types.ProjectList {
 	if project.Type != "rpm" && project.Type != "deb" {
 		if !strings.HasPrefix(project.Name, "lib") {
 			project.Name = "lib" + project.Name
@@ -153,6 +157,7 @@ func checkIfRpmOrDebAppendLibIfNot(project packageurl.PackageURL, deps types.Pro
 			project.Name = project.Name[3:]
 		}
 		deps.Projects = append(deps.Projects, project)
+		deps.FileLookup[project.ToString()] = path
 	}
 	return deps
 }

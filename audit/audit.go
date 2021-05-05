@@ -20,6 +20,7 @@ import (
 	"github.com/sonatype-nexus-community/cheque/config"
 
 	"github.com/jedib0t/go-pretty/v6/table"
+
 	"github.com/package-url/packageurl-go"
 	"github.com/sonatype-nexus-community/cheque/bom"
 	"github.com/sonatype-nexus-community/cheque/logger"
@@ -45,22 +46,23 @@ type AuditResult struct {
 	Count       int
 }
 
-func (a Audit) GetPurls(libPaths []string, libs []string, files []string) []packageurl.PackageURL {
+func (a Audit) GetPurls(libPaths []string, libs []string, files []string) ([]packageurl.PackageURL, map[string]string) {
 	myBom := packages.Make{}
 	var projectList, _ = bom.CreateBom(libPaths, libs, files)
 	myBom.Purls = projectList.Projects
-	return myBom.Purls
+	return myBom.Purls, projectList.FileLookup
 }
 
 func (a Audit) ProcessPaths(libPaths []string, libs []string, files []string) (r *AuditResult) {
-	return a.AuditBom(a.GetPurls(libPaths, libs, files))
+	purls, fileLookup := a.GetPurls(libPaths, libs, files)
+	return a.AuditBom(purls, fileLookup)
 }
 
 func (a Audit) HasProperOssiCredentials() bool {
 	return len(a.OssiConfig.Username) > 0 && len(a.OssiConfig.Token) > 0
 }
 
-func (a Audit) AuditBom(deps []packageurl.PackageURL) (r *AuditResult) {
+func (a Audit) AuditBom(deps []packageurl.PackageURL, fileLookup map[string]string) (r *AuditResult) {
 	var canonicalPurls, _ = rootPurls(deps)
 	var purls, _ = definedPurls(deps)
 	var packageCount = countDistinctLibraries(append(canonicalPurls, purls...))
@@ -146,17 +148,37 @@ func (a Audit) AuditBom(deps []packageurl.PackageURL) (r *AuditResult) {
 	sb.WriteString(t.Render())
 	sb.WriteString("\n")
 
+	var amendedResults []types.Coordinate
+
 	for _, v := range results {
 		if v.IsVulnerable() {
 			count++
 			LogVulnerablePackage(&sb, false, 0, 0, v)
 		}
+
+		// try and get the path for the file from the lookup
+		tokens := strings.Split(v.Coordinates, "/")
+		cppPurl := "pkg:cpp/" + tokens[len(tokens)-1]
+		path, ok := fileLookup[cppPurl]
+		if ok {
+			v.Path = path
+		} else {
+			path = v.Coordinates
+		}
+
+		amendedResults = append(amendedResults, types.Coordinate{
+			Coordinates:     v.Coordinates,
+			Reference:       v.Reference,
+			Path:            path,
+			Vulnerabilities: v.Vulnerabilities,
+			InvalidSemVer:   v.InvalidSemVer,
+		})
 	}
 
 	fmt.Print(sb.String())
 
 	return &AuditResult{
-		Coordinates: results,
+		Coordinates: amendedResults,
 		Count:       count,
 	}
 }

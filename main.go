@@ -212,7 +212,7 @@ func showPolicyActionMessage(res iq.StatusURLResult, writer io.Writer) {
 func generateConanFiles(myConfig config.Config, results *linker.Results) {
 	if *myConfig.ChequeConfig.CreateConanFiles {
 		myAudit := audit.New(myConfig.OSSIndexConfig)
-		purls := myAudit.GetPurls(results.LibPaths, results.Libs, results.Files)
+		purls, _ := myAudit.GetPurls(results.LibPaths, results.Libs, results.Files)
 		options := conan.Options{
 			BinaryName: context.GetBinaryName(),
 		}

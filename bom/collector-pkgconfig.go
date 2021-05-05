@@ -93,6 +93,7 @@ func (c *pkgConfigCollector) parsePkgConfig() {
 		// This is a direct pointer to the pkgconfig file
 		path = c.path
 	} else {
+		// pkgconfig may be found in directory related to library
 		dpath := filepath.Dir(c.path)
 		base := filepath.Base(c.path)
 		extension := filepath.Ext(base)
