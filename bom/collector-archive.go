@@ -130,10 +130,8 @@ func removeSrcSuffix(name string) (s string) {
 	r, _ := regexp.Compile("^(.*?)[_\\.\\-]src$")
 	matches := r.FindStringSubmatch(name)
 	if matches != nil {
-		fmt.Printf("%s .. %s\n", name, matches[1])
 		return matches[1]
 	}
-	fmt.Printf("%s -- %s\n", name, name)
 	return name
 }
 
