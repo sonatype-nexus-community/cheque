@@ -70,6 +70,15 @@ func (s Scanner) DoScan(path string, args []string) (results *linker.Results) {
 
 					files[path] = true
 				}
+
+				for k, v := range TYPESTOCHECK {
+					if strings.HasSuffix(path, k) {
+						logger.Info(v + " " + path)
+
+						files[path] = true
+					}
+				}
+
 			}
 			return nil
 		})

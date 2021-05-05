@@ -113,7 +113,8 @@ func (c *pkgConfigCollector) parsePkgConfig() {
 
 	file, err := AppFs.Open(path)
 	if err != nil {
-		logger.Fatal(err.Error())
+		logger.Error(path + " " + err.Error())
+		return
 	}
 	defer file.Close()
 
@@ -128,6 +129,6 @@ func (c *pkgConfigCollector) parsePkgConfig() {
 	}
 
 	if err := scanner.Err(); err != nil {
-		logger.Fatal(err.Error())
+		logger.Error(path + " " + err.Error())
 	}
 }
