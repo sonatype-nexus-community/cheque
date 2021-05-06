@@ -84,6 +84,7 @@ func main() {
 
 	if results != nil && (len(results.Libs) > 0 || len(results.Files) > 0) {
 		generateConanFiles(*myConfig, results)
+		generateSbom(*myConfig, results)
 		auditWithIQ(*myConfig, results)
 	}
 
@@ -206,6 +207,34 @@ func showPolicyActionMessage(res iq.StatusURLResult, writer io.Writer) {
 	default:
 		_, _ = fmt.Fprintln(writer, "No policy violations reported for this audit")
 		_, _ = fmt.Fprintln(writer, "Report URL: ", res.AbsoluteReportHTMLURL)
+	}
+}
+
+func generateSbom(myConfig config.Config, results *linker.Results) {
+	if context.GetSbom() || *myConfig.ChequeConfig.CreateSbom {
+		dx := cyclonedx.Default(logger.GetLogger())
+		sbom := dx.FromCoordinates(results.Coordinates)
+		fname := context.GetBinaryName()
+		if fname == "a.out" {
+			fname = "cheque"
+			if context.GetChequeScan() {
+				fname = context.GetChequeScanPath() + "/" + fname
+			}
+		}
+		fname = fname + ".cyclonedx"
+		f, err := os.Create(fname)
+		if err != nil {
+			logger.GetLogger().WithField("err", err).Error("error exporting sbom")
+			return
+		}
+		defer f.Close()
+		_, err = f.WriteString(sbom)
+		if err != nil {
+			logger.GetLogger().WithField("err", err).Error("error exporting sbom")
+			return
+		}
+		f.Sync()
+		fmt.Printf("exported SBOM to %s\n", fname)
 	}
 }
 

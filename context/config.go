@@ -56,7 +56,7 @@ func init() {
 		switch arg {
 		case "help":
 			usage()
-		case "export-bom":
+		case "export-sbom":
 			bom = true
 		case "Werror=cheque":
 			exitWithError = true
@@ -118,7 +118,7 @@ func GetCommand() (s string) {
 	return cmd
 }
 
-func GetBom() (b bool) {
+func GetSbom() (b bool) {
 	return bom
 }
 

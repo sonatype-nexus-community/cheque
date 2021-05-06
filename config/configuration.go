@@ -25,13 +25,13 @@ import (
 
 var (
 	ChequeConfigDirectory = ".cheque"
-	ChequeConfigFile = "config"
+	ChequeConfigFile      = "config"
 	LocalChequeConfigFile = ".cheque-config"
 )
 
 type OSSIConfig struct {
 	Username string `yaml:"Username"`
-	Token string `yaml:"Token"`
+	Token    string `yaml:"Token"`
 }
 
 type IQConfig struct {
@@ -41,9 +41,10 @@ type IQConfig struct {
 }
 
 type ChequeConfig struct {
-	CreateConanFiles *bool     `yaml:"Create-Conan-Files",omitempty`
-	UseIQ            *bool     `yaml:"Use-IQ",omitempty`
-	IQMaxRetries     *int      `yaml:"IQ-Max-Retries",omitempty`
+	CreateSbom       *bool    `yaml:"Create-SBOM",omitempty`
+	CreateConanFiles *bool    `yaml:"Create-Conan-Files",omitempty`
+	UseIQ            *bool    `yaml:"Use-IQ",omitempty`
+	IQMaxRetries     *int     `yaml:"IQ-Max-Retries",omitempty`
 	IQBuildStage     string   `yaml:"IQ-Build-Stage"`
 	IQAppNamePrefix  string   `yaml:"IQ-App-Prefix"`
 	IQAppAllowList   []string `yaml:"IQ-App-Allow-List",omitempty`
@@ -58,7 +59,7 @@ type Config struct {
 }
 
 type Options struct {
-	Directory string
+	Directory        string
 	WorkingDirectory string
 }
 
@@ -91,8 +92,8 @@ func (c *Config) CreateOrReadConfigFile() {
 			CreateConanFiles: &falseBoolean,
 			UseIQ:            &falseBoolean,
 			IQMaxRetries:     &retryDefault,
-			IQBuildStage: "build",
-			IQAppNamePrefix: "cheque-",
+			IQBuildStage:     "build",
+			IQAppNamePrefix:  "cheque-",
 		}, c.getChequeConfig())
 	}
 
