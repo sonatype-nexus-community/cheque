@@ -157,19 +157,19 @@ func (a Audit) AuditBom(deps []packageurl.PackageURL, fileLookup map[string]stri
 		}
 
 		// try and get the path for the file from the lookup
-		tokens := strings.Split(v.Coordinates, "/")
-		cppPurl := "pkg:cpp/" + tokens[len(tokens)-1]
-		path, ok := fileLookup[cppPurl]
-		if ok {
-			v.Path = path
-		} else {
-			path = v.Coordinates
-		}
+		// tokens := strings.Split(v.Coordinates, "/")
+		// cppPurl := "pkg:cpp/" + tokens[len(tokens)-1]
+		// path, ok := fileLookup[cppPurl]
+		// if ok {
+		// 	v.Path = path
+		// } else {
+		// 	path = v.Coordinates
+		// }
 
 		amendedResults = append(amendedResults, types.Coordinate{
-			Coordinates:     v.Coordinates,
-			Reference:       v.Reference,
-			Path:            path,
+			Coordinates: v.Coordinates,
+			Reference:   v.Reference,
+			// Path:            path,
 			Vulnerabilities: v.Vulnerabilities,
 			InvalidSemVer:   v.InvalidSemVer,
 		})
