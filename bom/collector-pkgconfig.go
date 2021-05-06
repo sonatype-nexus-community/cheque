@@ -98,7 +98,7 @@ func (c *pkgConfigCollector) parsePkgConfig() {
 		base := filepath.Base(c.path)
 		extension := filepath.Ext(base)
 		base = base[0 : len(base)-len(extension)]
-		path := dpath + "/pkgconfig/" + base + ".pc"
+		path = dpath + "/pkgconfig/" + base + ".pc"
 
 		if _, err := AppFs.Stat(path); os.IsNotExist(err) {
 			path = dpath + "/" + base + ".pc"

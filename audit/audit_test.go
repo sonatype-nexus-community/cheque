@@ -16,15 +16,16 @@ package audit
 import (
 	"encoding/json"
 	"errors"
-	"github.com/sonatype-nexus-community/cheque/config"
 	"net/http"
 	"testing"
+
+	"github.com/sonatype-nexus-community/cheque/config"
 
 	"github.com/jarcoal/httpmock"
 	"github.com/package-url/packageurl-go"
 	"github.com/shopspring/decimal"
 	"github.com/sonatype-nexus-community/cheque/types"
-  ossiTypes "github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
+	ossiTypes "github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
 )
 
 var projectList = types.ProjectList{}
@@ -42,6 +43,7 @@ func setupProjectList() {
 	projectList.Projects = append(projectList.Projects, newPackageURL("pkg:rpm/fedora/libname4@1.0.0"))
 	projectList.Projects = append(projectList.Projects, newPackageURL("pkg:conan/name5@1.0.0"))
 	projectList.Projects = append(projectList.Projects, newPackageURL("pkg:conan/libname5@1.0.0"))
+	projectList.FileLookup = make(map[string]string)
 }
 
 func newPackageURL(purl string) (newPurl packageurl.PackageURL) {
@@ -86,7 +88,7 @@ func TestAuditBom(t *testing.T) {
 
 	setupProjectList()
 	audit := New(config.OSSIConfig{})
-	auditResults := audit.AuditBom(projectList.Projects)
+	auditResults := audit.AuditBom(projectList.Projects, projectList.FileLookup)
 
 	if auditResults.Count != 1 {
 		t.Errorf("There is an error, expected 1, got %d", auditResults.Count)
@@ -125,7 +127,7 @@ func TestPassesOssiCredentials(t *testing.T) {
 	setupProjectList()
 	audit := New(config.OSSIConfig{
 		Username: "user",
-		Token: "token1",
+		Token:    "token1",
 	})
 
 	//Make sure we have proper creds
@@ -133,7 +135,7 @@ func TestPassesOssiCredentials(t *testing.T) {
 		t.Error("Audit should have a proper config")
 	}
 
-	auditResults := audit.AuditBom(projectList.Projects)
+	auditResults := audit.AuditBom(projectList.Projects, projectList.FileLookup)
 
 	if auditResults.Count != 1 {
 		t.Errorf("There is an error, expected 1, got %d", auditResults.Count)
@@ -177,7 +179,7 @@ func TestWorksWithAbsenceOfOssiCredentials(t *testing.T) {
 		t.Error("Audit should have a proper config")
 	}
 
-	auditResults := audit.AuditBom(projectList.Projects)
+	auditResults := audit.AuditBom(projectList.Projects, projectList.FileLookup)
 
 	if auditResults.Count != 1 {
 		t.Errorf("There is an error, expected 1, got %d", auditResults.Count)
