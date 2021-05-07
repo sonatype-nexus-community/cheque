@@ -120,7 +120,7 @@ func getArchiveNameAndVersion(path string) (name string, version string, err err
 	r, _ := regexp.Compile("^(.*?)[_\\.\\-]([0-9_\\.\\-]+[0-9_\\.\\-a-z]+)")
 	matches := r.FindStringSubmatch(fname)
 	if matches == nil {
-		return "", "", errors.New("getUnixLibraryNameAndVersion: cannot get name/version from " + path + " (" + fname + ")")
+		return "", "", errors.New("Cannot get name/version from " + path + " (" + fname + ")")
 	}
 	repl := strings.NewReplacer("-", ".", "-", ".")
 	return removeSrcSuffix(matches[1]), repl.Replace(matches[2]), nil

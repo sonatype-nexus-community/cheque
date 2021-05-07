@@ -89,6 +89,7 @@ func (c *Config) CreateOrReadConfigFile() {
 		falseBoolean := false
 		retryDefault := 30
 		c.writeDefaultConfig(ChequeConfigDirectory, ChequeConfig{
+			CreateSbom:       &falseBoolean,
 			CreateConanFiles: &falseBoolean,
 			UseIQ:            &falseBoolean,
 			IQMaxRetries:     &retryDefault,
@@ -98,6 +99,18 @@ func (c *Config) CreateOrReadConfigFile() {
 	}
 
 	c.readConfig()
+}
+
+func (c ChequeConfig) ShouldCreateSbom() bool {
+	return c.CreateSbom != nil && *c.CreateSbom
+}
+
+func (c ChequeConfig) ShouldCreateConanFiles() bool {
+	return c.CreateConanFiles != nil && *c.CreateConanFiles
+}
+
+func (c ChequeConfig) ShouldUseIQ() bool {
+	return c.UseIQ != nil && *c.UseIQ
 }
 
 func (c Config) createDirectory(directory string) {
@@ -167,6 +180,10 @@ func (c Config) overrideWithLocalConfig(config ChequeConfig) ChequeConfig {
 
 		if localConfig.UseIQ != nil {
 			config.UseIQ = localConfig.UseIQ
+		}
+
+		if localConfig.CreateConanFiles != nil {
+			config.CreateConanFiles = localConfig.CreateConanFiles
 		}
 
 		if localConfig.CreateConanFiles != nil {

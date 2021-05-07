@@ -141,7 +141,7 @@ func getWrappedCommand() (cmdPath string) {
 }
 
 func auditWithIQ(config config.Config, lResults *linker.Results) {
-	if *config.ChequeConfig.UseIQ {
+	if config.ChequeConfig.ShouldUseIQ() {
 		dx := cyclonedx.Default(logger.GetLogger())
 		sbom := dx.FromCoordinates(lResults.Coordinates)
 
@@ -211,7 +211,7 @@ func showPolicyActionMessage(res iq.StatusURLResult, writer io.Writer) {
 }
 
 func generateSbom(myConfig config.Config, results *linker.Results) {
-	if context.GetSbom() || *myConfig.ChequeConfig.CreateSbom {
+	if context.GetSbom() || myConfig.ChequeConfig.ShouldCreateSbom() {
 		dx := cyclonedx.Default(logger.GetLogger())
 		sbom := dx.FromCoordinates(results.Coordinates)
 		fname := context.GetBinaryName()
@@ -239,7 +239,7 @@ func generateSbom(myConfig config.Config, results *linker.Results) {
 }
 
 func generateConanFiles(myConfig config.Config, results *linker.Results) {
-	if *myConfig.ChequeConfig.CreateConanFiles {
+	if myConfig.ChequeConfig.ShouldCreateConanFiles() {
 		myAudit := audit.New(myConfig.OSSIndexConfig)
 		purls, _ := myAudit.GetPurls(results.LibPaths, results.Libs, results.Files)
 		options := conan.Options{

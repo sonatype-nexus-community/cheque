@@ -25,9 +25,15 @@ And its completely free! Beauty, eh?
 
 ## Supported platforms
 
+### "Compiler wrapper mode" and "Check specific system library" mode
+
 Currently only gcc on Linux is supported. There is marginal support for other
 compilers (clang) and operating systems (osx) but it is far more rudimentary and
 not to be trusted.
+
+### Directory Scan Mode
+
+Directory scan mode (`-cheque-scan`) is supported on Linux, OSX, and Windows.
 
 ## Usage
 
@@ -49,11 +55,74 @@ Option summary: (Many cheque options match those of the underlying compiler/link
     	Specify the name of a DLL required for compiling/linking
   -Werror=cheque
     	Treat cheque warnings as errors
+  -cheque-scan <dir>
+    	Do a directory scan
+  -export-sbom
+    	Export a cycloneDX SBOM file
+  -o
+    	Define output file base name.
   -version
     	prints current cheque version
 ```
 
-For example:
+## Scan a directory
+
+Directory scanning mode (`-cheque-scan`) does what the name suggests, it scans all files recursively in a directory looking
+for library dependency evidence. This can take many forms:
+
+* Source archives (eg. boost_1_67_0.tar.bz2)
+* pkgconfig files (*.pc)
+* Library file binaries
+* **Package Manifests (eg. conan, CMakefile)
+* **And much, much more.
+
+  ** Coming soon!
+
+Directory scanning mode is currently under active development.
+
+```
+./cheque -cheque-scan /directory/to/scan -export-sbom
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Summary                   ┃
+┣━━━━━━━━━━━━━━━━━━━━━━┳━━━━┫
+┃ Audited Dependencies ┃ 14 ┃
+┗━━━━━━━━━━━━━━━━━━━━━━┻━━━━┛
+[0/0]	pkg:conan/conan/openssl@1.0.2u
+4 known vulnerabilities affecting installed version 
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ [CVE-2018-16395]  Data Handling                                                                                           ┃
+┣━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃ Description        ┃ An issue was discovered in the OpenSSL library in Ruby before 2.3.8, 2.4.x                           ┃
+┃                    ┃ before 2.4.5, 2.5.x before 2.5.2, and 2.6.x before 2.6.0-preview3. When two                          ┃
+┃                    ┃ OpenSSL::X509::Name objects are compared using ==, depending on the                                  ┃
+┃                    ┃ ordering, non-equal objects may return true. When the first argument is one                          ┃
+┃                    ┃ character longer than the second, or the second argument contains a                                  ┃
+┃                    ┃ character that is one less than a character in the same position of the                              ┃
+┃                    ┃ first argument, the result of == will be true. This could be leveraged to                            ┃
+┃                    ┃ create an illegitimate certificate that may be accepted as legitimate and                            ┃
+┃                    ┃ then used in signing or encryption operations.                                                       ┃
+┣━━━━━━━━━━━━━━━━━━━━╋━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃ OSS Index ID       ┃ 9ac68536-0a39-4e94-b3d5-6a5726be91ad                                                                 ┃
+┣━━━━━━━━━━━━━━━━━━━━╋━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃ CVSS Score         ┃ 9.8/10 (Critical)                                                                                    ┃
+┣━━━━━━━━━━━━━━━━━━━━╋━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃ CVSS Vector        ┃ CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H                                                         ┃
+┣━━━━━━━━━━━━━━━━━━━━╋━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃ Link for more info ┃ https://ossindex.sonatype.org/vulnerability/9ac68536-0a39-4e94-b3d5-6a5726be91ad?component-type=cona ┃
+┃                    ┃ n&component-name=conan%2Fopenssl&utm_source=cheque&utm_medium=integration&utm_content=development    ┃
+┗━━━━━━━━━━━━━━━━━━━━┻━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+...
+
+Warning: Vulnerable dependencies found: 5
+exported SBOM to /Users/twoducks/src/cheque-examples/linux/scandemo/cheque.cyclonedx
+```
+
+## Check specific system library
+
+On linux cheque can be run just like a compiler, and therefore any library which would be found by a compiler can be
+checked.
 
 ```
 > cheque -lpng hello.c

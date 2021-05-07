@@ -103,6 +103,10 @@ func usage() {
 	fmt.Fprintf(os.Stderr, "    	Treat cheque warnings as errors\n")
 	fmt.Fprintf(os.Stderr, "  -cheque-scan <dir>\n")
 	fmt.Fprintf(os.Stderr, "    	Do a directory scan\n")
+	fmt.Fprintf(os.Stderr, "  -export-sbom\n")
+	fmt.Fprintf(os.Stderr, "    	Export a cycloneDX SBOM file\n")
+	fmt.Fprintf(os.Stderr, "  -o\n")
+	fmt.Fprintf(os.Stderr, "    	Define output file base name.\n")
 
 	// fmt.Fprintf(os.Stderr, "  -export-bom\n")
 	// fmt.Fprintf(os.Stderr, "    	generate a Bill Of Materials only\n")

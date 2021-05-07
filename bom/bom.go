@@ -50,7 +50,7 @@ func CreateBom(libPaths []string, libs []string, files []string) (deps types.Pro
 	for _, lib := range libs {
 		lookup, err = recursiveGetLibraryPaths(lookup, libPaths, lib)
 		if err != nil {
-			logger.Error(err.Error())
+			fmt.Printf(err.Error() + "\n")
 			continue
 		}
 	}
@@ -58,7 +58,7 @@ func CreateBom(libPaths []string, libs []string, files []string) (deps types.Pro
 	for path := range lookup {
 		project, err := getLibraryCoordinate(path)
 		if err != nil {
-			logger.Error(err.Error())
+			fmt.Printf(err.Error() + "\n")
 			continue
 		}
 
@@ -77,7 +77,7 @@ func CreateBom(libPaths []string, libs []string, files []string) (deps types.Pro
 			// If we have a nameMatch then this is a dynamic library
 			project, err := getLibraryCoordinate(lib)
 			if err != nil {
-				logger.Error(err.Error())
+				fmt.Printf(err.Error() + "\n")
 				continue
 			}
 
@@ -91,7 +91,7 @@ func CreateBom(libPaths []string, libs []string, files []string) (deps types.Pro
 			// but may be any number of other supported files as well.
 			purl, err := getFileCoordinate(lib)
 			if err != nil {
-				logger.Error(err.Error())
+				fmt.Printf(err.Error() + "\n")
 				continue
 			}
 

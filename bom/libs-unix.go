@@ -141,7 +141,7 @@ func getUnixLibraryNameAndVersion(path string) (name string, version string, err
 		matches = r.FindStringSubmatch(path)
 	}
 	if matches == nil {
-		return "", "", errors.New("getUnixLibraryNameAndVersion: cannot get name/version from " + path + " (" + fname + ")")
+		return "", "", errors.New("Cannot get name/version from " + path + " (" + fname + ")")
 	}
 	name = matches[1]
 
@@ -158,7 +158,7 @@ func getUnixLibraryNameAndVersion(path string) (name string, version string, err
 		return name, matches[1], nil
 	}
 
-	return name, "", errors.New("getUnixLibraryNameAndVersion: cannot get version from " + fname)
+	return name, "", errors.New("Cannot get version from " + fname)
 }
 
 /** In some cases the library is a symbolic link to a file with an embedded version

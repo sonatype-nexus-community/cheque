@@ -35,6 +35,7 @@ var TYPESTOCHECK = map[string]string{
 	".so.":   "Linux DLL",
 	".a":     "Static Lib",
 	".a.":    "Static Lib",
+	".dll":   "Windows DLL",
 }
 
 type Scanner struct {
