@@ -221,7 +221,7 @@ func generateSbom(myConfig config.Config, results *linker.Results) {
 				fname = context.GetChequeScanPath() + "/" + fname
 			}
 		}
-		fname = fname + ".cyclonedx"
+		fname = fname + "-bom.xml"
 		f, err := os.Create(fname)
 		if err != nil {
 			logger.GetLogger().WithField("err", err).Error("error exporting sbom")
