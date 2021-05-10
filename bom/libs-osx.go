@@ -48,7 +48,7 @@ func getOsxLibraryNameAndVersion(path string) (name string, version string, err 
 	// Extract a name
 	fname := filepath.Base(path)
 	r, _ := regexp.Compile("^(.*?)\\.([0-9\\.]+)dylib")
-	matches := r.FindStringSubmatch(path)
+	matches := r.FindStringSubmatch(fname)
 	if matches == nil {
 		return "", "", errors.New("getOsxLibraryNameAndVersion: cannot get name/version from " + path + " (" + fname + ")")
 	}
@@ -56,7 +56,7 @@ func getOsxLibraryNameAndVersion(path string) (name string, version string, err 
 
 	// Extract a version
 	r, _ = regexp.Compile("\\.([0-9\\.]+)\\.dylib")
-	matches = r.FindStringSubmatch(path)
+	matches = r.FindStringSubmatch(fname)
 	if matches != nil {
 		return name, matches[1], nil
 	}

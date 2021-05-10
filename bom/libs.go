@@ -57,27 +57,34 @@ func GetLibraryPath(libPaths []string, name string) (path string, err error) {
 }
 
 // GetLibraryName depending on your operating system (see Goose), returns the name of your library, given a full name
-func GetLibraryName(path string) (nam string, err error) {
-	switch Goose {
-	case "windows":
-		panic(fmt.Sprintf("GetLibraryName: Unsupported OS: %s\n", Goose))
-	case "darwin":
-		return getOsxLibraryName(path)
-	default:
-		return getUnixLibraryName(path)
+func GetLibraryName(path string) (name string, err error) {
+	name, err = getWindowsLibraryName(path)
+	if err == nil {
+		return name, nil
 	}
+
+	name, err = getOsxLibraryName(path)
+	if err == nil {
+		return name, nil
+	}
+
+	name, err = getUnixLibraryName(path)
+	return name, err
 }
 
 // GetLibraryVersion depending on your operating system (see Goose), returns the version of your library, given a full name
 func GetLibraryVersion(path string) (version string, err error) {
-	switch Goose {
-	case "windows":
-		panic(fmt.Sprintf("GetLibraryVersion: Unsupported OS: %s\n", Goose))
-	case "darwin":
-		return getOsxLibraryVersion(path)
-	default:
-		return getUnixLibraryVersion(path)
+	version, err = getWindowsLibraryVersion(path)
+	if err != nil {
+		return version, nil
 	}
+
+	version, err = getOsxLibraryVersion(path)
+	if err != nil {
+		return version, nil
+	}
+
+	return getUnixLibraryVersion(path)
 }
 
 func GetLibraryPathRegexPattern() (result string) {
