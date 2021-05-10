@@ -205,6 +205,12 @@ func getFileCoordinate(path string) (purl packageurl.PackageURL, err error) {
 		return purl, nil
 	}
 
+	collector = stringsCollector{path: path}
+	purl, err = collector.GetPurlObject()
+	if err == nil {
+		return purl, nil
+	}
+
 	collector = pathCollector{path: path}
 	purl, err = collector.GetPurlObject()
 	if err == nil {
