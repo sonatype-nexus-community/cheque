@@ -75,12 +75,12 @@ func GetLibraryName(path string) (name string, err error) {
 // GetLibraryVersion depending on your operating system (see Goose), returns the version of your library, given a full name
 func GetLibraryVersion(path string) (version string, err error) {
 	version, err = getWindowsLibraryVersion(path)
-	if err != nil {
+	if err == nil {
 		return version, nil
 	}
 
 	version, err = getOsxLibraryVersion(path)
-	if err != nil {
+	if err == nil {
 		return version, nil
 	}
 

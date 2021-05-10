@@ -80,6 +80,7 @@ func (c pathCollector) GetPurlObject() (purl packageurl.PackageURL, err error) {
 	}
 
 	purl, err = packageurl.FromString(fmt.Sprintf("pkg:cpp/%s@%s", name, version))
+
 	if err != nil {
 		return purl, err
 	}
