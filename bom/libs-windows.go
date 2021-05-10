@@ -14,25 +14,53 @@
 package bom
 
 import (
-	"fmt"
-	"os"
-	"flag"
+	// "os"
+	// "regexp"
+	// "strings"
 
-	// Required to get OS
-	"runtime"
+	// "github.com/sonatype-nexus-community/cheque/logger"
+	// "github.com/sonatype-nexus-community/nancy/types"
+
+	// // "fmt"
+	// "bufio"
+	// "errors"
+	"errors"
+	"path/filepath"
+	"regexp"
+	// "os/exec"
+	// "bytes"
 )
 
-
-func getWindowsLibraryId(name string) (version string, err error) {
-	_, _ = fmt.Fprintf(os.Stderr, "Unsupported OS: %s\n", runtime.GOOS)
-	flag.PrintDefaults()
-	os.Exit(2)
-	return "", nil
+/** Given a file path, extract a library name from the path.
+ */
+func getWindowsLibraryName(name string) (path string, err error) {
+	path, _, err = getWindowsLibraryNameAndVersion(name)
+	return path, err
 }
 
-func getWindowsArchiveId(name string) (version string, err error) {
-	_, _ = fmt.Fprintf(os.Stderr, "Unsupported OS: %s\n", runtime.GOOS)
-	flag.PrintDefaults()
-	os.Exit(2)
-	return "", nil
+/** Given a file path, extract a library name from the path.
+ */
+func getWindowsLibraryVersion(name string) (version string, err error) {
+	_, version, err = getWindowsLibraryNameAndVersion(name)
+	return version, err
+}
+
+func getWindowsLibraryNameAndVersion(path string) (name string, version string, err error) {
+	// Extract a name
+	fname := filepath.Base(path)
+	r, _ := regexp.Compile("^(.*?)[\\.-_]([0-9\\._-]+)\\.dll")
+	matches := r.FindStringSubmatch(path)
+	if matches == nil {
+		return "", "", errors.New("Cannot get name/version from " + path + " (" + fname + ")")
+	}
+	name = matches[1]
+
+	// Extract a version
+	r, _ = regexp.Compile("[\\._-]([0-9\\._-]+)\\.dll")
+	matches = r.FindStringSubmatch(path)
+	if matches != nil {
+		return name, matches[1], nil
+	}
+
+	return name, "", errors.New("Cannot get version from " + fname)
 }

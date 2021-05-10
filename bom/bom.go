@@ -108,7 +108,7 @@ func CreateBom(libPaths []string, libs []string, files []string) (deps types.Pro
 func getTransitiveDependencies(path string) (results []byte, err error) {
 	switch UseRuntime {
 	case "windows":
-		panic(fmt.Sprintf("getTransitiveDependencies: Unsupported OS: %s\n", UseRuntime))
+		return
 	case "darwin":
 		return OtoolCommand.ExecCommand("-L", path)
 	default:
