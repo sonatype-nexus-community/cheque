@@ -49,7 +49,7 @@ func getWindowsLibraryNameAndVersion(path string) (name string, version string, 
 	// Extract a name
 	fname := filepath.Base(path)
 	r, _ := regexp.Compile("^(.*?)[\\.-_]([0-9\\._-]+)\\.dll")
-	matches := r.FindStringSubmatch(fname)
+	matches := r.FindStringSubmatch(path)
 	if matches == nil {
 		return "", "", errors.New("Cannot get name/version from " + path + " (" + fname + ")")
 	}
@@ -57,7 +57,7 @@ func getWindowsLibraryNameAndVersion(path string) (name string, version string, 
 
 	// Extract a version
 	r, _ = regexp.Compile("[\\._-]([0-9\\._-]+)\\.dll")
-	matches = r.FindStringSubmatch(fname)
+	matches = r.FindStringSubmatch(path)
 	if matches != nil {
 		return name, matches[1], nil
 	}
