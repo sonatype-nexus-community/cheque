@@ -78,6 +78,12 @@ func (s Scanner) DoScan(path string, args []string) (results *linker.Results) {
 
 						files[path] = true
 					}
+					// Special case for libpng.so.1.2.3
+					if strings.HasPrefix(k, ".") && strings.Contains(path, k) {
+						logger.Info(v + " " + path)
+
+						files[path] = true
+					}
 				}
 
 			}

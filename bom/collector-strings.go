@@ -72,11 +72,36 @@ func (c stringsCollector) GetVersion() (string, error) {
 	return "", errors.New("No possible name matches found")
 }
 
+/** Looking for a name and version that are high quality
+ */
+func (c stringsCollector) isValidNameAndVersion(name string) bool {
+	myname, err := GetLibraryName(name)
+	if err != nil || myname == "" {
+		return false
+	}
+	myversion, err := GetLibraryVersion(name)
+	if err != nil || myversion == "" {
+		return false
+	}
+
+	// Make sure the version is of a reasonable length
+	tokens := strings.Split(myversion, ".")
+	if len(tokens) > 2 {
+		return true
+	}
+
+	return false
+}
+
 func (c stringsCollector) getPossibleNames() (string, error) {
 	// Only run on libraries
 	found := false
 	for k := range TYPESTOCHECK {
 		if strings.HasSuffix(c.path, k) {
+			found = true
+		}
+		// Special case for libpng.so.1.2.3
+		if strings.HasPrefix(k, ".") && strings.Contains(c.path, k) {
 			found = true
 		}
 	}
@@ -89,22 +114,37 @@ func (c stringsCollector) getPossibleNames() (string, error) {
 		return "", errors.New("Not a library")
 	}
 
+	// Remove path
 	fname := filepath.Base(c.path)
+	// Remove extension (and version number)
 	tokens := strings.Split(fname, ".")
 	fname = tokens[0]
-	r, _ := regexp.Compile("(" + fname + "[^ \\t]+)")
+	// Remove any trailing numbers
+	fname = strings.TrimRight(fname, "1234567890")
 
-	// fmt.Printf("STRINGS: %s %s\n", fname, c.path)
+	nameAndVersionPattern, _ := regexp.Compile("(" + fname + "[^ \\t]+)")
+	nameSeparatorVersionPattern, _ := regexp.Compile("(" + fname + ") +\\w+ +((\\d+)\\.(\\d+)\\.(\\d+))")
+
 	for i := 0; i < len(c.libraryStrings); i++ {
 		if strings.Contains(c.libraryStrings[i], fname) {
-			// fmt.Printf("  STRING: %s %s\n", fname, c.libraryStrings[i])
 
-			// try and find a good match for the full name
-			matches := r.FindStringSubmatch(c.libraryStrings[i])
+			// try and find a good match for the full name with version
+			matches := nameAndVersionPattern.FindStringSubmatch(c.libraryStrings[i])
 			if matches != nil {
-				// fmt.Printf("    !! STRING: %s\n", matches[1])
-				return matches[1], nil
+				if c.isValidNameAndVersion(matches[1]) {
+					return matches[1], nil
+				}
 			}
+
+			// Try and find a match with the name and version, but separated by other text
+			matches = nameSeparatorVersionPattern.FindStringSubmatch(c.libraryStrings[i])
+			if matches != nil {
+				name := matches[1] + "." + matches[2] + ".so"
+				if c.isValidNameAndVersion(name) {
+					return name, nil
+				}
+			}
+
 		}
 	}
 	return "", errors.New("No possible name matches found")
