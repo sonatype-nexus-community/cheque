@@ -14,9 +14,13 @@
 package config
 
 import (
+	"encoding/json"
 	"io/ioutil"
+	"log"
+	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	"github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
@@ -50,12 +54,23 @@ type ChequeConfig struct {
 	IQAppAllowList   []string `yaml:"IQ-App-Allow-List",omitempty`
 }
 
+type ConanPackage struct {
+	Name string `json:"name"`
+	Path string `json:"path"`
+}
+
+type ConanPackages struct {
+	Lookup map[string]*ConanPackage
+}
+
 type Config struct {
 	logger         *logrus.Logger
 	options        Options
 	OSSIndexConfig OSSIConfig
 	IQConfig       IQConfig
 	ChequeConfig   ChequeConfig
+	ChequeCache    []string
+	ConanPackages  ConanPackages
 }
 
 type Options struct {
@@ -101,6 +116,14 @@ func (c *Config) CreateOrReadConfigFile() {
 	c.readConfig()
 }
 
+func (c *Config) CreateOrReadCacheFile() {
+	if !fileExists(c.getConanCache()) {
+		c.writeConanCache(types.ConanCacheDirName, c.getConanCache())
+	}
+
+	c.readCache()
+}
+
 func (c ChequeConfig) ShouldCreateSbom() bool {
 	return c.CreateSbom != nil && *c.CreateSbom
 }
@@ -122,6 +145,10 @@ func (c Config) createDirectory(directory string) {
 }
 
 //Gets the default location for the config file
+func (c Config) getConanCache() string {
+	return filepath.Join(c.options.Directory, types.ConanCacheDirName, types.ConanCacheFileName)
+}
+
 func (c Config) getIQConfig() string {
 	return filepath.Join(c.options.Directory, types.IQServerDirName, types.IQServerConfigFileName)
 }
@@ -166,6 +193,16 @@ func (c *Config) readConfig() {
 	c.OSSIndexConfig = ossiConfig
 	c.IQConfig = iqConfig
 	c.ChequeConfig = chequeConfig
+}
+
+func (c *Config) readCache() {
+	conanBytes, err := ioutil.ReadFile(c.getConanCache())
+	if err != nil {
+		c.logger.WithField("err", err).Error(err)
+	}
+	c.ConanPackages.Lookup = make(map[string]*ConanPackage)
+	_ = yaml.Unmarshal(conanBytes, &c.ConanPackages.Lookup)
+
 }
 
 func (c Config) overrideWithLocalConfig(config ChequeConfig) ChequeConfig {
@@ -215,6 +252,60 @@ func (c Config) writeDefaultConfig(directoryName string, config interface{}, pat
 	c.createDirectory(directoryName)
 	myConfig, _ := yaml.Marshal(config)
 	err := ioutil.WriteFile(pathToConfig, myConfig, 0644)
+	if err != nil {
+		c.logger.WithFields(
+			logrus.Fields{
+				"configFile": pathToConfig,
+				"err":        err,
+			}).Error("Could not create OSSIndexConfig.")
+	}
+}
+
+func (c Config) writeConanCache(directoryName string, pathToConfig string) {
+	c.ConanPackages.Lookup = make(map[string]*ConanPackage)
+
+	url := "https://api.github.com/repositories/204671232/contents/recipes"
+
+	conanClient := http.Client{
+		Timeout: time.Second * 2, // Timeout after 2 seconds
+	}
+
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	req.Header.Set("User-Agent", "cheque")
+
+	res, getErr := conanClient.Do(req)
+	if getErr != nil {
+		log.Fatal(getErr)
+	}
+
+	if res.Body != nil {
+		defer res.Body.Close()
+	}
+
+	body, readErr := ioutil.ReadAll(res.Body)
+	if readErr != nil {
+		log.Fatal(readErr)
+	}
+
+	packages := make([]ConanPackage, 0)
+
+	jsonErr := json.Unmarshal(body, &packages)
+	if jsonErr != nil {
+		log.Fatal(jsonErr)
+	}
+
+	// Initialize the identity database
+	for _, v := range packages {
+		c.ConanPackages.Lookup[v.Name] = &v
+	}
+
+	c.createDirectory(directoryName)
+	myConfig, _ := yaml.Marshal(c.ConanPackages)
+	err = ioutil.WriteFile(pathToConfig, myConfig, 0644)
 	if err != nil {
 		c.logger.WithFields(
 			logrus.Fields{

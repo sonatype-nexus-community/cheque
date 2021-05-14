@@ -87,7 +87,7 @@ func TestAuditBom(t *testing.T) {
 	defer httpmock.DeactivateAndReset()
 
 	setupProjectList()
-	audit := New(config.OSSIConfig{})
+	audit := New(config.OSSIConfig{}, config.ConanPackages{})
 	auditResults := audit.AuditBom(projectList.Projects, projectList.FileLookup)
 
 	if auditResults.Count != 1 {
@@ -128,7 +128,7 @@ func TestPassesOssiCredentials(t *testing.T) {
 	audit := New(config.OSSIConfig{
 		Username: "user",
 		Token:    "token1",
-	})
+	}, config.ConanPackages{})
 
 	//Make sure we have proper creds
 	if !audit.HasProperOssiCredentials() {
@@ -172,7 +172,7 @@ func TestWorksWithAbsenceOfOssiCredentials(t *testing.T) {
 	defer httpmock.DeactivateAndReset()
 
 	setupProjectList()
-	audit := New(config.OSSIConfig{})
+	audit := New(config.OSSIConfig{}, config.ConanPackages{})
 
 	//We should not have proper creds
 	if audit.HasProperOssiCredentials() {
@@ -187,7 +187,7 @@ func TestWorksWithAbsenceOfOssiCredentials(t *testing.T) {
 }
 
 func TestProcessPaths(t *testing.T) {
-	audit := New(config.OSSIConfig{})
+	audit := New(config.OSSIConfig{}, config.ConanPackages{})
 
 	auditResults := audit.ProcessPaths(
 		[]string{"/usrdefined/path"},

@@ -17,12 +17,11 @@ import (
 	"fmt"
 	"text/tabwriter"
 
-	"github.com/sonatype-nexus-community/cheque/config"
-
 	"github.com/jedib0t/go-pretty/v6/table"
 
 	"github.com/package-url/packageurl-go"
 	"github.com/sonatype-nexus-community/cheque/bom"
+	"github.com/sonatype-nexus-community/cheque/config"
 	"github.com/sonatype-nexus-community/cheque/logger"
 	"github.com/sonatype-nexus-community/cheque/packages"
 	"github.com/sonatype-nexus-community/go-sona-types/ossindex"
@@ -32,12 +31,14 @@ import (
 )
 
 type Audit struct {
-	OssiConfig config.OSSIConfig
+	OssiConfig    config.OSSIConfig
+	ConanPackages config.ConanPackages
 }
 
-func New(ossiConfig config.OSSIConfig) *Audit {
+func New(ossiConfig config.OSSIConfig, conanPackages config.ConanPackages) *Audit {
 	return &Audit{
-		OssiConfig: ossiConfig,
+		OssiConfig:    ossiConfig,
+		ConanPackages: conanPackages,
 	}
 }
 
@@ -126,9 +127,10 @@ func (a Audit) AuditBom(deps []packageurl.PackageURL, fileLookup map[string]stri
 		// v.Coordinates = "pkg:cpp/" + k
 
 		// If there are no vulnerabilities, try and use Conan package, cause IQ knows about those
+		fmt.Printf("WIK: %v\n", a.ConanPackages.Lookup)
 		if len(v.Vulnerabilities) == 0 {
 			tokens := strings.Split(v.Coordinates, "/")
-			v.Coordinates = "pkg:conan/" + tokens[2]
+			v.Coordinates = "pkg:conan/conan/" + a.getConanLibraryName(tokens[2])
 		}
 		logger.Info(v.Coordinates)
 		results = append(results, v)
@@ -181,6 +183,30 @@ func (a Audit) AuditBom(deps []packageurl.PackageURL, fileLookup map[string]stri
 		Coordinates: amendedResults,
 		Count:       count,
 	}
+}
+
+func (a Audit) getConanLibraryName(fullName string) (result string) {
+	tokens := strings.Split(fullName, "@")
+	name := tokens[0]
+	version := tokens[1]
+	if strings.HasPrefix(name, "lib") {
+		useName := strings.Replace(name, "lib", "", 0)
+		fmt.Printf("LOL: %s\n", useName)
+		conanPkg := a.ConanPackages.Lookup[useName]
+		if conanPkg != nil {
+			return conanPkg.Name + "@" + version
+		}
+	} else {
+		useName := "lib" + name
+		fmt.Printf("WUT: %s\n", useName)
+		conanPkg := a.ConanPackages.Lookup[useName]
+		if conanPkg != nil {
+			return conanPkg.Name + "@" + version
+		}
+	}
+
+	fmt.Printf("WAT: %s\n", name)
+	return name + "@" + version
 }
 
 func countDistinctLibraries(purls []string) (result int) {

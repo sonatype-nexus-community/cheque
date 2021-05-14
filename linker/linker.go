@@ -15,8 +15,9 @@ package linker
 
 import (
 	"fmt"
-	"github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
 	"strings"
+
+	"github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
 
 	"github.com/sonatype-nexus-community/cheque/config"
 
@@ -34,20 +35,22 @@ var TYPESTOCHECK = map[string]string{
 }
 
 type Linker struct {
-	ossiConfig config.OSSIConfig
+	ossiConfig    config.OSSIConfig
+	conanPackages config.ConanPackages
 }
 
 type Results struct {
-	Count int
-	LibPaths []string
-	Libs []string
-	Files []string
+	Count       int
+	LibPaths    []string
+	Libs        []string
+	Files       []string
 	Coordinates []types.Coordinate
 }
 
-func New(config config.OSSIConfig) *Linker {
+func New(config config.OSSIConfig, conanPackages config.ConanPackages) *Linker {
 	return &Linker{
-		ossiConfig: config,
+		ossiConfig:    config,
+		conanPackages: conanPackages,
 	}
 }
 
@@ -123,7 +126,7 @@ func (l Linker) DoLink(args []string) (results *Results) {
 
 	if len(libs) > 0 || len(files) > 0 {
 
-		audit := audit.New(l.ossiConfig)
+		audit := audit.New(l.ossiConfig, l.conanPackages)
 		libPaths := iterateAndAppendToLibPathsSlice(libPaths)
 		libs := iterateAndAppendToSlice(libs)
 		files := iterateAndAppendToSlice(files)
@@ -131,11 +134,11 @@ func (l Linker) DoLink(args []string) (results *Results) {
 			libPaths,
 			libs,
 			files)
-		return &Results {
-			LibPaths: libPaths,
-			Libs: libs,
-			Files: files,
-			Count: auditResults.Count,
+		return &Results{
+			LibPaths:    libPaths,
+			Libs:        libs,
+			Files:       files,
+			Count:       auditResults.Count,
 			Coordinates: auditResults.Coordinates,
 		}
 	}

@@ -38,6 +38,7 @@ func main() {
 	options := config.Options{}
 	myConfig := config.New(logger.GetLogger(), options)
 	myConfig.CreateOrReadConfigFile()
+	myConfig.CreateOrReadCacheFile()
 
 	// Remove cheque custom arguments
 	for _, arg := range os.Args[1:] {
@@ -56,7 +57,7 @@ func main() {
 
 	// If we are running in "compiler mode" run the cheque linker
 	if !context.GetChequeScan() {
-		myLinker := linker.New(myConfig.OSSIndexConfig)
+		myLinker := linker.New(myConfig.OSSIndexConfig, myConfig.ConanPackages)
 		results = myLinker.DoLink(args)
 		if results.Count > 0 {
 			if context.ExitWithError() {
@@ -70,7 +71,7 @@ func main() {
 
 	// If we are running in "scan mode" run the cheque scanner
 	if context.GetChequeScan() {
-		myScanner := scanner.New(myConfig.OSSIndexConfig)
+		myScanner := scanner.New(myConfig.OSSIndexConfig, myConfig.ConanPackages)
 		results = myScanner.DoScan(context.GetChequeScanPath(), args)
 		if results.Count > 0 {
 			if context.ExitWithError() {
@@ -240,7 +241,7 @@ func generateSbom(myConfig config.Config, results *linker.Results) {
 
 func generateConanFiles(myConfig config.Config, results *linker.Results) {
 	if myConfig.ChequeConfig.ShouldCreateConanFiles() {
-		myAudit := audit.New(myConfig.OSSIndexConfig)
+		myAudit := audit.New(myConfig.OSSIndexConfig, myConfig.ConanPackages)
 		purls, _ := myAudit.GetPurls(results.LibPaths, results.Libs, results.Files)
 		options := conan.Options{
 			BinaryName: context.GetBinaryName(),

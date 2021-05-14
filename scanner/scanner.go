@@ -39,12 +39,14 @@ var TYPESTOCHECK = map[string]string{
 }
 
 type Scanner struct {
-	ossiConfig config.OSSIConfig
+	ossiConfig    config.OSSIConfig
+	conanPackages config.ConanPackages
 }
 
-func New(config config.OSSIConfig) *Scanner {
+func New(config config.OSSIConfig, conanPackages config.ConanPackages) *Scanner {
 	return &Scanner{
-		ossiConfig: config,
+		ossiConfig:    config,
+		conanPackages: conanPackages,
 	}
 }
 
@@ -94,7 +96,7 @@ func (s Scanner) DoScan(path string, args []string) (results *linker.Results) {
 	}
 
 	if len(mylibs) > 0 || len(files) > 0 {
-		audit := audit.New(s.ossiConfig)
+		audit := audit.New(s.ossiConfig, s.conanPackages)
 		libPaths := iterateAndAppendToLibPathsSlice(libPaths)
 		libs := iterateAndAppendToSlice(mylibs)
 		files := iterateAndAppendToSlice(files)
