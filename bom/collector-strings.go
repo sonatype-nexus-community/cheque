@@ -100,7 +100,7 @@ func (c stringsCollector) getPossibleNames() (string, error) {
 		if strings.HasSuffix(c.path, k) {
 			found = true
 		}
-		// Special case for libpng.so.1.2.3
+		// Special case for postfixed versions (libpng.so.1.2.3)
 		if strings.HasPrefix(k, ".") && strings.Contains(c.path, k) {
 			found = true
 		}

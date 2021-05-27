@@ -127,7 +127,6 @@ func (a Audit) AuditBom(deps []packageurl.PackageURL, fileLookup map[string]stri
 		// v.Coordinates = "pkg:cpp/" + k
 
 		// If there are no vulnerabilities, try and use Conan package, cause IQ knows about those
-		fmt.Printf("WIK: %v\n", a.ConanPackages.Lookup)
 		if len(v.Vulnerabilities) == 0 {
 			tokens := strings.Split(v.Coordinates, "/")
 			v.Coordinates = "pkg:conan/conan/" + a.getConanLibraryName(tokens[2])
@@ -185,27 +184,28 @@ func (a Audit) AuditBom(deps []packageurl.PackageURL, fileLookup map[string]stri
 	}
 }
 
+/**
+ * Give a `name@version` look at the conan cache file and find the best name match possible. For example, we may be passed
+ * "png" but conan knows the package as "libpng". We should return "libpng" in that case.
+ */
 func (a Audit) getConanLibraryName(fullName string) (result string) {
 	tokens := strings.Split(fullName, "@")
 	name := tokens[0]
 	version := tokens[1]
 	if strings.HasPrefix(name, "lib") {
 		useName := strings.Replace(name, "lib", "", 0)
-		fmt.Printf("LOL: %s\n", useName)
 		conanPkg := a.ConanPackages.Lookup[useName]
 		if conanPkg != nil {
 			return conanPkg.Name + "@" + version
 		}
 	} else {
 		useName := "lib" + name
-		fmt.Printf("WUT: %s\n", useName)
 		conanPkg := a.ConanPackages.Lookup[useName]
 		if conanPkg != nil {
 			return conanPkg.Name + "@" + version
 		}
 	}
 
-	fmt.Printf("WAT: %s\n", name)
 	return name + "@" + version
 }
 

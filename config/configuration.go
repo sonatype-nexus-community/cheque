@@ -202,7 +202,6 @@ func (c *Config) readCache() {
 	}
 	c.ConanPackages.Lookup = make(map[string]*ConanPackage)
 	_ = yaml.Unmarshal(conanBytes, &c.ConanPackages.Lookup)
-
 }
 
 func (c Config) overrideWithLocalConfig(config ChequeConfig) ChequeConfig {
