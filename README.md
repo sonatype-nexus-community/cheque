@@ -191,7 +191,7 @@ See `.cheque-config.example` for the format
 
 ### IQ Server
 
-If cheque is configured to use and submit reports to iq server, 
+If `cheque` is configured to use and submit reports to IQ server, 
 it requires the .iq-server-config file to be configured and placed 
 in the following directory:
 
@@ -199,9 +199,9 @@ in the following directory:
 
 See the example file `.iq-server-config.example`
 
-### Oss Index
+### OSS Index
 
-If there is interest to run against Oss Index with credentials,
+If there is interest to run against OSS Index with credentials,
 it requires the .oss-index-config file to be configured and placed 
 in the following directory:
 
@@ -217,7 +217,7 @@ Tests can be run like `go test ./... -v`
 
 ### Release Process
 
-Follow the steps below to release a new version of Nancy. You need to be part of the `deploy from circle ci` group for this to work.
+Follow the steps below to release a new version of `cheque`. You need to be part of the `deploy from circle ci` group for this to work.
 
 1. Checkout/pull the latest `master` branch, and create a new tag with the desired semantic version and a helpful note:
 
