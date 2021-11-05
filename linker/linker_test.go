@@ -34,7 +34,7 @@ func TestDoLink(t *testing.T) {
 	// FIXME: By default we are returned the number of vulnerable packages. We
 	// might want to add a way to get the total number of packages as well.
 	var expected = 0
-	myLinker := New(config.OSSIConfig{})
+	myLinker := New(config.OSSIConfig{}, config.ConanPackages{})
 	results := myLinker.DoLink(args)
 
 	if results.Count != expected {
