@@ -15,11 +15,10 @@ package context
 
 import (
 	"fmt"
+	"github.com/sonatype-nexus-community/cheque/buildversion"
 	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/sonatype-nexus-community/nancy/buildversion"
 )
 
 var bom = false
