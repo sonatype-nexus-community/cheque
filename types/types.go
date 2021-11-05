@@ -6,3 +6,7 @@ type ProjectList struct {
 	Projects   []packageurl.PackageURL
 	FileLookup map[string]string
 }
+
+// Wild guess at values for these. need confirmation
+const ConanCacheDirName = ".conanCacheDir"
+const ConanCacheFileName = "conanCacheFile"
