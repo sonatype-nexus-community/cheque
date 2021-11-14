@@ -8,5 +8,5 @@ type ProjectList struct {
 }
 
 // Wild guess at values for these. need confirmation
-const ConanCacheDirName = ".conanCacheDir"
-const ConanCacheFileName = "conanCacheFile"
+const ConanCacheDirName = ".cheque"
+const ConanCacheFileName = "conan-cache.json"
