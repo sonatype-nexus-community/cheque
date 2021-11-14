@@ -15,6 +15,7 @@ package config
 
 import (
 	"encoding/json"
+	myTypes "github.com/sonatype-nexus-community/cheque/types"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -118,7 +119,7 @@ func (c *Config) CreateOrReadConfigFile() {
 
 func (c *Config) CreateOrReadCacheFile() {
 	if !fileExists(c.getConanCache()) {
-		c.writeConanCache(types.ConanCacheDirName, c.getConanCache())
+		c.writeConanCache(myTypes.ConanCacheDirName, c.getConanCache())
 	}
 
 	c.readCache()
@@ -146,7 +147,7 @@ func (c Config) createDirectory(directory string) {
 
 //Gets the default location for the config file
 func (c Config) getConanCache() string {
-	return filepath.Join(c.options.Directory, types.ConanCacheDirName, types.ConanCacheFileName)
+	return filepath.Join(c.options.Directory, myTypes.ConanCacheDirName, myTypes.ConanCacheFileName)
 }
 
 func (c Config) getIQConfig() string {

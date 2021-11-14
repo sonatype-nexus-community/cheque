@@ -21,6 +21,7 @@ import (
 
 	"github.com/package-url/packageurl-go"
 	"github.com/sonatype-nexus-community/cheque/bom"
+	"github.com/sonatype-nexus-community/cheque/buildversion"
 	"github.com/sonatype-nexus-community/cheque/config"
 	"github.com/sonatype-nexus-community/cheque/logger"
 	"github.com/sonatype-nexus-community/cheque/packages"
@@ -83,7 +84,7 @@ func (a Audit) AuditBom(deps []packageurl.PackageURL, fileLookup map[string]stri
 	purls = append(purls, rpmPurls...)
 
 	options := types.Options{
-		Version:     "development",
+		Version:     buildversion.BuildVersion,
 		Tool:        "cheque",
 		DBCacheName: "cheque-cache",
 	}
