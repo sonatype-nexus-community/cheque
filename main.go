@@ -15,20 +15,20 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
 
 	"github.com/sonatype-nexus-community/cheque/audit"
+	"github.com/sonatype-nexus-community/cheque/bom"
 	"github.com/sonatype-nexus-community/cheque/conan"
 	"github.com/sonatype-nexus-community/cheque/config"
 	"github.com/sonatype-nexus-community/cheque/context"
+	"github.com/sonatype-nexus-community/cheque/iq"
 	"github.com/sonatype-nexus-community/cheque/linker"
 	"github.com/sonatype-nexus-community/cheque/logger"
 	"github.com/sonatype-nexus-community/cheque/scanner"
 	"github.com/sonatype-nexus-community/go-sona-types/cyclonedx"
-	"github.com/sonatype-nexus-community/go-sona-types/iq"
 )
 
 func main() {
@@ -53,6 +53,75 @@ func main() {
 		}
 	}
 
+	if myConfig.ChequeConfig.ShouldUseIQ() {
+		doIqRun(*myConfig, args)
+	} else {
+		doOssiRun(*myConfig, args)
+	}
+}
+
+/**
+ * Run an analysis using IQ. This will avoid any communications with OSS Index
+ */
+func doIqRun(myConfig config.Config, args []string) {
+	var results *linker.Results
+
+	// If we are running in "compiler mode" run the cheque linker
+	if !context.GetChequeScan() {
+		myLinker := linker.New(myConfig.OSSIndexConfig, myConfig.ConanPackages)
+		results = myLinker.GetArguments(args)
+		if results.Count > 0 {
+			if context.ExitWithError() {
+				fmt.Fprintf(os.Stderr, "Error: Vulnerable dependencies found: %v\n", results.Count)
+				os.Exit(results.Count)
+			} else {
+				fmt.Fprintf(os.Stderr, "Warning: Vulnerable dependencies found: %v\n", results.Count)
+			}
+		}
+	}
+
+	// If we are running in "scan mode" run the cheque scanner
+	if context.GetChequeScan() {
+		myScanner := scanner.New(myConfig.OSSIndexConfig, myConfig.ConanPackages)
+		results = myScanner.GetArguments(context.GetChequeScanPath(), args)
+		if results.Count > 0 {
+			if context.ExitWithError() {
+				fmt.Fprintf(os.Stderr, "Error: Vulnerable dependencies found: %v\n", results.Count)
+				os.Exit(results.Count)
+			} else {
+				fmt.Fprintf(os.Stderr, "Warning: Vulnerable dependencies found: %v\n", results.Count)
+			}
+		}
+	}
+
+	if results != nil && (len(results.Libs) > 0 || len(results.Files) > 0) {
+		var projectList, _ = bom.CreateBomFromRoot(results.LibPaths, results.Libs, results.Files, context.GetChequeScanPath())
+
+		i := iq.New(myConfig)
+		results.Coordinates = i.ExtractCoordinates(projectList)
+
+		generateConanFiles(myConfig, results)
+		generateSbom(myConfig, results)
+		i.AuditWithIQ(results)
+	}
+
+	// If we are running in "compiler mode" run the real linker
+	if !context.GetChequeScan() {
+		switch context.GetCommand() {
+		case "cheque":
+			break
+		default:
+			runWrappedCommand(args)
+			break
+		}
+	}
+	os.Exit(0)
+}
+
+/**
+ * Run an analysis against OSS Index.
+ */
+func doOssiRun(myConfig config.Config, args []string) {
 	var results *linker.Results
 
 	// If we are running in "compiler mode" run the cheque linker
@@ -84,9 +153,8 @@ func main() {
 	}
 
 	if results != nil && (len(results.Libs) > 0 || len(results.Files) > 0) {
-		generateConanFiles(*myConfig, results)
-		generateSbom(*myConfig, results)
-		auditWithIQ(*myConfig, results)
+		generateConanFiles(myConfig, results)
+		generateSbom(myConfig, results)
 	}
 
 	// If we are running in "compiler mode" run the real linker
@@ -139,76 +207,6 @@ func getWrappedCommand() (cmdPath string) {
 		cmdPath = "" // Don't report this one as the wrapped binary
 	}
 	return
-}
-
-func auditWithIQ(config config.Config, lResults *linker.Results) {
-	if config.ChequeConfig.ShouldUseIQ() {
-		dx := cyclonedx.Default(logger.GetLogger())
-		sbom := dx.FromCoordinates(lResults.Coordinates)
-
-		binaryName := context.GetBinaryName()
-		if config.ChequeConfig.IQAppNamePrefix != "" {
-			binaryName = config.ChequeConfig.IQAppNamePrefix + binaryName
-		}
-
-		runIQ := len(config.ChequeConfig.IQAppAllowList) == 0
-
-		// Check to see if we're using allow list, if so, then check that
-		// it's in there.
-		if !runIQ {
-			allowListArr := config.ChequeConfig.IQAppAllowList
-			for _, app := range allowListArr[:] {
-				if app == context.GetBinaryName() {
-					runIQ = true
-				}
-			}
-		}
-
-		if runIQ {
-			sendBomToIQ(config, binaryName, sbom)
-		} else {
-			logger.GetLogger().Info("Skipping sending bom to IQ due to app allow list.")
-		}
-	}
-}
-
-func sendBomToIQ(config config.Config, binaryName string, sbom string) {
-	iqOptions := iq.Options{
-		User:        config.IQConfig.Username,
-		Token:       config.IQConfig.Token,
-		Application: binaryName,
-		Server:      config.IQConfig.Server,
-		Stage:       config.ChequeConfig.IQBuildStage,
-		MaxRetries:  *config.ChequeConfig.IQMaxRetries,
-	}
-	server, err := iq.New(logger.GetLogger(), iqOptions)
-	if err != nil {
-		logger.GetLogger().WithField("err", err).Error("error creating connection to IQ")
-		return
-	}
-	result, iqerr := server.AuditWithSbom(sbom)
-	if iqerr != nil {
-		logger.GetLogger().WithField("err", iqerr).Error("error submitting bom")
-	}
-	logger.GetLogger().WithField("result", result).Info("Completed submission of bom to IQ")
-
-	// print summary
-	showPolicyActionMessage(result, os.Stdout)
-}
-
-func showPolicyActionMessage(res iq.StatusURLResult, writer io.Writer) {
-	_, _ = fmt.Fprintln(writer)
-	switch res.PolicyAction {
-	case iq.PolicyActionFailure:
-		_, _ = fmt.Fprintln(writer, "There are policy violations to clean up")
-		_, _ = fmt.Fprintln(writer, "Report URL: ", res.AbsoluteReportHTMLURL)
-	case iq.PolicyActionWarning:
-		_, _ = fmt.Fprintln(writer, "There are policy warnings to investigate")
-		_, _ = fmt.Fprintln(writer, "Report URL: ", res.AbsoluteReportHTMLURL)
-	default:
-		_, _ = fmt.Fprintln(writer, "No policy violations reported for this audit")
-		_, _ = fmt.Fprintln(writer, "Report URL: ", res.AbsoluteReportHTMLURL)
-	}
 }
 
 func generateSbom(myConfig config.Config, results *linker.Results) {

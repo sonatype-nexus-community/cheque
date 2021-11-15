@@ -50,7 +50,7 @@ func New(config config.OSSIConfig, conanPackages config.ConanPackages) *Scanner 
 	}
 }
 
-func (s Scanner) DoScan(path string, args []string) (results *linker.Results) {
+func (s Scanner) GetArguments(path string, args []string) (results *linker.Results) {
 	libPaths := []string{}
 	mylibs := make(map[string]bool)
 	files := make(map[string]bool)
@@ -96,18 +96,32 @@ func (s Scanner) DoScan(path string, args []string) (results *linker.Results) {
 	}
 
 	if len(mylibs) > 0 || len(files) > 0 {
-		audit := audit.New(s.ossiConfig, s.conanPackages)
 		libPaths := iterateAndAppendToLibPathsSlice(libPaths)
 		libs := iterateAndAppendToSlice(mylibs)
 		files := iterateAndAppendToSlice(files)
-		auditResults := audit.ProcessPaths(
-			libPaths,
-			libs,
-			files)
 		return &linker.Results{
-			LibPaths:    libPaths,
-			Libs:        libs,
-			Files:       files,
+			LibPaths: libPaths,
+			Libs:     libs,
+			Files:    files,
+		}
+	}
+
+	return new(linker.Results)
+}
+
+func (s Scanner) DoScan(path string, args []string) (results *linker.Results) {
+	myArgs := s.GetArguments(path, args)
+	if len(myArgs.Libs) > 0 || len(myArgs.Files) > 0 {
+		audit := audit.New(s.ossiConfig, s.conanPackages)
+		auditResults := audit.ProcessPathsWithRoot(
+			myArgs.LibPaths,
+			myArgs.Libs,
+			myArgs.Files,
+			path)
+		return &linker.Results{
+			LibPaths:    myArgs.LibPaths,
+			Libs:        myArgs.Libs,
+			Files:       myArgs.Files,
 			Count:       auditResults.Count,
 			Coordinates: auditResults.Coordinates,
 		}

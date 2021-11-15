@@ -49,14 +49,22 @@ type AuditResult struct {
 }
 
 func (a Audit) GetPurls(libPaths []string, libs []string, files []string) ([]packageurl.PackageURL, map[string]string) {
+	return a.GetPurlsWithRoot(libPaths, libs, files, "")
+}
+
+func (a Audit) GetPurlsWithRoot(libPaths []string, libs []string, files []string, rootPath string) ([]packageurl.PackageURL, map[string]string) {
 	myBom := packages.Make{}
-	var projectList, _ = bom.CreateBom(libPaths, libs, files)
+	var projectList, _ = bom.CreateBomFromRoot(libPaths, libs, files, rootPath)
 	myBom.Purls = projectList.Projects
 	return myBom.Purls, projectList.FileLookup
 }
 
 func (a Audit) ProcessPaths(libPaths []string, libs []string, files []string) (r *AuditResult) {
-	purls, fileLookup := a.GetPurls(libPaths, libs, files)
+	return a.ProcessPathsWithRoot(libPaths, libs, files, "")
+}
+
+func (a Audit) ProcessPathsWithRoot(libPaths []string, libs []string, files []string, rootPath string) (r *AuditResult) {
+	purls, fileLookup := a.GetPurlsWithRoot(libPaths, libs, files, rootPath)
 	return a.AuditBom(purls, fileLookup)
 }
 
@@ -161,17 +169,11 @@ func (a Audit) AuditBom(deps []packageurl.PackageURL, fileLookup map[string]stri
 		// try and get the path for the file from the lookup
 		// tokens := strings.Split(v.Coordinates, "/")
 		// cppPurl := "pkg:cpp/" + tokens[len(tokens)-1]
-		// path, ok := fileLookup[cppPurl]
-		// if ok {
-		// 	v.Path = path
-		// } else {
-		// 	path = v.Coordinates
-		// }
+		// path := fileLookup[cppPurl]
 
 		amendedResults = append(amendedResults, types.Coordinate{
-			Coordinates: v.Coordinates,
-			Reference:   v.Reference,
-			// Path:            path,
+			Coordinates:     v.Coordinates,
+			Reference:       v.Reference,
 			Vulnerabilities: v.Vulnerabilities,
 			InvalidSemVer:   v.InvalidSemVer,
 		})

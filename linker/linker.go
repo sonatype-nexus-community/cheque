@@ -54,7 +54,10 @@ func New(config config.OSSIConfig, conanPackages config.ConanPackages) *Linker {
 	}
 }
 
-func (l Linker) DoLink(args []string) (results *Results) {
+/**
+ * Extract command line arguments from the link line
+ */
+func (l Linker) GetArguments(args []string) (results *Results) {
 	libPaths := []string{}
 	libs := make(map[string]bool)
 	files := make(map[string]bool)
@@ -126,18 +129,32 @@ func (l Linker) DoLink(args []string) (results *Results) {
 
 	if len(libs) > 0 || len(files) > 0 {
 
-		audit := audit.New(l.ossiConfig, l.conanPackages)
 		libPaths := iterateAndAppendToLibPathsSlice(libPaths)
 		libs := iterateAndAppendToSlice(libs)
 		files := iterateAndAppendToSlice(files)
-		auditResults := audit.ProcessPaths(
-			libPaths,
-			libs,
-			files)
 		return &Results{
-			LibPaths:    libPaths,
-			Libs:        libs,
-			Files:       files,
+			LibPaths: libPaths,
+			Libs:     libs,
+			Files:    files,
+		}
+	}
+
+	return new(Results)
+}
+
+func (l Linker) DoLink(args []string) (results *Results) {
+	myArgs := l.GetArguments(args)
+
+	if len(myArgs.Libs) > 0 || len(myArgs.Files) > 0 {
+		audit := audit.New(l.ossiConfig, l.conanPackages)
+		auditResults := audit.ProcessPaths(
+			myArgs.LibPaths,
+			myArgs.Libs,
+			myArgs.Files)
+		return &Results{
+			LibPaths:    myArgs.LibPaths,
+			Libs:        myArgs.Libs,
+			Files:       myArgs.Files,
 			Count:       auditResults.Count,
 			Coordinates: auditResults.Coordinates,
 		}

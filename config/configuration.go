@@ -15,7 +15,6 @@ package config
 
 import (
 	"encoding/json"
-	myTypes "github.com/sonatype-nexus-community/cheque/types"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -24,6 +23,7 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
+	chequeTypes "github.com/sonatype-nexus-community/cheque/types"
 	"github.com/sonatype-nexus-community/go-sona-types/ossindex/types"
 	"gopkg.in/yaml.v3"
 )
@@ -119,7 +119,7 @@ func (c *Config) CreateOrReadConfigFile() {
 
 func (c *Config) CreateOrReadCacheFile() {
 	if !fileExists(c.getConanCache()) {
-		c.writeConanCache(myTypes.ConanCacheDirName, c.getConanCache())
+		c.writeConanCache(chequeTypes.ConanCacheDirName, c.getConanCache())
 	}
 
 	c.readCache()
@@ -147,7 +147,7 @@ func (c Config) createDirectory(directory string) {
 
 //Gets the default location for the config file
 func (c Config) getConanCache() string {
-	return filepath.Join(c.options.Directory, myTypes.ConanCacheDirName, myTypes.ConanCacheFileName)
+	return filepath.Join(c.options.Directory, chequeTypes.ConanCacheDirName, chequeTypes.ConanCacheFileName)
 }
 
 func (c Config) getIQConfig() string {

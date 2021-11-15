@@ -42,6 +42,10 @@ func init() {
 
 // CreateBom does stuff
 func CreateBom(libPaths []string, libs []string, files []string) (deps types.ProjectList, err error) {
+	return CreateBomFromRoot(libPaths, libs, files, "")
+}
+
+func CreateBomFromRoot(libPaths []string, libs []string, files []string, rootPath string) (deps types.ProjectList, err error) {
 	// Library names
 	lookup := make(map[string]bool)
 	deps.FileLookup = make(map[string]string)
@@ -62,12 +66,22 @@ func CreateBom(libPaths []string, libs []string, files []string) (deps types.Pro
 			continue
 		}
 
+		relativePath := path
+		if strings.HasPrefix(path, rootPath) {
+			relativePath = strings.Replace(path, rootPath, "", 1)
+		}
+
 		deps.Projects = append(deps.Projects, project)
-		deps.FileLookup[project.ToString()] = path
+		deps.FileLookup[project.ToString()] = relativePath
 		deps = checkIfRpmOrDebAppendLibIfNot(project, path, deps)
 	}
 
 	for _, lib := range files {
+		relativePath := lib
+		if strings.HasPrefix(lib, rootPath) {
+			relativePath = strings.Replace(lib, rootPath, "", 1)
+		}
+
 		pattern := GetLibraryFileRegexPattern()
 		rn, _ := regexp.Compile(pattern)
 		fname := filepath.Base(lib)
@@ -84,7 +98,7 @@ func CreateBom(libPaths []string, libs []string, files []string) (deps types.Pro
 			// We need both the "lib<name>" and "<name>" versions, since which is used
 			// depends on the repo.
 			deps.Projects = append(deps.Projects, project)
-			deps.FileLookup[project.ToString()] = lib
+			deps.FileLookup[project.ToString()] = relativePath
 			deps = checkIfRpmOrDebAppendLibIfNot(project, lib, deps)
 		} else {
 			// If we get here then this is a concrete non-dynamic library file. This might be a static library,
@@ -98,7 +112,7 @@ func CreateBom(libPaths []string, libs []string, files []string) (deps types.Pro
 			// We need both the "lib<name>" and "<name>" versions, since which is used
 			// depends on the repo.
 			deps.Projects = append(deps.Projects, purl)
-			deps.FileLookup[purl.ToString()] = lib
+			deps.FileLookup[purl.ToString()] = relativePath
 			deps = checkIfRpmOrDebAppendLibIfNot(purl, lib, deps)
 		}
 	}

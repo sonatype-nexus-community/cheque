@@ -211,6 +211,8 @@ github.com/soheilhy/cmux v0.1.4/go.mod h1:IM3LyeVVIOuxMH7sFAkER9+bJ4dT7Ms6E4xg4k
 github.com/sonatype-nexus-community/go-sona-types v0.0.8/go.mod h1:uou8FGf9R5Nz1c6BfSM3v9K7g0R6faTYoxLh9Ybeht8=
 github.com/sonatype-nexus-community/go-sona-types v0.0.10 h1:VW+OE1vAjBwwRCz7jz4xcBbUn1j3bz1gFnEw1YYmYGs=
 github.com/sonatype-nexus-community/go-sona-types v0.0.10/go.mod h1:uou8FGf9R5Nz1c6BfSM3v9K7g0R6faTYoxLh9Ybeht8=
+github.com/sonatype-nexus-community/go-sona-types v0.1.2 h1:0xDZ4g3CXICKKFlgb35fx2qlta3oH4MJawQ1Uae6AjQ=
+github.com/sonatype-nexus-community/go-sona-types v0.1.2/go.mod h1:VCloKfByIYi0oMo+Q83QzWvUENoUTLxSZmMsud4wvG4=
 github.com/sonatype-nexus-community/nancy v1.0.1 h1:d+mf5iiFgNG3WcapXkOLWBS2YA69Gw7lTn+f1S+FLsI=
 github.com/sonatype-nexus-community/nancy v1.0.1/go.mod h1:3uqqbvpP2pIyaZqCY17HOmLMMV2ATDD//tVrhqI+XZg=
 github.com/spaolacci/murmur3 v0.0.0-20180118202830-f09979ecbc72/go.mod h1:JwIasOWyU6f++ZhiEuf87xNszmSA2myDM2Kzu9HwQUA=
